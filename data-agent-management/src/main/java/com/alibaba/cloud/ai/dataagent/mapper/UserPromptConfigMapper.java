@@ -113,7 +113,7 @@ public interface UserPromptConfigMapper {
 			<script>
 			SELECT * FROM user_prompt_config
 			WHERE prompt_type = #{promptType}
-			  AND enabled = true
+			  AND enabled = 1
 			<if test='agentId != null'> AND agent_id = #{agentId}</if>
 			ORDER BY priority DESC, display_order, update_time DESC
 			</script>

@@ -153,7 +153,7 @@ class AgentKnowledgeService {
           },
         },
       );
-      return response.data.data;
+      return response.data.success;
     } catch (error) {
       console.error('Failed to update recall status:', error);
       return null;

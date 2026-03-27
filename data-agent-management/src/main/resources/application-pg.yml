@@ -4,28 +4,23 @@ server:
 # 存储 DataAgent 业务数据的数据库，并非Agent分析数据的来源
 spring:
   datasource:
-    url: jdbc:h2:mem:nl2sql_database;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=true;MODE=MySQL;DB_CLOSE_ON_EXIT=FALSE
-    username: root
-    password: root
-    driver-class-name: org.h2.Driver
+    url: jdbc:postgresql://127.0.0.1/nl2sql_database
+    username: junphine
+    password: 332584185
+    driver-class-name: org.postgresql.Driver
     type: com.alibaba.druid.pool.DruidDataSource
   sql:
     init:
-      mode: always
+      mode: NEVER
       schema-locations:
-        - classpath:sql/h2/schema-h2.sql
-        - classpath:sql/h2/product_schema-h2.sql
+        - classpath:sql/pg/schema-pg.sql
+        - classpath:sql/pg/product_schema-pg.sql
       data-locations:
-        - classpath:sql/h2/data-h2.sql
-        - classpath:sql/h2/product_data-h2.sql
+        - classpath:sql/pg/data-pg.sql
+        - classpath:sql/pg/product_data-pg.sql
       continue-on-error: true
       separator: ;
       encoding: utf-8
-  # H2 控制台配置（开发环境启用）
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
   ai:
     vectorstore:
       type: simple

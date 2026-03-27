@@ -22,7 +22,7 @@
 # SQL 编写约束
 
 1.  **方言兼容性**：必须严格遵循 **{dialect}** 的语法规范。
-    *   注意日期函数（如 MySQL 的 `DATE_FORMAT` vs PG 的 `TO_CHAR`）。
+    *   注意日期函数（如 MySQL 的 `DATE_FORMAT` vs PG 的 `TO_CHAR`）,PG支持字符串转日期函数，如TO_DATE('2026/1/1', 'YYYY/MM/DD')。
     *   注意分页语法（如 `LIMIT` vs `OFFSET/FETCH`）。
     *   注意标识符引用（如 MySQL 的反引号 \` vs PG 的双引号 "）。
 2.  **结果集控制**：

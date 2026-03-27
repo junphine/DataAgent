@@ -216,8 +216,7 @@ public class AgentKnowledgeServiceImpl implements AgentKnowledgeService {
 		knowledge.setEmbeddingStatus(EmbeddingStatus.PENDING);
 		knowledge.setErrorMsg("");
 		agentKnowledgeMapper.update(knowledge);
-		eventPublisher
-			.publishEvent(new AgentKnowledgeEmbeddingEvent(this, knowledge.getId(), knowledge.getSplitterType()));
+		eventPublisher.publishEvent(new AgentKnowledgeEmbeddingEvent(this, knowledge.getId(), knowledge.getSplitterType()));
 		log.info("Retry embedding for knowledgeId: {}, splitterType: {}", id, knowledge.getSplitterType());
 	}
 

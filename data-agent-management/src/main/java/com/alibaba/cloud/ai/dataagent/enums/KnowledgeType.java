@@ -29,12 +29,12 @@ public enum KnowledgeType {
 	DOCUMENT("DOCUMENT", "文档类型"),
 
 	/**
-	 * 问答类型
+	 * 问答类型, 一问一答
 	 */
 	QA("QA", "问答类型"),
 
 	/**
-	 * 常见问题类型
+	 * 常见问题类型，列表
 	 */
 	FAQ("FAQ", "常见问题类型");
 

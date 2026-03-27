@@ -17,9 +17,11 @@ package com.alibaba.cloud.ai.dataagent.controller;
 
 import com.alibaba.cloud.ai.dataagent.entity.AgentPresetQuestion;
 import com.alibaba.cloud.ai.dataagent.service.agent.AgentPresetQuestionService;
+import com.alibaba.cloud.ai.dataagent.vo.ApiResponse;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -60,6 +62,7 @@ public class AgentPresetQuestionController {
 			List<AgentPresetQuestion> questions = questionsData.stream().map(data -> {
 				AgentPresetQuestion question = new AgentPresetQuestion();
 				question.setQuestion((String) data.get("question"));
+				question.setAnswer((String) data.get("answer"));
 				Object isActiveObj = data.get("isActive");
 				if (isActiveObj instanceof Boolean) {
 					question.setIsActive((Boolean) isActiveObj);
@@ -95,6 +98,30 @@ public class AgentPresetQuestionController {
 		catch (Exception e) {
 			log.error("Error deleting preset question {} for agent {}", questionId, agentId, e);
 			return ResponseEntity.internalServerError().body(Map.of("error", "删除预设问题失败: " + e.getMessage()));
+		}
+	}
+
+	@PutMapping("/recall/{id}")
+	public ApiResponse<Boolean> recallKnowledge(@PathVariable(value = "id") Long id,
+												@RequestParam(value = "isRecall") Boolean isRecall) {
+		presetQuestionService.updateRecallStatus(id, isRecall);
+		return ApiResponse.success("success update recall businessKnowledge");
+	}
+
+	@PostMapping("/refresh-vector-store")
+	public ApiResponse<Boolean> refreshAllQAToVectorStore(@RequestParam(value = "agentId") String agentId) {
+		// 校验 agentId 不为空和空字符串
+		if (!StringUtils.hasText(agentId)) {
+			return ApiResponse.error("agentId cannot be empty");
+		}
+
+		try {
+			presetQuestionService.refreshAllQAToVectorStore(Long.valueOf(agentId));
+			return ApiResponse.success("success refresh vector store");
+		}
+		catch (Exception e) {
+			log.error("Failed to refresh vector store for agentId: {}", agentId, e);
+			return ApiResponse.error("Failed to refresh vector store");
 		}
 	}
 

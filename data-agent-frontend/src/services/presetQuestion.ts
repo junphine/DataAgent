@@ -22,12 +22,15 @@ interface PresetQuestion {
   question: string;
   sortOrder?: number;
   isActive?: boolean;
+  isRecall?: boolean; // true=召回, false=非召回
+  answer?: string;
   createTime?: string;
   updateTime?: string;
 }
 
 interface PresetQuestionDTO {
   question: string;
+  answer?: string;
   isActive?: boolean;
 }
 
@@ -61,6 +64,7 @@ class PresetQuestionService {
       const questionsData = questions.map(q => ({
         question: q.question,
         isActive: q.isActive ?? true,
+        answer: q.answer
       }));
       const response = await axios.post(
         `${API_BASE_URL}/${agentId}/preset-questions`,
@@ -86,6 +90,42 @@ class PresetQuestionService {
       console.error('删除预设问题失败:', error);
       throw error;
     }
+  }
+
+  /**
+   * 更新召回状态
+   */
+  async updateRecallStatus(id: number, recalled: boolean): Promise<PresetQuestionDTO | null> {
+    try {
+      const response = await axios.put<{ success: boolean; data: PresetQuestionDTO }>(
+        `${API_BASE_URL}/recall/${id}`,
+        null,
+        {
+          params: {
+            isRecall: recalled,
+          },
+        },
+      );
+      return response.data.success;
+    } catch (error) {
+      console.error('Failed to update recall status:', error);
+      return null;
+    }
+  }
+
+  /**
+   * 刷新所有QA知识到向量存储
+   * @param agentId Agent ID
+   */
+  async refreshAllQAToVectorStore(agentId: string): Promise<boolean> {
+    const response = await axios.post<ApiResponse<boolean>>(
+      `${API_BASE_URL}/refresh-vector-store`,
+      null,
+      {
+        params: { agentId },
+      },
+    );
+    return response.data.success;
   }
 }
 

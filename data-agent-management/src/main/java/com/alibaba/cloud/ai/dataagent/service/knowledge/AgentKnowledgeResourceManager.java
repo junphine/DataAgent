@@ -23,6 +23,9 @@ import com.alibaba.cloud.ai.dataagent.entity.AgentKnowledge;
 import com.alibaba.cloud.ai.dataagent.service.file.FileStorageService;
 import com.alibaba.cloud.ai.dataagent.service.vectorstore.AgentVectorStoreService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.reader.tika.TikaDocumentReader;
 import org.springframework.ai.transformer.splitter.TextSplitter;
@@ -30,9 +33,9 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 // 智能体知识的向量资源和文件资源管理
 @Slf4j
@@ -98,6 +101,10 @@ public class AgentKnowledgeResourceManager {
 		// 使用FileStorageService获取文件资源对象
 		Resource resource = fileStorageService.getFileResource(filePath);
 
+		if(filePath.endsWith(".csv") && splitterType.equals("line")){
+			return readCsvDocuments(resource,true);
+		}
+
 		// 使用TikaDocumentReader读取文件
 		TikaDocumentReader tikaDocumentReader = new TikaDocumentReader(resource);
 		List<Document> documents = tikaDocumentReader.read();
@@ -108,6 +115,65 @@ public class AgentKnowledgeResourceManager {
 
 		return splitter.apply(documents);
 	}
+
+
+	/**
+	 * 读取 CSV 文件，每行生成一个 Document
+	 * @param resource CSV 文件资源
+	 * @param hasHeader 是否有表头
+	 * @return Document 列表
+	 */
+	public List<Document> readCsvDocuments(Resource resource, boolean hasHeader) {
+		List<Document> documents = new ArrayList<>();
+		List<String> headers = null;
+
+		try (InputStreamReader reader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8);
+			 CSVParser csvParser = new CSVParser(reader, CSVFormat.DEFAULT.builder()
+					 .setHeader()
+					 .setSkipHeaderRecord(hasHeader)
+					 .build())) {
+
+			// 获取表头
+			headers = csvParser.getHeaderNames();
+
+			// 遍历每一行
+			int rowNumber = 0;
+			for (CSVRecord record : csvParser) {
+				rowNumber++;
+
+				// 构建 Document 内容
+				StringBuilder contentBuilder = new StringBuilder();
+				Map<String, Object> metadata = new HashMap<>();
+
+				// 添加行号到 metadata
+				metadata.put("row_number", rowNumber);
+
+				// 处理每一列
+				for (String header : headers) {
+					String value = record.get(header);
+
+					// 将列信息添加到内容中
+					if (contentBuilder.length() > 0) {
+						contentBuilder.append(", ");
+					}
+					contentBuilder.append(header).append(": ").append(value);
+
+					// 同时将每个字段也存储到 metadata 中，方便后续检索
+					metadata.put(header, value);
+				}
+
+				// 创建 Document
+				Document document = new Document(contentBuilder.toString(), metadata);
+				documents.add(document);
+			}
+
+		} catch (Exception e) {
+			throw new RuntimeException("Failed to read CSV file: " + resource.getFilename(), e);
+		}
+
+		return documents;
+	}
+
 
 	/**
 	 * 从向量存储中删除知识

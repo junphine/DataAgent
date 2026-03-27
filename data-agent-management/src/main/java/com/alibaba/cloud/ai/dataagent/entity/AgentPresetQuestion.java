@@ -32,9 +32,13 @@ public class AgentPresetQuestion {
 
 	private String question;
 
+	private String answer;
+
 	private Integer sortOrder;
 
 	private Boolean isActive;
+
+	private Boolean isRecall;
 
 	private LocalDateTime createTime;
 

@@ -46,8 +46,8 @@ public interface AgentPresetQuestionMapper {
 	AgentPresetQuestion selectById(@Param("id") Long id);
 
 	@Insert("""
-			INSERT INTO agent_preset_question (agent_id, question, sort_order, is_active, create_time, update_time)
-			VALUES (#{agentId}, #{question}, #{sortOrder}, #{isActive}, NOW(), NOW())
+			INSERT INTO agent_preset_question (agent_id, question, answer, sort_order, is_active, create_time, update_time)
+			VALUES (#{agentId}, #{question}, #{answer}, #{sortOrder}, #{isActive}, NOW(), NOW())
 			""")
 	@Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
 	int insert(AgentPresetQuestion question);
@@ -57,6 +57,7 @@ public interface AgentPresetQuestionMapper {
 			UPDATE agent_preset_question
 			<set>
 				<if test="question != null">question = #{question},</if>
+				<if test="answer != null">answer = #{answer},</if>
 				<if test="sortOrder != null">sort_order = #{sortOrder},</if>
 				<if test="isActive != null">is_active = #{isActive},</if>
 				update_time = NOW()
@@ -65,6 +66,22 @@ public interface AgentPresetQuestionMapper {
 			</script>
 			""")
 	int update(AgentPresetQuestion question);
+
+	@Update("""
+			<script>
+			UPDATE agent_preset_question
+			<set>
+				<if test="question != null">question = #{question},</if>
+				<if test="sortOrder != null">sort_order = #{sortOrder},</if>
+				<if test="isActive != null">is_active = #{isActive},</if>
+				<if test="isRecall != null">is_recall = #{isRecall},</if>
+				<if test="answer != null">answer = #{answer},</if>
+				update_time = NOW()
+			</set>
+			WHERE id = #{id}
+			</script>
+			""")
+	int updateById(AgentPresetQuestion knowledge);
 
 	@Delete("""
 			DELETE FROM agent_preset_question WHERE id = #{id}

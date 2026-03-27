@@ -19,7 +19,6 @@ import com.alibaba.cloud.ai.dataagent.properties.DataAgentProperties;
 import com.alibaba.cloud.ai.dataagent.service.hybrid.fusion.FusionStrategy;
 import com.alibaba.cloud.ai.dataagent.service.hybrid.retrieval.HybridRetrievalStrategy;
 import com.alibaba.cloud.ai.dataagent.service.hybrid.retrieval.impl.DefaultHybridRetrievalStrategy;
-import com.alibaba.cloud.ai.dataagent.service.hybrid.retrieval.impl.ElasticsearchHybridRetrievalStrategy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.FactoryBean;
@@ -65,17 +64,10 @@ public class HybridRetrievalStrategyFactory implements FactoryBean<HybridRetriev
 		}
 		if ("elasticsearch".equalsIgnoreCase(vectorStoreType)) {
 			log.info("Creating ElasticsearchHybridRetrievalStrategy with index: {}", elasticsearchIndexName);
-			ElasticsearchHybridRetrievalStrategy strategy = new ElasticsearchHybridRetrievalStrategy(executorService,
-					vectorStore, fusionStrategy);
-			// 设置索引名称
-			strategy.setIndexName(elasticsearchIndexName);
-			// 从DataAgentProperties获取最小分数
-			strategy.setMinScore(dataAgentProperties.getVectorStore().getElasticsearchMinScore());
-			return strategy;
+			throw new UnsupportedOperationException("ElasticsearchHybridRetrievalStrategy");
 		}
 		else {
-			log.warn(
-					"Creating DefaultHybridRetrievalStrategy (default) without keyword-search ability,maybe you should implement interface -> HybridRetrievalStrategy ");
+			log.warn("Creating DefaultHybridRetrievalStrategy (default) without keyword-search ability,maybe you should implement interface -> HybridRetrievalStrategy ");
 			return new DefaultHybridRetrievalStrategy(executorService, vectorStore, fusionStrategy);
 		}
 	}

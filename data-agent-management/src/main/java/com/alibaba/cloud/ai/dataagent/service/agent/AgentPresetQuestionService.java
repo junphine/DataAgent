@@ -59,4 +59,9 @@ public interface AgentPresetQuestionService {
 	 */
 	void batchSave(Long agentId, List<AgentPresetQuestion> questions);
 
+
+	void updateRecallStatus(Long id, Boolean isRecall);
+
+	void refreshAllQAToVectorStore(Long agentId) throws Exception;
+
 }

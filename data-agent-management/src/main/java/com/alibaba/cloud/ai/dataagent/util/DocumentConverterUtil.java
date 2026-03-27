@@ -20,7 +20,9 @@ import com.alibaba.cloud.ai.dataagent.bo.schema.TableInfoBO;
 import com.alibaba.cloud.ai.dataagent.constant.Constant;
 import com.alibaba.cloud.ai.dataagent.constant.DocumentMetadataConstant;
 import com.alibaba.cloud.ai.dataagent.entity.AgentKnowledge;
+import com.alibaba.cloud.ai.dataagent.entity.AgentPresetQuestion;
 import com.alibaba.cloud.ai.dataagent.entity.BusinessKnowledge;
+import com.alibaba.cloud.ai.dataagent.enums.KnowledgeType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.ai.document.Document;
@@ -130,6 +132,19 @@ public class DocumentConverterUtil {
 		metadata.put(DocumentMetadataConstant.VECTOR_TYPE, DocumentMetadataConstant.AGENT_KNOWLEDGE);
 		metadata.put(DocumentMetadataConstant.DB_AGENT_KNOWLEDGE_ID, knowledge.getId());
 		metadata.put(DocumentMetadataConstant.CONCRETE_AGENT_KNOWLEDGE_TYPE, knowledge.getType().getCode());
+
+		return new Document(content, metadata);
+	}
+
+	public static Document convertQaFaqKnowledgeToDocument(AgentPresetQuestion knowledge) {
+		// 使用question作为Document的content字段
+		String content = knowledge.getQuestion();
+		Map<String, Object> metadata = new HashMap<>();
+		// answer和isRecall经常变更的放到关系数据库
+		metadata.put(Constant.AGENT_ID, knowledge.getAgentId().toString());
+		metadata.put(DocumentMetadataConstant.VECTOR_TYPE, DocumentMetadataConstant.AGENT_KNOWLEDGE);
+		metadata.put(DocumentMetadataConstant.DB_AGENT_KNOWLEDGE_ID, knowledge.getId());
+		metadata.put(DocumentMetadataConstant.CONCRETE_AGENT_KNOWLEDGE_TYPE, KnowledgeType.QA.getCode());
 
 		return new Document(content, metadata);
 	}

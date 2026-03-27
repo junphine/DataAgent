@@ -27,6 +27,16 @@
           <h3>预设问题列表</h3>
         </el-col>
         <el-col :span="12" style="text-align: right">
+          <el-button
+            @click="refreshVectorStore"
+            v-if="!refreshLoading"
+            size="large"
+            type="success"
+            round
+            :icon="Document"
+          >
+            同步到向量库
+          </el-button>
           <el-button @click="openCreateDialog" size="large" type="primary" round :icon="Plus">
             添加问题
           </el-button>
@@ -45,11 +55,38 @@
           </el-tag>
         </template>
       </el-table-column>
+      <el-table-column label="是否召回" min-width="80px">
+        <template #default="scope">
+        <el-tag :type="scope.row.isRecall ? 'success' : 'info'" round>
+          {{ scope.row.isRecall ? '已召回' : '禁用' }}
+        </el-tag>
+        </template>
+      </el-table-column>
       <el-table-column prop="createTime" label="创建时间" min-width="150px" />
       <el-table-column label="操作" min-width="200px">
         <template #default="scope">
           <el-button @click="editQuestion(scope.row)" size="small" type="primary" round plain>
             编辑
+          </el-button>
+           <el-button
+              v-if="scope.row.isRecall"
+              @click="toggleRecall(scope.row, false)"
+              size="small"
+              type="warning"
+              round
+              plain
+            >
+              取消召回
+            </el-button>
+            <el-button
+              v-if="scope.row.answer && !scope.row.isRecall"
+              @click="toggleRecall(scope.row, true)"
+              size="small"
+              type="success"
+              round
+              plain
+            >
+              设为召回
           </el-button>
           <el-button @click="deleteQuestion(scope.row)" size="small" type="danger" round plain>
             删除
@@ -78,6 +115,15 @@
       <el-form-item label="状态" prop="isActive">
         <el-switch v-model="questionForm.isActive" />
       </el-form-item>
+
+      <el-form-item label="答案" prop="answer">
+        <el-input v-model="questionForm.answer"
+          type="textarea"
+          :rows="6"
+          placeholder="请输入回答预设问题的SQL语句，可以留空"
+        />
+      </el-form-item>
+
     </el-form>
 
     <template #footer>
@@ -110,11 +156,14 @@
       const presetQuestionList: Ref<PresetQuestion[]> = ref([]);
       const dialogVisible: Ref<boolean> = ref(false);
       const isEdit: Ref<boolean> = ref(false);
+      const refreshLoading: Ref<boolean> = ref(false);
       const questionForm: Ref<PresetQuestion> = ref({
         agentId: props.agentId,
         question: '',
+        answer: '',
         sortOrder: 0,
         isActive: true,
+        isRecall: false
       });
       const currentEditId: Ref<number | null> = ref(null);
 
@@ -187,8 +236,10 @@
               };
               if (q.id === currentEditId.value) {
                 dto.isActive = questionForm.value.isActive === true;
+                dto.answer =  questionForm.value.answer;
               } else {
                 dto.isActive = q.isActive === true;
+                dto.answer =  q.answer;
               }
               return dto;
             });
@@ -196,10 +247,12 @@
             questionsToSave = [
               ...presetQuestionList.value.map(q => ({
                 question: q.question,
+                answer: q.answer,
                 isActive: q.isActive === true,
               })),
               {
                 question: questionForm.value.question,
+                answer: questionForm.value.answer,
                 isActive: questionForm.value.isActive === true,
               },
             ];
@@ -223,6 +276,57 @@
         }
       };
 
+       // 切换召回状态
+    const toggleRecall = async (knowledge: PresetQuestion, isRecall: boolean) => {
+      if (!knowledge.id) return;
+
+      try {
+        const result = await presetQuestionService.updateRecallStatus(knowledge.id, isRecall);
+        if (result) {
+          ElMessage.success(`${isRecall ? '设为召回' : '取消召回'}成功`);
+          knowledge.isRecall = isRecall;
+        } else {
+          ElMessage.error(`${isRecall ? '设为召回' : '取消召回'}失败`);
+        }
+      } catch (error) {
+        ElMessage.error(`${isRecall ? '设为召回' : '取消召回'}失败`);
+        console.error('Failed to toggle recall:', error);
+      }
+    };
+
+    // 刷新向量存储
+    const refreshVectorStore = async () => {
+      try {
+        await ElMessageBox.confirm(
+          '如果所有向量状态正常，即无需同步。确定要清除现有数据并开始重新同步吗？',
+          '确认同步',
+          {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning',
+          },
+        );
+
+        refreshLoading.value = true;
+        const result = await presetQuestionService.refreshAllQAToVectorStore(
+          props.agentId.toString(),
+        );
+        if (result) {
+          ElMessage.success('同步到向量库成功');
+        } else {
+          ElMessage.error('同步到向量库失败');
+        }
+      } catch (error) {
+        if (error !== 'cancel') {
+          ElMessage.error('同步到向量库失败');
+          console.error('Failed to refresh vector store:', error);
+        }
+      } finally {
+        refreshLoading.value = false;
+      }
+    };
+
+
       onMounted(() => {
         loadPresetQuestions();
       });
@@ -233,10 +337,13 @@
         dialogVisible,
         isEdit,
         questionForm,
+        refreshLoading,
         openCreateDialog,
         editQuestion,
         deleteQuestion,
         saveQuestion,
+        refreshVectorStore,
+        toggleRecall
       };
     },
   });

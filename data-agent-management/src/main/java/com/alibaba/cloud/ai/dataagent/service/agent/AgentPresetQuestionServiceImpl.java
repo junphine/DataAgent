@@ -15,9 +15,13 @@
  */
 package com.alibaba.cloud.ai.dataagent.service.agent;
 
+import com.alibaba.cloud.ai.dataagent.constant.DocumentMetadataConstant;
 import com.alibaba.cloud.ai.dataagent.entity.AgentPresetQuestion;
 import com.alibaba.cloud.ai.dataagent.mapper.AgentPresetQuestionMapper;
+import com.alibaba.cloud.ai.dataagent.service.vectorstore.AgentVectorStoreService;
+import com.alibaba.cloud.ai.dataagent.util.DocumentConverterUtil;
 import lombok.AllArgsConstructor;
+import org.springframework.ai.document.Document;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,6 +34,8 @@ import java.util.List;
 public class AgentPresetQuestionServiceImpl implements AgentPresetQuestionService {
 
 	private final AgentPresetQuestionMapper agentPresetQuestionMapper;
+
+	private final AgentVectorStoreService agentVectorStoreService;
 
 	@Override
 	public List<AgentPresetQuestion> findByAgentId(Long agentId) {
@@ -85,6 +91,39 @@ public class AgentPresetQuestionServiceImpl implements AgentPresetQuestionServic
 				question.setIsActive(true);
 			}
 			create(question); // Reuses create() which sets defaults and inserts
+		}
+	}
+
+	@Override
+	public void updateRecallStatus(Long id, Boolean isRecall) {
+		// 从数据库获取原始数据
+		AgentPresetQuestion knowledge = agentPresetQuestionMapper.selectById(id);
+		if (knowledge == null) {
+			throw new RuntimeException("Preset question not found with id: " + id);
+		}
+		// 更新数据库即可，不需要更新向量库，混合检索的的时候DynamicFilterService会根据 isRecall 字段过滤了
+		knowledge.setIsRecall(isRecall);
+		agentPresetQuestionMapper.updateById(knowledge);
+	}
+
+	@Override
+	public void refreshAllQAToVectorStore(Long agentId) throws Exception {
+		agentVectorStoreService.deleteDocumentsByVectorType(agentId.toString(), DocumentMetadataConstant.AGENT_KNOWLEDGE);
+
+		// 获取所有 isRecall 等于 1 且未逻辑删除的 BusinessKnowledge
+		List<AgentPresetQuestion> questions = findByAgentId(agentId);
+		List<AgentPresetQuestion> recalledQuestions = questions.stream()
+				.filter(knowledge -> knowledge.getIsRecall() != null && knowledge.getIsRecall())
+				.filter(knowledge -> knowledge.getAgentId() != null)
+				.filter(knowledge -> agentId.equals(knowledge.getAgentId()))
+				.toList();
+
+		// 转换为 Document 并插入到 vectorStore
+		if (!recalledQuestions.isEmpty()) {
+			List<Document> documents = recalledQuestions.stream()
+					.map(DocumentConverterUtil::convertQaFaqKnowledgeToDocument)
+					.toList();
+			agentVectorStoreService.addDocuments(agentId.toString(), documents);
 		}
 	}
 

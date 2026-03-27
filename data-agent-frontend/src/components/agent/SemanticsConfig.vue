@@ -24,7 +24,7 @@
 
     <div style="margin-bottom: 30px">
       <el-row style="display: flex; justify-content: space-between; align-items: center">
-        <el-col :span="12">
+        <el-col :span="8">
           <h3>语义模型列表</h3>
           <el-button
             v-if="selectedModels.length > 0"
@@ -38,11 +38,11 @@
             批量删除 ({{ selectedModels.length }})
           </el-button>
         </el-col>
-        <el-col :span="12" style="text-align: right">
+        <el-col :span="16" style="text-align: right">
           <el-input
             v-model="searchKeyword"
             placeholder="请输入关键词，并按回车搜索"
-            style="width: 250px; margin-right: 10px"
+            style="width: 300px; margin-right: 10px"
             clearable
             @clear="handleSearch"
             @keyup.enter="handleSearch"

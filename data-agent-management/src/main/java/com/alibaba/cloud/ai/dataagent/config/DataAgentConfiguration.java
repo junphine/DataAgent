@@ -19,6 +19,7 @@ import com.alibaba.cloud.ai.dataagent.properties.CodeExecutorProperties;
 import com.alibaba.cloud.ai.dataagent.properties.DataAgentProperties;
 import com.alibaba.cloud.ai.dataagent.properties.FileStorageProperties;
 import com.alibaba.cloud.ai.dataagent.service.vectorstore.SimpleVectorStoreInitialization;
+import com.alibaba.cloud.ai.dataagent.splitter.LineTextSplitter;
 import com.alibaba.cloud.ai.dataagent.splitter.SentenceSplitter;
 import com.alibaba.cloud.ai.transformer.splitter.RecursiveCharacterTextSplitter;
 import com.alibaba.cloud.ai.dataagent.splitter.SemanticTextSplitter;
@@ -504,6 +505,22 @@ public class DataAgentConfiguration implements DisposableBean {
 			.chunkSize(textSplitterProps.getChunkSize())
 			.paragraphOverlapChars(config.getParagraphOverlapChars())
 			.build();
+	}
+
+	/**
+	 * 段落分块器
+	 * @param properties 分块配置
+	 * @return ParagraphTextSplitter实例
+	 */
+	@Bean(name = "line")
+	public TextSplitter lineSplitter(DataAgentProperties properties) {
+		DataAgentProperties.TextSplitter textSplitterConfig = properties.getTextSplitter();
+		DataAgentProperties.TextSplitter.SentenceTextSplitterConfig sentenceConfig = textSplitterConfig.getSentence();
+
+		return LineTextSplitter.builder()
+				.withChunkSize(textSplitterConfig.getChunkSize())
+				.withSentenceOverlap(sentenceConfig.getSentenceOverlap())
+				.build();
 	}
 
 }

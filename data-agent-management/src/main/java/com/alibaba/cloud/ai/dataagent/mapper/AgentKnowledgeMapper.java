@@ -83,7 +83,7 @@ public interface AgentKnowledgeMapper {
 				AND embedding_status = #{queryDTO.embeddingStatus}
 			</if>
 			AND is_deleted = 0
-			LIMIT #{offset}, #{queryDTO.pageSize}
+			OFFSET #{offset} LIMIT #{queryDTO.pageSize}
 			</script>
 			""")
 	List<AgentKnowledge> selectByConditionsWithPage(@Param("queryDTO") AgentKnowledgeQueryDTO queryDTO,

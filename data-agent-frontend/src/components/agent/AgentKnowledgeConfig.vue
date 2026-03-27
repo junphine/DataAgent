@@ -26,10 +26,10 @@
 
     <div style="margin-bottom: 30px">
       <el-row style="display: flex; justify-content: space-between; align-items: center">
-        <el-col :span="12">
+        <el-col :span="6">
           <h3>知识列表</h3>
         </el-col>
-        <el-col :span="12" style="text-align: right">
+        <el-col :span="18" style="text-align: right">
           <el-input
             v-model="queryParams.title"
             placeholder="请输入知识标题搜索"
@@ -138,6 +138,14 @@
             round
           >
             段落
+          </el-tag>
+          <el-tag
+            v-else-if="scope.row.splitterType === 'line'"
+            type="warning"
+            size="small"
+            round
+          >
+            按行
           </el-tag>
           <el-tag v-else-if="scope.row.splitterType === 'semantic'" type="info" size="small" round>
             语义
@@ -307,6 +315,7 @@
           <el-option label="递归分块" value="recursive" />
           <el-option label="句子分块" value="sentence" />
           <el-option label="段落分块" value="paragraph" />
+          <el-option label="按行分块" value="line" />
           <el-option label="语义分块" value="semantic" />
         </el-select>
         <div style="margin-top: 8px; font-size: 12px; color: #909399">
@@ -321,6 +330,9 @@
           </div>
           <div v-else-if="knowledgeForm.splitterType === 'paragraph'">
             📝 按自然段落分块，保留段落完整性，适合博客、书籍等
+          </div>
+          <div v-else-if="knowledgeForm.splitterType === 'line'">
+            📝 按行分块，保留数据完整性，适合CSV等
           </div>
           <div v-else-if="knowledgeForm.splitterType === 'semantic'">
             🧠 基于语义相似度智能分块，自动识别主题边界，适合论文和长文（会产生 embedding API

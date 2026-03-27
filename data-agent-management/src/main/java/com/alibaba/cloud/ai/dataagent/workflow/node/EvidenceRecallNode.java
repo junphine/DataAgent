@@ -16,11 +16,13 @@
 package com.alibaba.cloud.ai.dataagent.workflow.node;
 
 import com.alibaba.cloud.ai.dataagent.constant.DocumentMetadataConstant;
+import com.alibaba.cloud.ai.dataagent.entity.AgentPresetQuestion;
 import com.alibaba.cloud.ai.dataagent.enums.KnowledgeType;
 import com.alibaba.cloud.ai.dataagent.enums.TextType;
 import com.alibaba.cloud.ai.dataagent.dto.prompt.EvidenceQueryRewriteDTO;
 import com.alibaba.cloud.ai.dataagent.entity.AgentKnowledge;
 import com.alibaba.cloud.ai.dataagent.mapper.AgentKnowledgeMapper;
+import com.alibaba.cloud.ai.dataagent.mapper.AgentPresetQuestionMapper;
 import com.alibaba.cloud.ai.dataagent.prompt.PromptHelper;
 import com.alibaba.cloud.ai.dataagent.service.llm.LlmService;
 import com.alibaba.cloud.ai.dataagent.service.vectorstore.AgentVectorStoreService;
@@ -57,6 +59,8 @@ public class EvidenceRecallNode implements NodeAction {
 	private final JsonParseUtil jsonParseUtil;
 
 	private final AgentKnowledgeMapper agentKnowledgeMapper;
+
+	private final AgentPresetQuestionMapper agentPresetQuestionMapper;
 
 	@Override
 	public Map<String, Object> apply(OverAllState state) throws Exception {
@@ -227,8 +231,11 @@ public class EvidenceRecallNode implements NodeAction {
 			String knowledgeType = (String) metadata.get(DocumentMetadataConstant.CONCRETE_AGENT_KNOWLEDGE_TYPE);
 
 			// 根据知识类型调用不同的处理方法
-			if (KnowledgeType.FAQ.getCode().equals(knowledgeType) || KnowledgeType.QA.getCode().equals(knowledgeType)) {
-				processFaqOrQaKnowledge(doc, i, result);
+			if (KnowledgeType.QA.getCode().equals(knowledgeType)) {
+				processQaKnowledge(doc, i, result);
+			}
+			else if (KnowledgeType.FAQ.getCode().equals(knowledgeType)) {
+				processFaqKnowledge(doc, i, result);
 			}
 			else {
 				processDocumentKnowledge(doc, i, result);
@@ -239,9 +246,48 @@ public class EvidenceRecallNode implements NodeAction {
 	}
 
 	/**
-	 * 处理FAQ或QA类型的知识
+	 * 处理QA类型的知识
 	 */
-	private void processFaqOrQaKnowledge(Document doc, int index, StringBuilder result) {
+	private void processQaKnowledge(Document doc, int index, StringBuilder result) {
+		Map<String, Object> metadata = doc.getMetadata();
+		String content = doc.getText();
+		Long knowledgeId = ((Number) metadata.get(DocumentMetadataConstant.DB_AGENT_KNOWLEDGE_ID)).longValue();
+		String knowledgeType = (String) metadata.get(DocumentMetadataConstant.CONCRETE_AGENT_KNOWLEDGE_TYPE);
+
+		log.debug("Processing {} type knowledge with id: {}", knowledgeType, knowledgeId);
+
+		if (knowledgeId != null) {
+			try {
+				AgentPresetQuestion knowledge = agentPresetQuestionMapper.selectById(knowledgeId);
+				if (knowledge != null && knowledge.getAnswer()!=null && !knowledge.getAnswer().isBlank()) {
+					String title = knowledge.getAnswer();
+					// 格式：[来源: xxx] Q: xxx A: xxx
+					result.append(index + 1).append(". ");
+					result.append("Q: ").append(content).append(" A: ").append(knowledge.getAnswer()).append("\n");
+
+					log.debug("Successfully processed {} knowledge with title: {}", knowledgeType, title);
+				}
+				else {
+					log.warn("Knowledge not found for id: {}", knowledgeId);
+				}
+			}
+			catch (Exception e) {
+				log.error("Error getting knowledge by id: {}", knowledgeId, e);
+				// 如果获取失败，使用原始内容
+				result.append(index + 1).append(". [来源: 经验库] ").append(content).append("\n");
+			}
+		}
+		else {
+			// 如果没有知识ID，使用原始内容
+			log.error("No knowledge id found for agent knowledge document: {}", doc.getId());
+			result.append(index + 1).append(". [来源: 经验库] ").append(content).append("\n");
+		}
+	}
+
+	/**
+	 * 处理FAQ类型的知识
+	 */
+	private void processFaqKnowledge(Document doc, int index, StringBuilder result) {
 		Map<String, Object> metadata = doc.getMetadata();
 		String content = doc.getText();
 		Integer knowledgeId = ((Number) metadata.get(DocumentMetadataConstant.DB_AGENT_KNOWLEDGE_ID)).intValue();
@@ -256,8 +302,8 @@ public class EvidenceRecallNode implements NodeAction {
 					String title = knowledge.getTitle();
 					// 格式：[来源: xxx] Q: xxx A: xxx
 					result.append(index + 1).append(". [来源: ");
-					result.append(title.isEmpty() ? "知识库" : title);
-					result.append("] Q: ").append(content).append(" A: ").append(knowledge.getContent()).append("\n");
+					result.append(title.isEmpty() ? "FAQ知识库" : title);
+					result.append("]\n").append(content).append("\n").append(knowledge.getContent()).append("\n");
 
 					log.debug("Successfully processed {} knowledge with title: {}", knowledgeType, title);
 				}
@@ -268,7 +314,7 @@ public class EvidenceRecallNode implements NodeAction {
 			catch (Exception e) {
 				log.error("Error getting knowledge by id: {}", knowledgeId, e);
 				// 如果获取失败，使用原始内容
-				result.append(index + 1).append(". [来源: 知识库] ").append(content).append("\n");
+				result.append(index + 1).append(". [来源: FAQ知识库] ").append(content).append("\n");
 			}
 		}
 		else {

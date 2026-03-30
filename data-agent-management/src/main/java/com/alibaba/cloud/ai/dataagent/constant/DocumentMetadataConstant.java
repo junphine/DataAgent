@@ -15,6 +15,7 @@
  */
 package com.alibaba.cloud.ai.dataagent.constant;
 
+
 // Document中metadata中存储的key
 public final class DocumentMetadataConstant {
 
@@ -34,17 +35,24 @@ public final class DocumentMetadataConstant {
 	// tableName
 	public static final String TABLE_NAME = "tableName";
 
+	public static final String DESCRIPTION = "DESCRIPTION";
+
 	// vectorType
 	public static final String VECTOR_TYPE = "vectorType";
 
-	// knowledgeId
-	public static final String DB_AGENT_KNOWLEDGE_ID = "agentKnowledgeId";
 
-	// FAQ/DOCUMENT/QA
 	public static final String CONCRETE_AGENT_KNOWLEDGE_TYPE = "concreteAgentKnowledgeType";
 
 	// 智能体的知识
 	public static final String AGENT_KNOWLEDGE = "agentKnowledge";
+	// knowledgeId
+	public static final String DB_AGENT_KNOWLEDGE_ID = "agentKnowledgeId";
+
+	// 常用查询示例
+	public static final String AGENT_PRESET_QA = "agentPresetQA";
+	// AgentPresetQuestion id
+	public static final String DB_AGENT_PRESET_QA_ID = "agentPresetQAId";
+	// FAQ/DOCUMENT/QA
 
 	// businessTerm
 	public static final String BUSINESS_TERM = "businessTerm";

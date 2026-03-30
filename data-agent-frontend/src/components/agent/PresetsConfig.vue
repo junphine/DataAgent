@@ -62,7 +62,11 @@
         </el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="createTime" label="创建时间" min-width="150px" />
+      <el-table-column label="创建时间" min-width="120px" >
+        <template #default="scope">
+          {{ formatDateTime(scope.row.createTime) }}
+        </template>
+      </el-table-column>
       <el-table-column label="操作" min-width="200px">
         <template #default="scope">
           <el-button @click="editQuestion(scope.row)" size="small" type="primary" round plain>
@@ -143,6 +147,7 @@
   import presetQuestionService from '@/services/presetQuestion';
   import { PresetQuestion, PresetQuestionDTO } from '@/services/presetQuestion';
   import { ElMessage, ElMessageBox } from 'element-plus';
+  import { formatDateTime } from '@/services/common';
 
   export default defineComponent({
     name: 'AgentPresetsConfig',
@@ -343,7 +348,8 @@
         deleteQuestion,
         saveQuestion,
         refreshVectorStore,
-        toggleRecall
+        toggleRecall,
+        formatDateTime
       };
     },
   });

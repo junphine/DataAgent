@@ -84,6 +84,10 @@ public class PromptConstant {
 		return new PromptTemplate(PromptLoader.loadPrompt("business-knowledge"));
 	}
 
+	public static PromptTemplate getSamplesKnowledgePromptTemplate() {
+		return new PromptTemplate(PromptLoader.loadPrompt("samples-knowledge"));
+	}
+
 	public static PromptTemplate getSemanticModelPromptTemplate() {
 		return new PromptTemplate(PromptLoader.loadPrompt("semantic-model"));
 	}

@@ -178,7 +178,7 @@ public class PromptHelper {
 		if (StringUtils.isNotBlank(businessTerms))
 			params.put("businessKnowledge", businessTerms);
 		else
-			params.put("businessKnowledge", "无");
+			return "";
 		return PromptConstant.getBusinessKnowledgePromptTemplate().render(params);
 	}
 
@@ -188,8 +188,17 @@ public class PromptHelper {
 		if (StringUtils.isNotBlank(agentKnowledge))
 			params.put("agentKnowledge", agentKnowledge);
 		else
-			params.put("agentKnowledge", "无");
+			return "";
 		return PromptConstant.getAgentKnowledgePromptTemplate().render(params);
+	}
+
+	public static String buildSamplesKnowledgePrompt(String businessTerms) {
+		Map<String, Object> params = new HashMap<>();
+		if (StringUtils.isNotBlank(businessTerms))
+			params.put("samplesKnowledge", businessTerms);
+		else
+			return "";
+		return PromptConstant.getSamplesKnowledgePromptTemplate().render(params);
 	}
 
 	public static String buildSemanticModelPrompt(List<SemanticModel> semanticModels) {

@@ -252,7 +252,8 @@ public class SqlServerJdbcDdl extends AbstractJdbcDdl {
 
 	@Override
 	public List<String> sampleColumn(Connection connection, String schema, String table, String column) {
-		String sql = super.getSelectSql(BizDataSourceTypeEnum.SQL_SERVER.getTypeName(), table, column, 99);
+		String sql = String.format("SELECT TOP %d DISTINCT %s FROM %s", 99, column, table);
+
 		List<String> sampleInfo = Lists.newArrayList();
 		try {
 			String[][] resultArr = SqlExecutor.executeSqlAndReturnArr(connection, null, sql);

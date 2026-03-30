@@ -23,7 +23,7 @@ public interface AgentService {
 
 	List<Agent> findAll();
 
-	Agent findById(Long id);
+	Agent findById(Integer id);
 
 	List<Agent> findByStatus(String status);
 
@@ -31,16 +31,16 @@ public interface AgentService {
 
 	Agent save(Agent agent);
 
-	void deleteById(Long id);
+	void deleteById(Integer id);
 
-	Agent generateApiKey(Long id);
+	Agent generateApiKey(Integer id);
 
-	Agent resetApiKey(Long id);
+	Agent resetApiKey(Integer id);
 
-	Agent deleteApiKey(Long id);
+	Agent deleteApiKey(Integer id);
 
-	Agent toggleApiKey(Long id, boolean enabled);
+	Agent toggleApiKey(Integer id, boolean enabled);
 
-	String getApiKeyMasked(Long id);
+	String getApiKeyMasked(Integer id);
 
 }

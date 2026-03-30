@@ -38,12 +38,12 @@ public class AgentPresetQuestionServiceImpl implements AgentPresetQuestionServic
 	private final AgentVectorStoreService agentVectorStoreService;
 
 	@Override
-	public List<AgentPresetQuestion> findByAgentId(Long agentId) {
+	public List<AgentPresetQuestion> findByAgentId(Integer agentId) {
 		return agentPresetQuestionMapper.selectByAgentId(agentId);
 	}
 
 	@Override
-	public List<AgentPresetQuestion> findAllByAgentId(Long agentId) {
+	public List<AgentPresetQuestion> findAllByAgentId(Integer agentId) {
 		return agentPresetQuestionMapper.selectAllByAgentId(agentId);
 	}
 
@@ -62,23 +62,23 @@ public class AgentPresetQuestionServiceImpl implements AgentPresetQuestionServic
 	}
 
 	@Override
-	public void update(Long id, AgentPresetQuestion question) {
+	public void update(Integer id, AgentPresetQuestion question) {
 		question.setId(id); // Ensure the ID is set
 		agentPresetQuestionMapper.update(question);
 	}
 
 	@Override
-	public void deleteById(Long id) {
+	public void deleteById(Integer id) {
 		agentPresetQuestionMapper.deleteById(id);
 	}
 
 	@Override
-	public void deleteByAgentId(Long agentId) {
+	public void deleteByAgentId(Integer agentId) {
 		agentPresetQuestionMapper.deleteByAgentId(agentId);
 	}
 
 	@Override
-	public void batchSave(Long agentId, List<AgentPresetQuestion> questions) {
+	public void batchSave(Integer agentId, List<AgentPresetQuestion> questions) {
 		// Step 1: Delete all existing preset questions for the agent
 		deleteByAgentId(agentId);
 
@@ -95,7 +95,7 @@ public class AgentPresetQuestionServiceImpl implements AgentPresetQuestionServic
 	}
 
 	@Override
-	public void updateRecallStatus(Long id, Boolean isRecall) {
+	public void updateRecallStatus(Integer id, Boolean isRecall) {
 		// 从数据库获取原始数据
 		AgentPresetQuestion knowledge = agentPresetQuestionMapper.selectById(id);
 		if (knowledge == null) {
@@ -107,8 +107,8 @@ public class AgentPresetQuestionServiceImpl implements AgentPresetQuestionServic
 	}
 
 	@Override
-	public void refreshAllQAToVectorStore(Long agentId) throws Exception {
-		agentVectorStoreService.deleteDocumentsByVectorType(agentId.toString(), DocumentMetadataConstant.AGENT_KNOWLEDGE);
+	public void refreshAllQAToVectorStore(Integer agentId) throws Exception {
+		agentVectorStoreService.deleteDocumentsByVectorType(agentId.toString(), DocumentMetadataConstant.AGENT_PRESET_QA);
 
 		// 获取所有 isRecall 等于 1 且未逻辑删除的 BusinessKnowledge
 		List<AgentPresetQuestion> questions = findByAgentId(agentId);
@@ -121,7 +121,7 @@ public class AgentPresetQuestionServiceImpl implements AgentPresetQuestionServic
 		// 转换为 Document 并插入到 vectorStore
 		if (!recalledQuestions.isEmpty()) {
 			List<Document> documents = recalledQuestions.stream()
-					.map(DocumentConverterUtil::convertQaFaqKnowledgeToDocument)
+					.map(DocumentConverterUtil::convertPresetQuestionAnwserToDocument)
 					.toList();
 			agentVectorStoreService.addDocuments(agentId.toString(), documents);
 		}

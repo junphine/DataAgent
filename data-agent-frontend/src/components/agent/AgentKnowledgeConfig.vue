@@ -229,7 +229,7 @@
       <el-pagination
         v-model:current-page="queryParams.pageNum"
         v-model:page-size="queryParams.pageSize"
-        :page-sizes="[10, 20, 50, 100]"
+        :page-sizes="[10, 20, 50, 100, 200]"
         layout="total, sizes, prev, pager, next, jumper"
         :total="total"
         @size-change="handleSizeChange"
@@ -302,7 +302,7 @@
 
       <!-- 分块策略选择 (仅文档类型) -->
       <el-form-item
-        v-if="knowledgeForm.type === 'DOCUMENT' && !isEdit"
+        v-if="knowledgeForm.type === 'DOCUMENT'"
         label="分块策略"
         prop="splitterType"
       >
@@ -426,6 +426,7 @@
     AgentKnowledge,
     AgentKnowledgeQueryDTO,
   } from '@/services/agentKnowledge';
+  import { formatFileSize } from '@/services/common';
 
   export default defineComponent({
     name: 'AgentKnowledgeConfig',
@@ -458,7 +459,7 @@
         type: '',
         embeddingStatus: '',
         pageNum: 1,
-        pageSize: 10,
+        pageSize: 20,
       });
 
       // 表单数据
@@ -642,15 +643,6 @@
       const handleFileChange = (file: { name: string; size: number; raw: File }) => {
         fileList.value = [file];
         knowledgeForm.value.file = file.raw;
-      };
-
-      // 格式化文件大小
-      const formatFileSize = (bytes: number): string => {
-        if (!bytes) return '0 B';
-        const k = 1024;
-        const sizes = ['B', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
       };
 
       // 保存知识

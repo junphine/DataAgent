@@ -42,7 +42,7 @@ public interface UserPromptService {
 	 * @param agentId 智能体ID，为空表示不按智能体过滤
 	 * @return 配置列表
 	 */
-	List<UserPromptConfig> getActiveConfigsByType(String promptType, Long agentId);
+	List<UserPromptConfig> getActiveConfigsByType(String promptType, Integer agentId);
 
 	/**
 	 * Get enabled configuration by prompt type and agent
@@ -50,7 +50,7 @@ public interface UserPromptService {
 	 * @param agentId agent id, null means not filtered by agent
 	 * @return configuration object, returns null if not exists
 	 */
-	UserPromptConfig getActiveConfigByType(String promptType, Long agentId);
+	UserPromptConfig getActiveConfigByType(String promptType, Integer agentId);
 
 	/**
 	 * Get all configurations
@@ -64,7 +64,7 @@ public interface UserPromptService {
 	 * @param agentId agent id, null means not filtered by agent
 	 * @return configuration list
 	 */
-	List<UserPromptConfig> getConfigsByType(String promptType, Long agentId);
+	List<UserPromptConfig> getConfigsByType(String promptType, Integer agentId);
 
 	/**
 	 * Delete configuration
@@ -93,7 +93,7 @@ public interface UserPromptService {
 	 * @param agentId agent id, null means not filtered by agent
 	 * @return optimization configuration list
 	 */
-	List<UserPromptConfig> getOptimizationConfigs(String promptType, Long agentId);
+	List<UserPromptConfig> getOptimizationConfigs(String promptType, Integer agentId);
 
 	/**
 	 * 批量启用配置

@@ -48,7 +48,7 @@ public class AgentServiceImpl implements AgentService {
 	}
 
 	@Override
-	public Agent findById(Long id) {
+	public Agent findById(Integer id) {
 		return agentMapper.findById(id);
 	}
 
@@ -89,7 +89,7 @@ public class AgentServiceImpl implements AgentService {
 	}
 
 	@Override
-	public void deleteById(Long id) {
+	public void deleteById(Integer id) {
 		try {
 			// 获取头像信息用于文件清理
 			Agent existing = agentMapper.findById(id);
@@ -131,7 +131,7 @@ public class AgentServiceImpl implements AgentService {
 	}
 
 	@Override
-	public Agent generateApiKey(Long id) {
+	public Agent generateApiKey(Integer id) {
 		Agent agent = requireAgent(id);
 		String apiKey = ApiKeyUtil.generate();
 		agentMapper.updateApiKey(id, apiKey, 1);
@@ -141,12 +141,12 @@ public class AgentServiceImpl implements AgentService {
 	}
 
 	@Override
-	public Agent resetApiKey(Long id) {
+	public Agent resetApiKey(Integer id) {
 		return generateApiKey(id);
 	}
 
 	@Override
-	public Agent deleteApiKey(Long id) {
+	public Agent deleteApiKey(Integer id) {
 		Agent agent = requireAgent(id);
 		agentMapper.updateApiKey(id, null, 0);
 		agent.setApiKey(null);
@@ -155,7 +155,7 @@ public class AgentServiceImpl implements AgentService {
 	}
 
 	@Override
-	public Agent toggleApiKey(Long id, boolean enabled) {
+	public Agent toggleApiKey(Integer id, boolean enabled) {
 		agentMapper.toggleApiKey(id, enabled ? 1 : 0);
 		Agent agent = requireAgent(id);
 		agent.setApiKeyEnabled(enabled ? 1 : 0);
@@ -163,7 +163,7 @@ public class AgentServiceImpl implements AgentService {
 	}
 
 	@Override
-	public String getApiKeyMasked(Long id) {
+	public String getApiKeyMasked(Integer id) {
 		Agent agent = requireAgent(id);
 		String apiKey = agent.getApiKey();
 		if (apiKey == null || apiKey.isBlank()) {
@@ -172,7 +172,7 @@ public class AgentServiceImpl implements AgentService {
 		return ApiKeyUtil.mask(apiKey);
 	}
 
-	private Agent requireAgent(Long id) {
+	private Agent requireAgent(Integer id) {
 		Agent agent = agentMapper.findById(id);
 		if (agent == null) {
 			throw new IllegalArgumentException("Agent not found: " + id);

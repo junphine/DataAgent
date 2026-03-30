@@ -28,14 +28,19 @@ public interface AgentPresetQuestionMapper {
 			         WHERE agent_id = #{agentId} AND is_active = 1
 			ORDER BY sort_order ASC, id ASC
 			""")
-	List<AgentPresetQuestion> selectByAgentId(@Param("agentId") Long agentId);
+	List<AgentPresetQuestion> selectByAgentId(@Param("agentId") Integer agentId);
 
 	@Select("""
 			SELECT * FROM agent_preset_question
 			         WHERE agent_id = #{agentId}
 			ORDER BY sort_order ASC, id ASC
 			""")
-	List<AgentPresetQuestion> selectAllByAgentId(@Param("agentId") Long agentId);
+	List<AgentPresetQuestion> selectAllByAgentId(@Param("agentId") Integer agentId);
+
+	@Select("""
+			SELECT id FROM agent_preset_question WHERE agent_id = #{agentId} AND is_recall = 1 AND is_active = 1 AND question is not null
+			""")
+	List<Integer> selectRecalledQuestionIds(@Param("agentId") Integer agentId);
 
 	/**
 	 * Query by id
@@ -43,7 +48,7 @@ public interface AgentPresetQuestionMapper {
 	@Select("""
 			SELECT * FROM agent_preset_question WHERE id = #{id}
 			""")
-	AgentPresetQuestion selectById(@Param("id") Long id);
+	AgentPresetQuestion selectById(@Param("id") Integer id);
 
 	@Insert("""
 			INSERT INTO agent_preset_question (agent_id, question, answer, sort_order, is_active, create_time, update_time)
@@ -86,11 +91,11 @@ public interface AgentPresetQuestionMapper {
 	@Delete("""
 			DELETE FROM agent_preset_question WHERE id = #{id}
 			""")
-	int deleteById(@Param("id") Long id);
+	int deleteById(@Param("id") Integer id);
 
 	@Delete("""
 			DELETE FROM agent_preset_question WHERE agent_id = #{agentId}
 			""")
-	int deleteByAgentId(@Param("agentId") Long agentId);
+	int deleteByAgentId(@Param("agentId") Integer agentId);
 
 }

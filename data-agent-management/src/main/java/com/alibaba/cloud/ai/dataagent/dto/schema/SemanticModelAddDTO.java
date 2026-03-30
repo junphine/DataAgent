@@ -31,7 +31,7 @@ public class SemanticModelAddDTO {
 
 	/** 关联的智能体ID */
 	@NotNull(message = "智能体ID不能为空")
-	private Long agentId;
+	private Integer agentId;
 
 	/** 关联的表名 */
 	@NotBlank(message = "表名不能为空")

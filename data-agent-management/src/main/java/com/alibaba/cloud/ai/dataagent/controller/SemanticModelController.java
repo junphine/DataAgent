@@ -19,8 +19,7 @@ import com.alibaba.cloud.ai.dataagent.dto.schema.SemanticModelAddDTO;
 import com.alibaba.cloud.ai.dataagent.dto.schema.SemanticModelBatchImportDTO;
 import com.alibaba.cloud.ai.dataagent.entity.SemanticModel;
 import com.alibaba.cloud.ai.dataagent.service.semantic.SemanticModelService;
-import com.alibaba.cloud.ai.dataagent.vo.ApiResponse;
-import com.alibaba.cloud.ai.dataagent.vo.BatchImportResult;
+import com.alibaba.cloud.ai.dataagent.vo.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
@@ -58,12 +57,12 @@ public class SemanticModelController {
 
 	@GetMapping
 	public ApiResponse<List<SemanticModel>> list(@RequestParam(value = "keyword", required = false) String keyword,
-			@RequestParam(value = "agentId", required = false) Long agentId) {
+			@RequestParam(value = "agentId", required = true) Integer agentId) {
 		List<SemanticModel> result;
 		if (keyword != null && !keyword.trim().isEmpty()) {
-			result = semanticModelService.search(keyword);
+			result = semanticModelService.search(agentId, keyword);
 		}
-		else if (agentId != null) {
+		else if (agentId != 0) {
 			result = semanticModelService.getByAgentId(agentId);
 		}
 		else {
@@ -72,8 +71,24 @@ public class SemanticModelController {
 		return ApiResponse.success("success list semanticModel", result);
 	}
 
+	@GetMapping("/queryByPage")
+	public PageResponse<List<SemanticModel>> queryByPage(@RequestParam(value = "keyword", required = false) String keyword,
+														 @RequestParam(value = "agentId", required = true) Integer agentId,
+														 @RequestParam(value = "pageNum", required = false) Integer pageNum,
+														 @RequestParam(value = "pageSize", required = false) Integer pageSize) {
+		try {
+			PageResult<SemanticModel> pageResult = semanticModelService.queryByConditionsWithPage(agentId,keyword,pageNum,pageSize);
+			return PageResponse.success(pageResult.getData(), pageResult.getTotal(), pageResult.getPageNum(),
+					pageResult.getPageSize(), pageResult.getTotalPages());
+		}
+		catch (Exception e) {
+			log.error("分页查询知识列表失败：{}", e.getMessage());
+			return PageResponse.pageError("分页查询失败：" + e.getMessage());
+		}
+	}
+
 	@GetMapping("/{id}")
-	public ApiResponse<SemanticModel> get(@PathVariable(value = "id") Long id) {
+	public ApiResponse<SemanticModel> get(@PathVariable(value = "id") Integer id) {
 		SemanticModel model = semanticModelService.getById(id);
 		return ApiResponse.success("success retrieve semanticModel", model);
 	}
@@ -90,7 +105,7 @@ public class SemanticModelController {
 	}
 
 	@PutMapping("/{id}")
-	public ApiResponse<SemanticModel> update(@PathVariable(value = "id") Long id, @RequestBody SemanticModel model) {
+	public ApiResponse<SemanticModel> update(@PathVariable(value = "id") Integer id, @RequestBody SemanticModel model) {
 		if (semanticModelService.getById(id) == null) {
 			return ApiResponse.error("Semantic model not found");
 		}
@@ -100,7 +115,7 @@ public class SemanticModelController {
 	}
 
 	@DeleteMapping("/{id}")
-	public ApiResponse<Boolean> delete(@PathVariable(value = "id") Long id) {
+	public ApiResponse<Boolean> delete(@PathVariable(value = "id") Integer id) {
 		if (semanticModelService.getById(id) == null) {
 			return ApiResponse.error("Semantic model not found");
 		}
@@ -112,21 +127,21 @@ public class SemanticModelController {
 	 * 批量删除语义模型
 	 */
 	@DeleteMapping("/batch")
-	public ApiResponse<Boolean> batchDelete(@RequestBody @NotEmpty(message = "ID列表不能为空") List<Long> ids) {
+	public ApiResponse<Boolean> batchDelete(@RequestBody @NotEmpty(message = "ID列表不能为空") List<Integer> ids) {
 		semanticModelService.deleteSemanticModels(ids);
 		return ApiResponse.success("批量删除成功", true);
 	}
 
 	// Enable
 	@PutMapping("/enable")
-	public ApiResponse<Boolean> enableFields(@RequestBody @NotEmpty(message = "ID列表不能为空") List<Long> ids) {
+	public ApiResponse<Boolean> enableFields(@RequestBody @NotEmpty(message = "ID列表不能为空") List<Integer> ids) {
 		semanticModelService.enableSemanticModels(ids);
 		return ApiResponse.success("Semantic models enabled successfully", true);
 	}
 
 	// Disable
 	@PutMapping("/disable")
-	public ApiResponse<Boolean> disableFields(@RequestBody @NotEmpty(message = "ID列表不能为空") List<Long> ids) {
+	public ApiResponse<Boolean> disableFields(@RequestBody @NotEmpty(message = "ID列表不能为空") List<Integer> ids) {
 		ids.forEach(semanticModelService::disableSemanticModel);
 		return ApiResponse.success("Semantic models disabled successfully", true);
 	}
@@ -170,9 +185,7 @@ public class SemanticModelController {
 	@PostMapping(value = "/import/excel", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public Mono<ApiResponse<BatchImportResult>> importExcel(@RequestPart("file") FilePart file,
 			@RequestPart("agentId") String agentId) {
-		Long agentIdLong = Long.parseLong(agentId);
 		String filename = file.filename();
-
 		return DataBufferUtils.join(file.content()).flatMap(dataBuffer -> {
 			byte[] bytes = new byte[dataBuffer.readableByteCount()];
 			dataBuffer.read(bytes);
@@ -180,7 +193,7 @@ public class SemanticModelController {
 
 			return Mono.fromCallable(() -> {
 				try (InputStream inputStream = new ByteArrayInputStream(bytes)) {
-					BatchImportResult result = semanticModelService.importFromExcel(inputStream, filename, agentIdLong);
+					BatchImportResult result = semanticModelService.importFromExcel(inputStream, filename, Integer.valueOf(agentId));
 					return ApiResponse.success("Excel导入完成", result);
 				}
 			}).subscribeOn(Schedulers.boundedElastic());

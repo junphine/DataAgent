@@ -46,7 +46,7 @@ public class AgentDatasourceServiceImpl implements AgentDatasourceService {
 	private final AgentDatasourceTablesMapper tablesMapper;
 
 	@Override
-	public Boolean initializeSchemaForAgentWithDatasource(Long agentId, Integer datasourceId, List<String> tables) {
+	public Boolean initializeSchemaForAgentWithDatasource(Integer agentId, Integer datasourceId, List<String> tables) {
 		Assert.notNull(agentId, "Agent ID cannot be null");
 		Assert.notNull(datasourceId, "Datasource ID cannot be null");
 		Assert.notEmpty(tables, "Tables cannot be empty");
@@ -82,7 +82,7 @@ public class AgentDatasourceServiceImpl implements AgentDatasourceService {
 	}
 
 	@Override
-	public List<AgentDatasource> getAgentDatasource(Long agentId) {
+	public List<AgentDatasource> getAgentDatasource(Integer agentId) {
 		Assert.notNull(agentId, "Agent ID cannot be null");
 		List<AgentDatasource> adentDatasources = agentDatasourceMapper.selectByAgentIdWithDatasource(agentId);
 
@@ -104,7 +104,7 @@ public class AgentDatasourceServiceImpl implements AgentDatasourceService {
 
 	@Override
 	@Transactional
-	public AgentDatasource addDatasourceToAgent(Long agentId, Integer datasourceId) {
+	public AgentDatasource addDatasourceToAgent(Integer agentId, Integer datasourceId) {
 		// First, disable other data sources for this agent (an agent can only have one
 		// enabled data source)
 		agentDatasourceMapper.disableAllByAgentId(agentId);
@@ -126,7 +126,7 @@ public class AgentDatasourceServiceImpl implements AgentDatasourceService {
 		else {
 			// If it does not exist, create a new association
 			AgentDatasource agentDatasource = new AgentDatasource(agentId, datasourceId);
-			agentDatasource.setIsActive(1);
+			agentDatasource.setIsActive(true);
 			agentDatasourceMapper.createNewRelationEnabled(agentId, datasourceId);
 			result = agentDatasource;
 		}
@@ -135,12 +135,12 @@ public class AgentDatasourceServiceImpl implements AgentDatasourceService {
 	}
 
 	@Override
-	public void removeDatasourceFromAgent(Long agentId, Integer datasourceId) {
+	public void removeDatasourceFromAgent(Integer agentId, Integer datasourceId) {
 		agentDatasourceMapper.removeRelation(agentId, datasourceId);
 	}
 
 	@Override
-	public AgentDatasource toggleDatasourceForAgent(Long agentId, Integer datasourceId, Boolean isActive) {
+	public AgentDatasource toggleDatasourceForAgent(Integer agentId, Integer datasourceId, Boolean isActive) {
 		// If enabling data source, first check if there are other enabled data sources
 		if (isActive) {
 			int activeCount = agentDatasourceMapper.countActiveByAgentIdExcluding(agentId, datasourceId);
@@ -162,7 +162,7 @@ public class AgentDatasourceServiceImpl implements AgentDatasourceService {
 
 	@Override
 	@Transactional
-	public void updateDatasourceTables(Long agentId, Integer datasourceId, List<String> tables) {
+	public void updateDatasourceTables(Integer agentId, Integer datasourceId, List<String> tables) {
 		if (agentId == null || datasourceId == null || tables == null) {
 			throw new IllegalArgumentException("参数不能为空");
 		}

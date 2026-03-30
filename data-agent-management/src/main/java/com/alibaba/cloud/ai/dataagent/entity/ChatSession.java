@@ -15,6 +15,7 @@
  */
 package com.alibaba.cloud.ai.dataagent.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -43,8 +44,10 @@ public class ChatSession {
 
 	private Long userId;
 
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	private LocalDateTime createTime;
 
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	private LocalDateTime updateTime;
 
 	public ChatSession(String id, Integer agentId, String title, String status, Long userId) {

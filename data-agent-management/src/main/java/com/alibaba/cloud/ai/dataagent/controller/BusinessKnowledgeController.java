@@ -41,7 +41,7 @@ public class BusinessKnowledgeController {
 	public ApiResponse<List<BusinessKnowledgeVO>> list(@RequestParam(value = "agentId") String agentIdStr,
 			@RequestParam(value = "keyword", required = false) String keyword) {
 		List<BusinessKnowledgeVO> result;
-		Long agentId = Long.parseLong(agentIdStr);
+		Integer agentId = Integer.parseInt(agentIdStr);
 
 		if (StringUtils.hasText(keyword)) {
 			result = businessKnowledgeService.searchKnowledge(agentId, keyword);
@@ -53,7 +53,7 @@ public class BusinessKnowledgeController {
 	}
 
 	@GetMapping("/{id}")
-	public ApiResponse<BusinessKnowledgeVO> get(@PathVariable(value = "id") Long id) {
+	public ApiResponse<BusinessKnowledgeVO> get(@PathVariable(value = "id") Integer id) {
 		BusinessKnowledgeVO vo = businessKnowledgeService.getKnowledgeById(id);
 		if (vo == null) {
 			return ApiResponse.error("businessKnowledge not found");
@@ -68,7 +68,7 @@ public class BusinessKnowledgeController {
 	}
 
 	@PutMapping("/{id}")
-	public ApiResponse<BusinessKnowledgeVO> update(@PathVariable(value = "id") Long id,
+	public ApiResponse<BusinessKnowledgeVO> update(@PathVariable(value = "id") Integer id,
 			@RequestBody UpdateBusinessKnowledgeDTO knowledge) {
 
 		return ApiResponse.success("success update businessKnowledge",
@@ -76,7 +76,7 @@ public class BusinessKnowledgeController {
 	}
 
 	@DeleteMapping("/{id}")
-	public ApiResponse<Boolean> delete(@PathVariable(value = "id") Long id) {
+	public ApiResponse<Boolean> delete(@PathVariable(value = "id") Integer id) {
 		if (businessKnowledgeService.getKnowledgeById(id) == null) {
 			return ApiResponse.error("businessKnowledge not found");
 		}
@@ -85,7 +85,7 @@ public class BusinessKnowledgeController {
 	}
 
 	@PostMapping("/recall/{id}")
-	public ApiResponse<Boolean> recallKnowledge(@PathVariable(value = "id") Long id,
+	public ApiResponse<Boolean> recallKnowledge(@PathVariable(value = "id") Integer id,
 			@RequestParam(value = "isRecall") Boolean isRecall) {
 		businessKnowledgeService.recallKnowledge(id, isRecall);
 		return ApiResponse.success("success update recall businessKnowledge");
@@ -109,7 +109,7 @@ public class BusinessKnowledgeController {
 	}
 
 	@PostMapping("/retry-embedding/{id}")
-	public ApiResponse<Boolean> retryEmbedding(@PathVariable(value = "id") Long id) {
+	public ApiResponse<Boolean> retryEmbedding(@PathVariable(value = "id") Integer id) {
 		businessKnowledgeService.retryEmbedding(id);
 		return ApiResponse.success("success retry embedding");
 	}

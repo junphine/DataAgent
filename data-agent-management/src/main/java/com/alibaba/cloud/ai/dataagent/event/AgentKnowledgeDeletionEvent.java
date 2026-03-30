@@ -23,9 +23,9 @@ import java.time.Clock;
 @Getter
 public class AgentKnowledgeDeletionEvent extends ApplicationEvent {
 
-	private final Integer knowledgeId;
+	private final int knowledgeId;
 
-	public AgentKnowledgeDeletionEvent(Object source, Integer knowledgeId) {
+	public AgentKnowledgeDeletionEvent(Object source, int knowledgeId) {
 		super(source, Clock.systemDefaultZone());
 		this.knowledgeId = knowledgeId;
 	}

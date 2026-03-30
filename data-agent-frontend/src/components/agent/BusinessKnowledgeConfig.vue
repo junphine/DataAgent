@@ -60,11 +60,11 @@
     </div>
 
     <el-table :data="businessKnowledgeList" style="width: 100%" border>
-      <el-table-column prop="id" label="ID" min-width="60px" />
+      <el-table-column prop="id" label="ID" max-width="60px" />
       <el-table-column prop="businessTerm" label="业务名词" min-width="120px" />
-      <el-table-column prop="description" label="描述" min-width="150px" />
+      <el-table-column prop="description" label="描述" min-width="200px" />
       <el-table-column prop="synonyms" label="同义词" min-width="120px" />
-      <el-table-column label="向量化状态" min-width="120px">
+      <el-table-column label="向量化状态" min-width="100px">
         <template #default="scope">
           <el-tag :type="getVectorStatusType(scope.row.embeddingStatus)" round>
             {{ scope.row.embeddingStatus || '未知' }}
@@ -87,7 +87,6 @@
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="createdTime" label="创建时间" min-width="120px" />
       <el-table-column label="操作" min-width="180px">
         <template #default="scope">
           <el-button @click="editKnowledge(scope.row)" size="small" type="primary" round plain>

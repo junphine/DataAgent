@@ -21,7 +21,6 @@ import com.alibaba.cloud.ai.dataagent.vo.ApiResponse;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -41,7 +40,7 @@ public class AgentPresetQuestionController {
 	 * Get preset question list of agent
 	 */
 	@GetMapping("/{agentId}/preset-questions")
-	public ResponseEntity<List<AgentPresetQuestion>> getPresetQuestions(@PathVariable(value = "agentId") Long agentId) {
+	public ResponseEntity<List<AgentPresetQuestion>> getPresetQuestions(@PathVariable(value = "agentId") Integer agentId) {
 		try {
 			List<AgentPresetQuestion> questions = presetQuestionService.findAllByAgentId(agentId);
 			return ResponseEntity.ok(questions);
@@ -56,7 +55,7 @@ public class AgentPresetQuestionController {
 	 * Batch save preset questions of agent
 	 */
 	@PostMapping("/{agentId}/preset-questions")
-	public ResponseEntity<Map<String, String>> savePresetQuestions(@PathVariable(value = "agentId") Long agentId,
+	public ResponseEntity<Map<String, String>> savePresetQuestions(@PathVariable(value = "agentId") Integer agentId,
 			@RequestBody List<Map<String, Object>> questionsData) {
 		try {
 			List<AgentPresetQuestion> questions = questionsData.stream().map(data -> {
@@ -89,8 +88,8 @@ public class AgentPresetQuestionController {
 	 * Delete preset question
 	 */
 	@DeleteMapping("/{agentId}/preset-questions/{questionId}")
-	public ResponseEntity<Map<String, String>> deletePresetQuestion(@PathVariable(value = "agentId") Long agentId,
-			@PathVariable Long questionId) {
+	public ResponseEntity<Map<String, String>> deletePresetQuestion(@PathVariable(value = "agentId") Integer agentId,
+			@PathVariable Integer questionId) {
 		try {
 			presetQuestionService.deleteById(questionId);
 			return ResponseEntity.ok(Map.of("message", "预设问题删除成功"));
@@ -102,21 +101,21 @@ public class AgentPresetQuestionController {
 	}
 
 	@PutMapping("/recall/{id}")
-	public ApiResponse<Boolean> recallKnowledge(@PathVariable(value = "id") Long id,
+	public ApiResponse<Boolean> recallKnowledge(@PathVariable(value = "id") Integer id,
 												@RequestParam(value = "isRecall") Boolean isRecall) {
 		presetQuestionService.updateRecallStatus(id, isRecall);
 		return ApiResponse.success("success update recall businessKnowledge");
 	}
 
 	@PostMapping("/refresh-vector-store")
-	public ApiResponse<Boolean> refreshAllQAToVectorStore(@RequestParam(value = "agentId") String agentId) {
+	public ApiResponse<Boolean> refreshAllQAToVectorStore(@RequestParam(value = "agentId") Integer agentId) {
 		// 校验 agentId 不为空和空字符串
-		if (!StringUtils.hasText(agentId)) {
+		if (agentId==null) {
 			return ApiResponse.error("agentId cannot be empty");
 		}
 
 		try {
-			presetQuestionService.refreshAllQAToVectorStore(Long.valueOf(agentId));
+			presetQuestionService.refreshAllQAToVectorStore(agentId);
 			return ApiResponse.success("success refresh vector store");
 		}
 		catch (Exception e) {

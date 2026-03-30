@@ -31,7 +31,7 @@ public interface BusinessKnowledgeMapper {
 			WHERE agent_id = #{agentId} AND is_deleted = 0
 			ORDER BY created_time DESC
 			""")
-	List<BusinessKnowledge> selectByAgentId(@Param("agentId") Long agentId);
+	List<BusinessKnowledge> selectByAgentId(@Param("agentId") Integer agentId);
 
 	/**
 	 * Query all business knowledge list
@@ -50,7 +50,7 @@ public interface BusinessKnowledgeMapper {
 			    OR synonyms LIKE CONCAT('%', #{keyword}, '%'))
 			ORDER BY created_time DESC
 			""")
-	List<BusinessKnowledge> searchInAgent(@Param("agentId") Long agentId, @Param("keyword") String keyword);
+	List<BusinessKnowledge> searchInAgent(@Param("agentId") Integer agentId, @Param("keyword") String keyword);
 
 	@Insert("""
 			INSERT INTO business_knowledge (business_term, description, synonyms, is_recall, agent_id, created_time, updated_time, embedding_status, is_deleted)
@@ -82,25 +82,25 @@ public interface BusinessKnowledgeMapper {
 			DELETE FROM business_knowledge
 			WHERE id = #{id}
 			""")
-	int deleteById(@Param("id") Long id);
+	int deleteById(@Param("id") Integer id);
 
 	@Select("""
 			SELECT * FROM business_knowledge
 			WHERE id = #{id} AND is_deleted = 0
 			""")
-	BusinessKnowledge selectById(Long id);
+	BusinessKnowledge selectById(Integer id);
 
 	@Select("""
 			SELECT id FROM business_knowledge
 			WHERE agent_id = #{agentId} AND is_recall = 1 AND is_deleted = 0
 			""")
-	List<Long> selectRecalledKnowledgeIds(@Param("agentId") Long agentId);
+	List<Integer> selectRecalledKnowledgeIds(@Param("agentId") Integer agentId);
 
 	@Update("""
 			UPDATE business_knowledge
 			SET is_deleted = #{isDeleted}, updated_time = NOW()
 			WHERE id = #{id}
 			""")
-	int logicalDelete(@Param("id") Long id, @Param("isDeleted") Integer isDeleted);
+	int logicalDelete(@Param("id") Integer id, @Param("isDeleted") boolean isDeleted);
 
 }

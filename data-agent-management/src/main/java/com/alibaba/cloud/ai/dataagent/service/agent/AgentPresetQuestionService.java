@@ -25,13 +25,13 @@ public interface AgentPresetQuestionService {
 	 * Get the list of preset questions by agent ID (only active ones, ordered by
 	 * sort_order and id)
 	 */
-	List<AgentPresetQuestion> findByAgentId(Long agentId);
+	List<AgentPresetQuestion> findByAgentId(Integer agentId);
 
 	/**
 	 * Get all preset questions by agent ID (including inactive ones, ordered by
 	 * sort_order and id)
 	 */
-	List<AgentPresetQuestion> findAllByAgentId(Long agentId);
+	List<AgentPresetQuestion> findAllByAgentId(Integer agentId);
 
 	/**
 	 * Create a new preset question
@@ -41,27 +41,27 @@ public interface AgentPresetQuestionService {
 	/**
 	 * Update an existing preset question
 	 */
-	void update(Long id, AgentPresetQuestion question);
+	void update(Integer id, AgentPresetQuestion question);
 
 	/**
 	 * Delete a preset question by ID
 	 */
-	void deleteById(Long id);
+	void deleteById(Integer id);
 
 	/**
 	 * Delete all preset questions for a given agent
 	 */
-	void deleteByAgentId(Long agentId);
+	void deleteByAgentId(Integer agentId);
 
 	/**
 	 * Batch save preset questions: delete all existing ones for the agent, then insert
 	 * the new list
 	 */
-	void batchSave(Long agentId, List<AgentPresetQuestion> questions);
+	void batchSave(Integer agentId, List<AgentPresetQuestion> questions);
 
 
-	void updateRecallStatus(Long id, Boolean isRecall);
+	void updateRecallStatus(Integer id, Boolean isRecall);
 
-	void refreshAllQAToVectorStore(Long agentId) throws Exception;
+	void refreshAllQAToVectorStore(Integer agentId) throws Exception;
 
 }

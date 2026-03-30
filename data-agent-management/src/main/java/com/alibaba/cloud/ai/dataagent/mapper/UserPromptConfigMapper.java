@@ -39,7 +39,7 @@ public interface UserPromptConfigMapper {
 			ORDER BY update_time DESC
 			</script>
 			""")
-	List<UserPromptConfig> selectByPromptType(@Param("promptType") String promptType, @Param("agentId") Long agentId);
+	List<UserPromptConfig> selectByPromptType(@Param("promptType") String promptType, @Param("agentId") Integer agentId);
 
 	/**
 	 * Query enabled configuration by prompt type
@@ -53,7 +53,7 @@ public interface UserPromptConfigMapper {
 			LIMIT 1
 			</script>
 			""")
-	UserPromptConfig selectActiveByPromptType(@Param("promptType") String promptType, @Param("agentId") Long agentId);
+	UserPromptConfig selectActiveByPromptType(@Param("promptType") String promptType, @Param("agentId") Integer agentId);
 
 	/**
 	 * Disable all configurations of a specified type
@@ -66,7 +66,7 @@ public interface UserPromptConfigMapper {
 			<if test='agentId != null'> AND agent_id = #{agentId}</if>
 			</script>
 			""")
-	int disableAllByPromptType(@Param("promptType") String promptType, @Param("agentId") Long agentId);
+	int disableAllByPromptType(@Param("promptType") String promptType, @Param("agentId") Integer agentId);
 
 	/**
 	 * Enable a specified configuration
@@ -119,7 +119,7 @@ public interface UserPromptConfigMapper {
 			</script>
 			""")
 	List<UserPromptConfig> getActiveConfigsByType(@Param("promptType") String promptType,
-			@Param("agentId") Long agentId);
+			@Param("agentId") Integer agentId);
 
 	@Select("""
 			<script>
@@ -129,7 +129,7 @@ public interface UserPromptConfigMapper {
 			ORDER BY priority DESC, display_order, update_time DESC
 			</script>
 			""")
-	List<UserPromptConfig> getConfigsByType(@Param("promptType") String promptType, @Param("agentId") Long agentId);
+	List<UserPromptConfig> getConfigsByType(@Param("promptType") String promptType, @Param("agentId") Integer agentId);
 
 	@Select("SELECT * FROM user_prompt_config ORDER BY priority DESC, display_order, update_time DESC")
 	List<UserPromptConfig> selectAll();

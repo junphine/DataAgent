@@ -18,6 +18,7 @@ package com.alibaba.cloud.ai.dataagent.service.vectorstore;
 import com.alibaba.cloud.ai.dataagent.constant.Constant;
 import com.alibaba.cloud.ai.dataagent.constant.DocumentMetadataConstant;
 import com.alibaba.cloud.ai.dataagent.mapper.AgentKnowledgeMapper;
+import com.alibaba.cloud.ai.dataagent.mapper.AgentPresetQuestionMapper;
 import com.alibaba.cloud.ai.dataagent.mapper.BusinessKnowledgeMapper;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,20 +40,24 @@ public class DynamicFilterService {
 
 	private final BusinessKnowledgeMapper businessKnowledgeMapper;
 
-	public Filter.Expression buildDynamicFilter(String agentId, String vectorType) {
+	private final AgentPresetQuestionMapper agentPresetQuestionMapper;
+
+	public Filter.Expression buildDynamicFilter(Integer agentId, String vectorType) {
 		FilterExpressionBuilder b = new FilterExpressionBuilder();
 		List<Filter.Expression> conditions = new ArrayList<>();
 
 		// 必须条件
 		conditions.add(b.eq(Constant.AGENT_ID, agentId).build());
 		conditions.add(b.eq(DocumentMetadataConstant.VECTOR_TYPE, vectorType).build());
-
+		if(vectorType!=null){
+			return combineWithAnd(conditions);
+		}
+		// 不必要查找了，目前是多vectorStore。
 		switch (vectorType) {
 
 			case DocumentMetadataConstant.AGENT_KNOWLEDGE:
 				// 场景 A: 知识库文档 -> 需要查 MySQL 获取启用状态
-				List<Integer> validIds = agentKnowledgeMapper.selectRecalledKnowledgeIds(Integer.valueOf(agentId));
-
+				List<Integer> validIds = agentKnowledgeMapper.selectRecalledKnowledgeIds(agentId);
 				if (validIds.isEmpty()) {
 					log.warn("Agent {} has no recalled knowledge documents. Returning empty filter signal.", agentId);
 					return null;
@@ -65,8 +70,7 @@ public class DynamicFilterService {
 
 			case DocumentMetadataConstant.BUSINESS_TERM:
 				// 场景 B: 业务知识 -> 查 business_knowledge 表的需要召回的
-				List<Long> recalledBusinessKnowledgeIds = businessKnowledgeMapper
-					.selectRecalledKnowledgeIds(Long.valueOf(agentId));
+				List<Integer> recalledBusinessKnowledgeIds = businessKnowledgeMapper.selectRecalledKnowledgeIds(agentId);
 
 				if (recalledBusinessKnowledgeIds.isEmpty()) {
 					log.warn("Agent {} has no recalled business terms. Returning empty filter signal.", agentId);
@@ -74,9 +78,21 @@ public class DynamicFilterService {
 				}
 				else {
 					// 添加 ID 过滤
-					conditions
-						.add(b.in(DocumentMetadataConstant.DB_BUSINESS_TERM_ID, recalledBusinessKnowledgeIds.toArray())
+					conditions.add(b.in(DocumentMetadataConstant.DB_BUSINESS_TERM_ID, recalledBusinessKnowledgeIds.toArray())
 							.build());
+				}
+				break;
+
+			case DocumentMetadataConstant.AGENT_PRESET_QA:
+				List<Integer> qaValidIds = agentPresetQuestionMapper.selectRecalledQuestionIds(agentId);
+
+				if (qaValidIds.isEmpty()) {
+					log.warn("Agent {} has no recalled preset qa documents. Returning empty filter signal.", agentId);
+					return null;
+				}
+				else {
+					// 加入 ID 过滤
+					conditions.add(b.in(DocumentMetadataConstant.DB_AGENT_PRESET_QA_ID, qaValidIds.toArray()).build());
 				}
 				break;
 
@@ -203,7 +219,7 @@ public class DynamicFilterService {
 		List<Filter.Expression> conditions = new ArrayList<>();
 
 		// 1. 基础条件：datasourceId
-		conditions.add(b.eq(Constant.DATASOURCE_ID, datasourceId.toString()).build());
+		conditions.add(b.eq(Constant.DATASOURCE_ID, datasourceId).build());
 
 		// 2. 基础条件：vectorType = TABLE
 		conditions.add(b.eq(DocumentMetadataConstant.VECTOR_TYPE, DocumentMetadataConstant.TABLE).build());
@@ -230,7 +246,7 @@ public class DynamicFilterService {
 		List<Filter.Expression> conditions = new ArrayList<>();
 
 		// 1. DatasourceId 条件
-		conditions.add(b.eq(Constant.DATASOURCE_ID, datasourceId.toString()).build());
+		conditions.add(b.eq(Constant.DATASOURCE_ID, datasourceId).build());
 
 		// 2. VectorType 条件
 		conditions.add(b.eq(DocumentMetadataConstant.VECTOR_TYPE, DocumentMetadataConstant.COLUMN).build());

@@ -71,8 +71,11 @@ public class ChatController {
 	public ResponseEntity<ChatSession> createSession(@PathVariable(value = "id") Integer id,
 			@RequestBody(required = false) Map<String, Object> request) {
 		String title = request != null ? (String) request.get("title") : null;
-		Long userId = request != null ? (Long) request.get("userId") : null;
-
+		Object userIdStr = request != null ? request.get("userId") : null;
+		Long userId = null;
+		if(userIdStr!=null){
+			userId = Long.valueOf(userIdStr.toString());
+		}
 		ChatSession session = chatSessionService.createSession(id, title, userId);
 		return ResponseEntity.ok(session);
 	}

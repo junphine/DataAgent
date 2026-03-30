@@ -83,12 +83,12 @@
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="创建时间" min-width="160px">
+      <el-table-column label="创建时间" min-width="120px">
         <template #default="scope">
           {{ formatDateTime(scope.row.createdTime || scope.row.createTime) }}
         </template>
       </el-table-column>
-      <el-table-column label="操作" min-width="180px">
+      <el-table-column label="操作" min-width="200px">
         <template #default="scope">
           <el-button @click="editModel(scope.row)" size="small" type="primary" round plain>
             编辑
@@ -119,6 +119,18 @@
         </template>
       </el-table-column>
     </el-table>
+    <!-- 分页组件 -->
+    <div style="margin-top: 20px; display: flex; justify-content: flex-end">
+      <el-pagination
+        v-model:current-page="queryParams.pageNum"
+        v-model:page-size="queryParams.pageSize"
+        :page-sizes="[10, 20, 50, 100, 200]"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+      />
+    </div>
   </div>
 
   <!-- 添加/编辑语义模型Dialog -->
@@ -193,15 +205,17 @@
 </template>
 
 <script lang="ts">
-  import { defineComponent, ref, onMounted, Ref } from 'vue';
+  import { defineComponent, ref, onMounted, Ref, reactive } from 'vue';
   import { Plus, Search, UploadFilled, Delete } from '@element-plus/icons-vue';
   import BatchImportDialog from './BatchImportDialog.vue';
   import semanticModelService, {
     SemanticModel,
+    SemanticModelQueryDto,
     SemanticModelAddDto,
     SemanticModelImportItem,
   } from '@/services/semanticModel';
   import { ElMessage, ElMessageBox } from 'element-plus';
+  import { formatDateTime } from '@/services/common';
 
   export default defineComponent({
     name: 'AgentSemanticsConfig',
@@ -235,6 +249,27 @@
       } as SemanticModel);
 
       const currentEditId: Ref<number | null> = ref(null);
+
+      const total: Ref<number> = ref(0);
+
+      // 查询参数
+      const queryParams = reactive<SemanticModelQueryDto>({
+        agentId: props.agentId,
+        searchKeyword: '',
+        pageNum: 1,
+        pageSize: 20,
+      });
+
+      // 分页处理
+      const handleSizeChange = (val: number) => {
+        queryParams.pageSize = val;
+        loadSemanticModels();
+      };
+
+      const handleCurrentChange = (val: number) => {
+        queryParams.pageNum = val;
+        loadSemanticModels();
+      };
 
       const openCreateDialog = () => {
         isEdit.value = false;
@@ -293,16 +328,17 @@
 
       // 处理搜索
       const handleSearch = () => {
+        queryParams.keyword = searchKeyword;
+        queryParams.pageNum = 1;
         loadSemanticModels();
       };
 
       // 加载语义模型列表
       const loadSemanticModels = async () => {
         try {
-          semanticModelList.value = await semanticModelService.list(
-            props.agentId,
-            searchKeyword.value || undefined,
-          );
+          let semanticModelResult = await semanticModelService.queryByPage(queryParams);
+          total.value = semanticModelResult.total || semanticModelResult.data.length;
+          semanticModelList.value = semanticModelResult.data;
         } catch (error) {
           ElMessage.error('加载语义模型列表失败');
           console.error('Failed to load semantic models:', error);
@@ -521,25 +557,6 @@
         await loadSemanticModels();
       };
 
-      // 格式化日期时间
-      const formatDateTime = (dateTime: string | undefined) => {
-        if (!dateTime) return '-';
-        try {
-          const date = new Date(dateTime);
-          return date.toLocaleString('zh-CN', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false,
-          });
-        } catch {
-          return dateTime;
-        }
-      };
-
       return {
         Plus,
         Search,
@@ -568,6 +585,10 @@
         downloadExcelTemplate,
         executeExcelImport,
         handleBatchImported,
+        total,
+        queryParams,
+        handleSizeChange,
+        handleCurrentChange,
         // 工具函数
         formatDateTime,
       };

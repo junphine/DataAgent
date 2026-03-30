@@ -24,24 +24,24 @@ import java.util.List;
 // TODO 添加一个分页查询的方法
 public interface BusinessKnowledgeService {
 
-	List<BusinessKnowledgeVO> getKnowledge(Long agentId);
+	List<BusinessKnowledgeVO> getKnowledge(Integer agentId);
 
 	List<BusinessKnowledgeVO> getAllKnowledge();
 
-	List<BusinessKnowledgeVO> searchKnowledge(Long agentId, String keyword);
+	List<BusinessKnowledgeVO> searchKnowledge(Integer agentId, String keyword);
 
-	BusinessKnowledgeVO getKnowledgeById(Long id);
+	BusinessKnowledgeVO getKnowledgeById(Integer id);
 
 	BusinessKnowledgeVO addKnowledge(CreateBusinessKnowledgeDTO knowledgeDTO);
 
-	BusinessKnowledgeVO updateKnowledge(Long id, UpdateBusinessKnowledgeDTO knowledgeDTO);
+	BusinessKnowledgeVO updateKnowledge(Integer id, UpdateBusinessKnowledgeDTO knowledgeDTO);
 
-	void deleteKnowledge(Long id);
+	void deleteKnowledge(Integer id);
 
-	void recallKnowledge(Long id, Boolean isRecall);
+	void recallKnowledge(Integer id, Boolean isRecall);
 
 	void refreshAllKnowledgeToVectorStore(String agentId) throws Exception;
 
-	void retryEmbedding(Long id);
+	void retryEmbedding(Integer id);
 
 }

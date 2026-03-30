@@ -38,6 +38,6 @@ public class UpdateBusinessKnowledgeDTO {
 	private String synonyms;
 
 	@NotNull(message = "Agent ID cannot be Null")
-	private Long agentId;
+	private Integer agentId;
 
 }

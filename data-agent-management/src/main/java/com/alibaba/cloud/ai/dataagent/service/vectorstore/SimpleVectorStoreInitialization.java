@@ -40,7 +40,7 @@ public class SimpleVectorStoreInitialization implements ApplicationRunner, Dispo
 	private final DataAgentProperties properties;
 
 	public void load() {
-		File file = new File(properties.getVectorStore().getFilePath());
+		File file = new File(properties.getVectorStore().getFilePath(),vectorStore.getName()+".json");
 
 		if (!file.exists()) {
 			log.info("No locally serialized vector database file was found.");
@@ -57,7 +57,7 @@ public class SimpleVectorStoreInitialization implements ApplicationRunner, Dispo
 
 	public void save() {
 		log.info("Serialize the vector database to a local file.");
-		Path path = Paths.get(properties.getVectorStore().getFilePath());
+		Path path = Paths.get(properties.getVectorStore().getFilePath(),vectorStore.getName()+".json");
 
 		try {
 			Files.createDirectories(path.getParent());

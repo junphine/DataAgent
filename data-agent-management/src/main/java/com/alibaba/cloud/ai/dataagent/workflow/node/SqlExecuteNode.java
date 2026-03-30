@@ -101,7 +101,7 @@ public class SqlExecuteNode implements NodeAction {
 			throw new IllegalStateException("Agent ID cannot be empty.");
 		}
 
-		Long agentId = Long.valueOf(agentIdStr);
+		Integer agentId = Integer.valueOf(agentIdStr);
 
 		// Dynamically get the data source configuration for an agent
 		DbConfigBO dbConfig = databaseUtil.getAgentDbConfig(agentId);
@@ -125,7 +125,7 @@ public class SqlExecuteNode implements NodeAction {
 	 */
 	@SuppressWarnings("unchecked")
 	private Map<String, Object> executeSqlQuery(OverAllState state, Integer currentStep, String sqlQuery,
-			DbConfigBO dbConfig, Long agentId) {
+			DbConfigBO dbConfig, Integer agentId) {
 		// Execute business logic first - actual SQL execution
 		DbQueryParameter dbQueryParameter = new DbQueryParameter();
 		dbQueryParameter.setSql(sqlQuery);

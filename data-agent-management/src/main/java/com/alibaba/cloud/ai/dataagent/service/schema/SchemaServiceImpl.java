@@ -174,7 +174,7 @@ public class SchemaServiceImpl implements SchemaService {
 			List<Document> tableDocs = convertTablesToDocuments(datasourceId, tables);
 
 			// 存储文档
-			log.info("Storing  columns and {} tables for datasource: {}", columnDocs.size(), tableDocs.size(),
+			log.info("Storing {} columns and {} tables for datasource: {}", columnDocs.size(), tableDocs.size(),
 					datasourceId);
 			storeSchemaDocuments(datasourceId, columnDocs, tableDocs);
 			log.info("Successfully stored all documents for datasource: {}", datasourceId);
@@ -274,7 +274,7 @@ public class SchemaServiceImpl implements SchemaService {
 	protected void clearSchemaDataForDatasource(Integer datasourceId) throws Exception {
 		// 检查是否有文档需要删除
 		Map<String, Object> metadata = new HashMap<>();
-		metadata.put(Constant.DATASOURCE_ID, datasourceId.toString());
+		metadata.put(Constant.DATASOURCE_ID, datasourceId);
 		metadata.put(DocumentMetadataConstant.VECTOR_TYPE, DocumentMetadataConstant.COLUMN);
 
 		agentVectorStoreService.deleteDocumentsByMetadata(metadata);
@@ -293,7 +293,7 @@ public class SchemaServiceImpl implements SchemaService {
 		FilterExpressionBuilder b = new FilterExpressionBuilder();
 		List<Filter.Expression> conditions = new ArrayList<>();
 
-		conditions.add(b.eq(Constant.DATASOURCE_ID, datasourceId.toString()).build());
+		conditions.add(b.eq(Constant.DATASOURCE_ID, datasourceId).build());
 		conditions.add(b.eq(DocumentMetadataConstant.VECTOR_TYPE, DocumentMetadataConstant.TABLE).build());
 
 		Filter.Expression filterExpression = DynamicFilterService.combineWithAnd(conditions);
@@ -306,7 +306,7 @@ public class SchemaServiceImpl implements SchemaService {
 			.filterExpression(filterExpression)
 			.build();
 
-		return agentVectorStoreService.getDocumentsOnlyByFilter(filterExpression, tableTopK);
+		return agentVectorStoreService.getDocumentsOnlyByFilter(datasourceId.toString(),DocumentMetadataConstant.TABLE,filterExpression, tableTopK);
 	}
 
 	private List<String> getMissingTableNamesWithForeignKeySet(List<Document> tableDocuments,
@@ -449,8 +449,7 @@ public class SchemaServiceImpl implements SchemaService {
 			String samplesStr = (String) meta.get("samples");
 			if (StringUtils.isNotBlank(samplesStr)) {
 				try {
-					List<String> samples = JsonUtil.getObjectMapper()
-						.readValue(samplesStr, new TypeReference<List<String>>() {
+					List<String> samples = JsonUtil.getObjectMapper().readValue(samplesStr, new TypeReference<List<String>>() {
 						});
 					columnDTO.setData(samples);
 				}
@@ -499,7 +498,7 @@ public class SchemaServiceImpl implements SchemaService {
 			log.error("FilterExpression is null.This should not happen when tableNames is not Empty, ");
 			return Collections.emptyList();
 		}
-		return agentVectorStoreService.getDocumentsOnlyByFilter(filterExpression, tableNames.size() + 5);
+		return agentVectorStoreService.getDocumentsOnlyByFilter(datasourceId.toString(),DocumentMetadataConstant.TABLE,filterExpression, tableNames.size() + 5);
 	}
 
 	@Override
@@ -517,7 +516,7 @@ public class SchemaServiceImpl implements SchemaService {
 		}
 		// 通过元数据过滤查找目标表下的所有列
 		// TopK=表数量×最大预估列数
-		return agentVectorStoreService.getDocumentsOnlyByFilter(filterExpression,
+		return agentVectorStoreService.getDocumentsOnlyByFilter(datasourceId.toString(), DocumentMetadataConstant.COLUMN, filterExpression,
 				tableNames.size() * dataAgentProperties.getMaxColumnsPerTable());
 	}
 

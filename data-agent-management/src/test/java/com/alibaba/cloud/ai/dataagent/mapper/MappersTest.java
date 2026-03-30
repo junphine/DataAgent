@@ -16,15 +16,13 @@
 package com.alibaba.cloud.ai.dataagent.mapper;
 
 import com.alibaba.cloud.ai.dataagent.entity.*;
-import com.alibaba.cloud.ai.dataagent.service.MySqlContainerConfiguration;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mybatis.spring.boot.test.autoconfigure.MybatisTest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
-import org.springframework.boot.testcontainers.context.ImportTestcontainers;
 import org.springframework.test.context.TestPropertySource;
 
 /**
@@ -35,8 +33,6 @@ import org.springframework.test.context.TestPropertySource;
  */
 @MybatisTest
 @TestPropertySource(properties = { "spring.sql.init.mode=never" })
-@ImportTestcontainers(MySqlContainerConfiguration.class)
-@ImportAutoConfiguration(MySqlContainerConfiguration.class)
 public class MappersTest {
 
 	@Autowired
@@ -60,7 +56,7 @@ public class MappersTest {
 	@Autowired
 	private BusinessKnowledgeMapper businessKnowledgeMapper;
 
-	private Long createAgent(String name) {
+	private Integer createAgent(String name) {
 		Agent agent = Agent.builder()
 			.name(name)
 			.description("for fk")
@@ -115,7 +111,7 @@ public class MappersTest {
 
 	@Test
 	public void testChatSessionAndMessageCrud() {
-		Long agentId = createAgent("session-holder");
+		Integer agentId = createAgent("session-holder");
 		String sessionId = java.util.UUID.randomUUID().toString();
 		// insert session
 		ChatSession session = new ChatSession(sessionId, agentId.intValue(), "tc_session", "active", 1L);
@@ -156,7 +152,7 @@ public class MappersTest {
 
 	@Test
 	public void testSemanticModelCrud() {
-		Long agentId = createAgent("semantic-holder");
+		Integer agentId = createAgent("semantic-holder");
 		SemanticModel m = new SemanticModel();
 		m.setAgentId(agentId);
 		m.setDatasourceId(1); // 添加数据源ID
@@ -191,7 +187,7 @@ public class MappersTest {
 	@Test
 	public void testAgentPresetQuestionCrud() {
 		// 先创建一个合法的 Agent 以满足外键约束
-		Long agentId = createAgent("preset-holder");
+		Integer agentId = createAgent("preset-holder");
 
 		// clean existing
 		agentPresetQuestionMapper.deleteByAgentId(agentId);
@@ -220,7 +216,7 @@ public class MappersTest {
 
 	@Test
 	public void testBusinessKnowledgeMapperCrud() {
-		Long agentId = createAgent("bk-holder");
+		Integer agentId = createAgent("bk-holder");
 		// clean
 		businessKnowledgeMapper.selectAll().forEach(b -> businessKnowledgeMapper.deleteById(b.getId()));
 

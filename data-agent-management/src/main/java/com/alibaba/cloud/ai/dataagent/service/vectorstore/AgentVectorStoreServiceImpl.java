@@ -23,24 +23,33 @@ import com.alibaba.cloud.ai.dataagent.dto.search.HybridSearchRequest;
 import com.alibaba.cloud.ai.dataagent.service.hybrid.retrieval.HybridRetrievalStrategy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.document.Document;
+import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.SimpleVectorStore;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.vectorstore.filter.Filter;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static com.alibaba.cloud.ai.dataagent.service.vectorstore.DynamicFilterService.buildFilterExpressionString;
 
 @Slf4j
 @Service
-public class AgentVectorStoreServiceImpl implements AgentVectorStoreService {
+public class AgentVectorStoreServiceImpl implements AgentVectorStoreService, DisposableBean {
 
 	private static final String DEFAULT = "default";
 
-	private final VectorStore vectorStore;
+	private final VectorStore vectorStore; // default
+
+	private final EmbeddingModel embeddingModel;
 
 	private final Optional<HybridRetrievalStrategy> hybridRetrievalStrategy;
 
@@ -48,23 +57,74 @@ public class AgentVectorStoreServiceImpl implements AgentVectorStoreService {
 
 	private final DynamicFilterService dynamicFilterService;
 
-	public AgentVectorStoreServiceImpl(VectorStore vectorStore,
+	private Map<String,VectorStore> vectorStoreMap = new ConcurrentHashMap<>();
+
+	public AgentVectorStoreServiceImpl(VectorStore vectorStore,EmbeddingModel embeddingModel,
 			Optional<HybridRetrievalStrategy> hybridRetrievalStrategy, DataAgentProperties dataAgentProperties,
 			DynamicFilterService dynamicFilterService) {
 		this.vectorStore = vectorStore;
+		this.embeddingModel = embeddingModel;
 		this.hybridRetrievalStrategy = hybridRetrievalStrategy;
 		this.dataAgentProperties = dataAgentProperties;
 		this.dynamicFilterService = dynamicFilterService;
 		log.info("VectorStore type: {}", vectorStore.getClass().getSimpleName());
 	}
 
+	public VectorStore vectorStore(String agentId, String vectorType){
+		String key = agentId+"."+vectorType;
+		VectorStore instance = vectorStoreMap.get(key);
+		if(instance==null){
+			SimpleVectorStore vectorStore = SimpleVectorStore.builder(embeddingModel).build();
+			File file = new File(dataAgentProperties.getVectorStore().getFilePath(),key+".json");
+
+			if (!file.exists()) {
+				log.info("No locally serialized vector database {} file was found.",key);
+			}
+			else{
+				try {
+					vectorStore.load(file);
+				}
+				catch (Throwable throwable) {
+					log.error("Failed to load the locally serialized vector database file.", throwable);
+				}
+			}
+			vectorStoreMap.put(key,vectorStore);
+			instance = vectorStore;
+		}
+		return instance;
+	}
+
+	public boolean flushVectorStore(String agentId, String vectorType){
+		String key = agentId+"."+vectorType;
+		VectorStore vectorStore = vectorStoreMap.get(key);
+		if(vectorStore!=null && vectorStore instanceof SimpleVectorStore){
+			SimpleVectorStore instance = (SimpleVectorStore)vectorStore;
+			log.info("Serialize the vector database to a local file.");
+			Path path = Paths.get(dataAgentProperties.getVectorStore().getFilePath(),key+".json");
+
+			try {
+				Files.createDirectories(path.getParent());
+
+				if (!Files.exists(path)) {
+					Files.createFile(path);
+				}
+
+				instance.save(path.toFile());
+				return true;
+			}
+			catch (Throwable t) {
+				log.error("An exception occurred while serializing the vector database to a local file.", t);
+			}
+		}
+		return false;
+	}
+
 	@Override
 	public List<Document> search(AgentSearchRequest searchRequest) {
 		Assert.hasText(searchRequest.getAgentId(), "AgentId cannot be empty");
 		Assert.hasText(searchRequest.getDocVectorType(), "DocVectorType cannot be empty");
-
-		Filter.Expression filter = dynamicFilterService.buildDynamicFilter(searchRequest.getAgentId(),
-				searchRequest.getDocVectorType());
+		Integer iAgentId = Integer.valueOf(searchRequest.getAgentId());
+		Filter.Expression filter = dynamicFilterService.buildDynamicFilter(iAgentId,searchRequest.getDocVectorType());
 		// 根据agentId vectorType找不到要 召回 的业务知识或者智能体知识
 		if (filter == null) {
 			log.warn(
@@ -84,7 +144,7 @@ public class AgentVectorStoreServiceImpl implements AgentVectorStoreService {
 			return hybridRetrievalStrategy.get().retrieve(hybridRequest);
 		}
 		log.debug("Hybrid search is not enabled. use vector-search only");
-		List<Document> results = vectorStore.similaritySearch(hybridRequest.toVectorSearchRequest());
+		List<Document> results = vectorStore(searchRequest.getAgentId(),searchRequest.getDocVectorType()).similaritySearch(hybridRequest.toVectorSearchRequest());
 		log.debug("Search completed with vectorType: {}, found {} documents for SearchRequest: {}",
 				searchRequest.getDocVectorType(), results.size(), searchRequest);
 		return results;
@@ -96,7 +156,7 @@ public class AgentVectorStoreServiceImpl implements AgentVectorStoreService {
 		Assert.notNull(agentId, "AgentId cannot be null.");
 		Assert.notNull(vectorType, "VectorType cannot be null.");
 
-		Map<String, Object> metadata = new HashMap<>(Map.ofEntries(Map.entry(Constant.AGENT_ID, agentId),
+		Map<String, Object> metadata = new HashMap<>(Map.ofEntries(
 				Map.entry(DocumentMetadataConstant.VECTOR_TYPE, vectorType)));
 
 		return this.deleteDocumentsByMetedata(agentId, metadata);
@@ -106,13 +166,17 @@ public class AgentVectorStoreServiceImpl implements AgentVectorStoreService {
 	public void addDocuments(String agentId, List<Document> documents) {
 		Assert.notNull(agentId, "AgentId cannot be null.");
 		Assert.notEmpty(documents, "Documents cannot be empty.");
-
+		String lastVectorType = null;
 		// 验证文档中 metadata 的一致性
 		for (Document document : documents) {
 			Assert.notNull(document.getMetadata(), "Document metadata cannot be null.");
 
 			String vectorType = (String) document.getMetadata().get(DocumentMetadataConstant.VECTOR_TYPE);
-
+			if(lastVectorType!=null){
+				Assert.isTrue(vectorType.equals(lastVectorType),
+						"Documents vectorType must same.");
+			}
+			lastVectorType = vectorType;
 			// 根据 vectorType 验证不同的字段
 			if (DocumentMetadataConstant.TABLE.equals(vectorType)
 					|| DocumentMetadataConstant.COLUMN.equals(vectorType)) {
@@ -124,23 +188,25 @@ public class AgentVectorStoreServiceImpl implements AgentVectorStoreService {
 				// 知识库和业务术语必须包含 agentId
 				Assert.isTrue(document.getMetadata().containsKey(Constant.AGENT_ID),
 						"Document metadata must contain agentId.");
-				Assert.isTrue(document.getMetadata().get(Constant.AGENT_ID).equals(agentId),
+				Assert.isTrue(document.getMetadata().get(Constant.AGENT_ID).toString().equals(agentId),
 						"Document metadata agentId does not match.");
 			}
 		}
-		vectorStore.add(documents);
+		if(lastVectorType!=null) {
+			vectorStore(agentId, lastVectorType).add(documents);
+		}
 	}
 
 	@Override
 	public Boolean deleteDocumentsByMetadata(Map<String, Object> metadata) {
 		Assert.notNull(metadata, "Metadata cannot be null.");
 		String filterExpression = buildFilterExpressionString(metadata);
-
-		if (vectorStore instanceof SimpleVectorStore) {
-			batchDelDocumentsWithFilter(filterExpression);
-		}
-		else {
-			vectorStore.delete(filterExpression);
+		for(VectorStore vectorStore: this.vectorStoreMap.values()) {
+			if (vectorStore instanceof SimpleVectorStore) {
+				batchDelDocumentsWithFilter(vectorStore,filterExpression);
+			} else {
+				vectorStore.delete(filterExpression);
+			}
 		}
 
 		return true;
@@ -151,13 +217,15 @@ public class AgentVectorStoreServiceImpl implements AgentVectorStoreService {
 		Assert.hasText(agentId, "AgentId cannot be empty.");
 		Assert.notNull(metadata, "Metadata cannot be null.");
 		// 添加agentId元数据过滤条件, 用于删除指定agentId下的所有数据，因为metadata中用户调用可能忘记添加agentId
-		metadata.put(Constant.AGENT_ID, agentId);
+		metadata.put(Constant.AGENT_ID, Integer.valueOf(agentId));
 		String filterExpression = buildFilterExpressionString(metadata);
+		String vectorType = (String) metadata.get(DocumentMetadataConstant.VECTOR_TYPE);
+		VectorStore vectorStore = vectorStore(agentId,vectorType);
 
 		// es的可以直接元数据删除
 		if (vectorStore instanceof SimpleVectorStore) {
 			// 目前SimpleVectorStore不支持通过元数据删除，使用会抛出UnsupportedOperationException,现在是通过id删除
-			batchDelDocumentsWithFilter(filterExpression);
+			batchDelDocumentsWithFilter(vectorStore,filterExpression);
 		}
 		else {
 			vectorStore.delete(filterExpression);
@@ -166,7 +234,7 @@ public class AgentVectorStoreServiceImpl implements AgentVectorStoreService {
 		return true;
 	}
 
-	private void batchDelDocumentsWithFilter(String filterExpression) {
+	private void batchDelDocumentsWithFilter(VectorStore vectorStore, String filterExpression) {
 		Set<String> seenDocumentIds = new HashSet<>();
 		// 分批获取，因为Milvus等向量数据库的topK有限制
 		List<Document> batch;
@@ -228,7 +296,8 @@ public class AgentVectorStoreServiceImpl implements AgentVectorStoreService {
 	}
 
 	@Override
-	public List<Document> getDocumentsOnlyByFilter(Filter.Expression filterExpression, Integer topK) {
+	public List<Document> getDocumentsOnlyByFilter(String agentId,String vectorType,Filter.Expression filterExpression, Integer topK) {
+		VectorStore vectorStore = vectorStore(agentId,vectorType);
 		Assert.notNull(filterExpression, "filterExpression cannot be null.");
 		if (topK == null)
 			topK = dataAgentProperties.getVectorStore().getDefaultTopkLimit();
@@ -242,15 +311,41 @@ public class AgentVectorStoreServiceImpl implements AgentVectorStoreService {
 	}
 
 	@Override
-	public boolean hasDocuments(String agentId) {
+	public boolean hasDocuments(String agentId,String vectorType) {
+		VectorStore vectorStore = vectorStore(agentId,vectorType);
 		// 类似 MySQL 的 LIMIT 1,只检查是否存在文档
 		List<Document> docs = vectorStore.similaritySearch(org.springframework.ai.vectorstore.SearchRequest.builder()
 			.query(DEFAULT)// 使用默认的查询字符串，因为有的嵌入模型不支持空字符串
-			.filterExpression(buildFilterExpressionString(Map.of(Constant.AGENT_ID, agentId)))
+			.filterExpression(buildFilterExpressionString(Map.of(DocumentMetadataConstant.VECTOR_TYPE, vectorType)))
 			.topK(1) // 只获取1个文档
 			.similarityThreshold(0.0)
 			.build());
 		return !docs.isEmpty();
 	}
 
+	@Override
+	public void destroy() throws Exception {
+		for(Map.Entry<String,VectorStore> entry: this.vectorStoreMap.entrySet()) {
+			if (entry.getValue() instanceof SimpleVectorStore) {
+				SimpleVectorStore instance = (SimpleVectorStore)entry.getValue();
+				log.info("Serialize the vector database to a local file.");
+				Path path = Paths.get(dataAgentProperties.getVectorStore().getFilePath(),entry.getKey()+".json");
+
+				try {
+					Files.createDirectories(path.getParent());
+
+					if (!Files.exists(path)) {
+						Files.createFile(path);
+					}
+
+					instance.save(path.toFile());
+				}
+				catch (Throwable t) {
+					log.error("An exception occurred while serializing the vector database to a local file.", t);
+				}
+			} else {
+
+			}
+		}
+	}
 }

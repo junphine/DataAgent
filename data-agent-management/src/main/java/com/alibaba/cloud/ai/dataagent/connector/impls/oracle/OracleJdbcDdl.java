@@ -278,7 +278,7 @@ public class OracleJdbcDdl extends AbstractJdbcDdl {
 			String upperTable = table.toUpperCase();
 			String upperColumn = column.toUpperCase();
 
-			String sql = String.format("SELECT %s FROM %s WHERE ROWNUM <= 99", upperColumn, upperTable);
+			String sql = String.format("SELECT distinct %s FROM %s WHERE ROWNUM <= 99", upperColumn, upperTable);
 
 			String[][] resultArr = SqlExecutor.executeSqlAndReturnArr(connection, null, sql);
 			if (resultArr.length <= 1) {

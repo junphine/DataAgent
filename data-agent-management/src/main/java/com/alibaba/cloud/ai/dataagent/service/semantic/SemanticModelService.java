@@ -19,6 +19,7 @@ import com.alibaba.cloud.ai.dataagent.dto.schema.SemanticModelAddDTO;
 import com.alibaba.cloud.ai.dataagent.dto.schema.SemanticModelBatchImportDTO;
 import com.alibaba.cloud.ai.dataagent.entity.SemanticModel;
 import com.alibaba.cloud.ai.dataagent.vo.BatchImportResult;
+import com.alibaba.cloud.ai.dataagent.vo.PageResult;
 
 import java.io.InputStream;
 import java.util.List;
@@ -27,41 +28,43 @@ public interface SemanticModelService {
 
 	List<SemanticModel> getAll();
 
-	List<SemanticModel> getEnabledByAgentId(Long agentId);
+	PageResult<SemanticModel> queryByConditionsWithPage(Integer agentId, String keyword, Integer pageNum, Integer pageSize);
 
-	List<SemanticModel> getByAgentIdAndTableNames(Long agentId, List<String> tableNames);
+	List<SemanticModel> getEnabledByAgentId(Integer agentId);
 
-	SemanticModel getById(Long id);
+	List<SemanticModel> getByAgentIdAndTableNames(Integer agentId, List<String> tableNames);
+
+	SemanticModel getById(Integer id);
 
 	void addSemanticModel(SemanticModel semanticModel);
 
 	boolean addSemanticModel(SemanticModelAddDTO dto);
 
-	void enableSemanticModel(Long id);
+	void enableSemanticModel(Integer id);
 
-	void disableSemanticModel(Long id);
+	void disableSemanticModel(Integer id);
 
-	List<SemanticModel> getByAgentId(Long agentId);
+	List<SemanticModel> getByAgentId(Integer agentId);
 
-	List<SemanticModel> search(String keyword);
+	List<SemanticModel> search(Integer agentId,String keyword);
 
-	void deleteSemanticModel(Long id);
+	void deleteSemanticModel(Integer id);
 
-	void updateSemanticModel(Long id, SemanticModel semanticModel);
+	void updateSemanticModel(Integer id, SemanticModel semanticModel);
 
 	default void addSemanticModels(List<SemanticModel> semanticModels) {
 		semanticModels.forEach(this::addSemanticModel);
 	}
 
-	default void enableSemanticModels(List<Long> ids) {
+	default void enableSemanticModels(List<Integer> ids) {
 		ids.forEach(this::enableSemanticModel);
 	}
 
-	default void disableSemanticModels(List<Long> ids) {
+	default void disableSemanticModels(List<Integer> ids) {
 		ids.forEach(this::disableSemanticModel);
 	}
 
-	default void deleteSemanticModels(List<Long> ids) {
+	default void deleteSemanticModels(List<Integer> ids) {
 		ids.forEach(this::deleteSemanticModel);
 	}
 
@@ -74,6 +77,6 @@ public interface SemanticModelService {
 	 * @param agentId 智能体ID
 	 * @return 导入结果
 	 */
-	BatchImportResult importFromExcel(InputStream inputStream, String filename, Long agentId);
+	BatchImportResult importFromExcel(InputStream inputStream, String filename, Integer agentId);
 
 }

@@ -16,12 +16,10 @@
 package com.alibaba.cloud.ai.dataagent.mapper;
 
 import com.alibaba.cloud.ai.dataagent.entity.Datasource;
-import com.alibaba.cloud.ai.dataagent.service.MySqlContainerConfiguration;
+
 import org.junit.jupiter.api.Test;
 import org.mybatis.spring.boot.test.autoconfigure.MybatisTest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
-import org.springframework.boot.testcontainers.context.ImportTestcontainers;
 import org.springframework.test.context.TestPropertySource;
 
 import java.time.LocalDateTime;
@@ -33,8 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @MybatisTest
 @TestPropertySource(
 		properties = { "spring.sql.init.mode=never", "mybatis.configuration.map-underscore-to-camel-case=true" })
-@ImportTestcontainers(MySqlContainerConfiguration.class)
-@ImportAutoConfiguration(MySqlContainerConfiguration.class)
+
 public class DatasourceMapperTest {
 
 	@Autowired

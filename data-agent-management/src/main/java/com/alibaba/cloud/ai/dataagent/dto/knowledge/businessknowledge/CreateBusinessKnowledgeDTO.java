@@ -43,6 +43,6 @@ public class CreateBusinessKnowledgeDTO {
 	private Boolean isRecall = true; // Whether to recall
 
 	@NotNull(message = "Agent ID cannot be Null")
-	private Long agentId; // Associated agent ID
+	private Integer agentId; // Associated agent ID
 
 }

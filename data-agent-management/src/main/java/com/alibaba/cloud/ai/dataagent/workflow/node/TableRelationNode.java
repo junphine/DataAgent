@@ -102,9 +102,9 @@ public class TableRelationNode implements NodeAction {
 		String agentIdStr = StateUtil.getStringValue(state, AGENT_ID);
 
 		// Execute business logic first - get final result immediately
-		DbConfigBO agentDbConfig = databaseUtil.getAgentDbConfig(Long.valueOf(agentIdStr));
+		DbConfigBO agentDbConfig = databaseUtil.getAgentDbConfig(Integer.valueOf(agentIdStr));
 
-		List<String> logicalForeignKeys = getLogicalForeignKeys(Long.valueOf(agentIdStr), tableDocuments);
+		List<String> logicalForeignKeys = getLogicalForeignKeys(Integer.valueOf(agentIdStr), tableDocuments);
 		log.info("Found {} logical foreign keys for agent: {}", logicalForeignKeys.size(), agentIdStr);
 
 		SchemaDTO initialSchema = buildInitialSchema(agentIdStr, columnDocuments, tableDocuments, agentDbConfig,
@@ -126,7 +126,7 @@ public class TableRelationNode implements NodeAction {
 
 					// 根据agentId和表名列表获取语义模型
 					List<SemanticModel> semanticModels = semanticModelService
-						.getByAgentIdAndTableNames(Long.valueOf(agentIdStr), tableNames);
+						.getByAgentIdAndTableNames(Integer.valueOf(agentIdStr), tableNames);
 
 					// 构建语义模型提示并存储到resultMap中
 					String semanticModelPrompt = buildSemanticModelPrompt(semanticModels);
@@ -209,7 +209,7 @@ public class TableRelationNode implements NodeAction {
 	}
 
 	/** 获取逻辑外键信息，并过滤只保留与当前召回表相关的外键 */
-	private List<String> getLogicalForeignKeys(Long agentId, List<Document> tableDocuments) {
+	private List<String> getLogicalForeignKeys(Integer agentId, List<Document> tableDocuments) {
 		try {
 			// 获取当前 agent 激活的数据源
 			AgentDatasource agentDatasource = agentDatasourceService.getCurrentAgentDatasource(agentId);

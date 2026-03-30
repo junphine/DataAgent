@@ -39,7 +39,7 @@ public class DatabaseUtil {
 
 	private final DatasourceService datasourceService;
 
-	public DbConfigBO getAgentDbConfig(Long agentId) {
+	public DbConfigBO getAgentDbConfig(Integer agentId) {
 		log.info("Getting datasource config for agent: {}", agentId);
 
 		// Get the enabled data source for the agent
@@ -52,7 +52,7 @@ public class DatabaseUtil {
 		return dbConfig;
 	}
 
-	public Accessor getAgentAccessor(Long agentId) {
+	public Accessor getAgentAccessor(Integer agentId) {
 		DbConfigBO dbConfig = getAgentDbConfig(agentId);
 		return accessorFactory.getAccessorByDbConfig(dbConfig);
 	}

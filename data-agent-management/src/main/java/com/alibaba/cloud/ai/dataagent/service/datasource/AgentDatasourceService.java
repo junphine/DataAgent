@@ -21,23 +21,23 @@ import java.util.List;
 public interface AgentDatasourceService {
 
 	/** Initialize agent's database schema using datasource */
-	Boolean initializeSchemaForAgentWithDatasource(Long agentId, Integer datasourceId, List<String> tables);
+	Boolean initializeSchemaForAgentWithDatasource(Integer agentId, Integer datasourceId, List<String> tables);
 
-	List<AgentDatasource> getAgentDatasource(Long agentId);
+	List<AgentDatasource> getAgentDatasource(Integer agentId);
 
-	default AgentDatasource getCurrentAgentDatasource(Long agentId) {
+	default AgentDatasource getCurrentAgentDatasource(Integer agentId) {
 		return getAgentDatasource(agentId).stream()
-			.filter(a -> a.getIsActive() != 0)
+			.filter(a -> a.getIsActive())
 			.findFirst()
 			.orElseThrow(() -> new IllegalStateException("Agent " + agentId + " has no active datasource"));
 	}
 
-	AgentDatasource addDatasourceToAgent(Long agentId, Integer datasourceId);
+	AgentDatasource addDatasourceToAgent(Integer agentId, Integer datasourceId);
 
-	void removeDatasourceFromAgent(Long agentId, Integer datasourceId);
+	void removeDatasourceFromAgent(Integer agentId, Integer datasourceId);
 
-	AgentDatasource toggleDatasourceForAgent(Long agentId, Integer datasourceId, Boolean isActive);
+	AgentDatasource toggleDatasourceForAgent(Integer agentId, Integer datasourceId, Boolean isActive);
 
-	void updateDatasourceTables(Long agentId, Integer datasourceId, List<String> tables);
+	void updateDatasourceTables(Integer agentId, Integer datasourceId, List<String> tables);
 
 }

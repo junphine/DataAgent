@@ -59,4 +59,12 @@ public class McpServerService {
 		return graphService.nl2sql(nl2SqlRequest.naturalQuery(), nl2SqlRequest.agentId());
 	}
 
+	@Tool(description = "获取企业各方面的内部数据，将自然语言查询转换为SQL语句。")
+	public String nl2SqlAllToolCallback(String query) throws GraphRunnerException {
+		Nl2SqlRequest nl2SqlRequest = new Nl2SqlRequest(query,"3");
+		Assert.hasText(nl2SqlRequest.agentId(), "AgentId cannot be empty");
+		Assert.hasText(nl2SqlRequest.naturalQuery(), "Natural query cannot be empty");
+		return graphService.nl2sql(nl2SqlRequest.naturalQuery(), nl2SqlRequest.agentId());
+	}
+
 }

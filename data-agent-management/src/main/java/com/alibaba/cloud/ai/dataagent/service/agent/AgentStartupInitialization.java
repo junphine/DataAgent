@@ -15,6 +15,7 @@
  */
 package com.alibaba.cloud.ai.dataagent.service.agent;
 
+import com.alibaba.cloud.ai.dataagent.constant.DocumentMetadataConstant;
 import com.alibaba.cloud.ai.dataagent.entity.Agent;
 import com.alibaba.cloud.ai.dataagent.entity.AgentDatasource;
 import com.alibaba.cloud.ai.dataagent.service.datasource.AgentDatasourceService;
@@ -118,7 +119,7 @@ public class AgentStartupInitialization implements ApplicationRunner, Disposable
 	 */
 	private boolean initializeAgentDataSource(Agent agent) {
 		try {
-			Long agentId = agent.getId();
+			Integer agentId = agent.getId();
 
 			boolean hasData = isAlreadyInitialized(agentId);
 
@@ -159,10 +160,10 @@ public class AgentStartupInitialization implements ApplicationRunner, Disposable
 		}
 	}
 
-	private boolean isAlreadyInitialized(Long agentId) {
+	private boolean isAlreadyInitialized(Integer agentId) {
 		try {
 			String agentIdStr = String.valueOf(agentId);
-			return agentVectorStoreService.hasDocuments(agentIdStr);
+			return agentVectorStoreService.hasDocuments(agentIdStr, DocumentMetadataConstant.COLUMN);
 		}
 		catch (Exception e) {
 			log.error("Failed to check initialization status for agent: {}, assuming not initialized", agentId, e);

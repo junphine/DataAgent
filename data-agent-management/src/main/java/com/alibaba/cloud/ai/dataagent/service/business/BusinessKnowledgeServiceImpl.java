@@ -51,7 +51,7 @@ public class BusinessKnowledgeServiceImpl implements BusinessKnowledgeService {
 	private final BusinessKnowledgeConverter businessKnowledgeConverter;
 
 	@Override
-	public List<BusinessKnowledgeVO> getKnowledge(Long agentId) {
+	public List<BusinessKnowledgeVO> getKnowledge(Integer agentId) {
 		List<BusinessKnowledge> businessKnowledges = businessKnowledgeMapper.selectByAgentId(agentId);
 		if (CollectionUtils.isEmpty(businessKnowledges)) {
 			return Collections.emptyList();
@@ -69,7 +69,7 @@ public class BusinessKnowledgeServiceImpl implements BusinessKnowledgeService {
 	}
 
 	@Override
-	public List<BusinessKnowledgeVO> searchKnowledge(Long agentId, String keyword) {
+	public List<BusinessKnowledgeVO> searchKnowledge(Integer agentId, String keyword) {
 		List<BusinessKnowledge> businessKnowledges = businessKnowledgeMapper.searchInAgent(agentId, keyword);
 		if (CollectionUtils.isEmpty(businessKnowledges)) {
 			return Collections.emptyList();
@@ -78,7 +78,7 @@ public class BusinessKnowledgeServiceImpl implements BusinessKnowledgeService {
 	}
 
 	@Override
-	public BusinessKnowledgeVO getKnowledgeById(Long id) {
+	public BusinessKnowledgeVO getKnowledgeById(Integer id) {
 		BusinessKnowledge businessKnowledge = businessKnowledgeMapper.selectById(id);
 		if (businessKnowledge == null) {
 			return null;
@@ -115,7 +115,7 @@ public class BusinessKnowledgeServiceImpl implements BusinessKnowledgeService {
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	public BusinessKnowledgeVO updateKnowledge(Long id, UpdateBusinessKnowledgeDTO knowledgeDTO) {
+	public BusinessKnowledgeVO updateKnowledge(Integer id, UpdateBusinessKnowledgeDTO knowledgeDTO) {
 		// 从数据库获取原始数据
 		BusinessKnowledge knowledge = businessKnowledgeMapper.selectById(id);
 		if (knowledge == null) {
@@ -169,7 +169,7 @@ public class BusinessKnowledgeServiceImpl implements BusinessKnowledgeService {
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	public void deleteKnowledge(Long id) {
+	public void deleteKnowledge(Integer id) {
 		// 从数据库获取原始数据
 		BusinessKnowledge knowledge = businessKnowledgeMapper.selectById(id);
 		if (knowledge == null) {
@@ -179,7 +179,7 @@ public class BusinessKnowledgeServiceImpl implements BusinessKnowledgeService {
 
 		doDelVector(knowledge);
 
-		if (businessKnowledgeMapper.logicalDelete(id, 1) <= 0) {
+		if (businessKnowledgeMapper.logicalDelete(id, true) <= 0) {
 			// 重新添加修复被删除的记录
 			agentVectorStoreService.addDocuments(knowledge.getAgentId().toString(),
 					List.of(DocumentConverterUtil.convertBusinessKnowledgeToDocument(knowledge)));
@@ -189,7 +189,7 @@ public class BusinessKnowledgeServiceImpl implements BusinessKnowledgeService {
 
 	private void doDelVector(BusinessKnowledge knowledge) {
 		Map<String, Object> metadata = new HashMap<>();
-		metadata.put(Constant.AGENT_ID, knowledge.getAgentId().toString());
+		metadata.put(Constant.AGENT_ID, knowledge.getAgentId());
 		metadata.put(DocumentMetadataConstant.DB_BUSINESS_TERM_ID, knowledge.getId());
 		metadata.put(DocumentMetadataConstant.VECTOR_TYPE, DocumentMetadataConstant.BUSINESS_TERM);
 		agentVectorStoreService.deleteDocumentsByMetedata(knowledge.getAgentId().toString(), metadata);
@@ -197,15 +197,14 @@ public class BusinessKnowledgeServiceImpl implements BusinessKnowledgeService {
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
-	public void recallKnowledge(Long id, Boolean isRecall) {
+	public void recallKnowledge(Integer id, Boolean isRecall) {
 		// 从数据库获取原始数据
 		BusinessKnowledge knowledge = businessKnowledgeMapper.selectById(id);
 		if (knowledge == null) {
 			throw new RuntimeException("Knowledge not found with id: " + id);
 		}
-
 		// 更新数据库即可，不需要更新向量库，混合检索的的时候DynamicFilterService会根据 isRecall 字段过滤了
-		knowledge.setIsRecall(isRecall ? 1 : 0);
+		knowledge.setIsRecall(isRecall);
 		businessKnowledgeMapper.updateById(knowledge);
 
 	}
@@ -217,8 +216,8 @@ public class BusinessKnowledgeServiceImpl implements BusinessKnowledgeService {
 		// 获取所有 isRecall 等于 1 且未逻辑删除的 BusinessKnowledge
 		List<BusinessKnowledge> allKnowledge = businessKnowledgeMapper.selectAll();
 		List<BusinessKnowledge> recalledKnowledge = allKnowledge.stream()
-			.filter(knowledge -> knowledge.getIsRecall() != null && knowledge.getIsRecall() == 1)
-			.filter(knowledge -> knowledge.getIsDeleted() == null || knowledge.getIsDeleted() == 0)
+			.filter(knowledge -> knowledge.getIsRecall() != null && knowledge.getIsRecall())
+			.filter(knowledge -> knowledge.getIsDeleted() == null || !knowledge.getIsDeleted())
 			.filter(knowledge -> agentId.equals(knowledge.getAgentId().toString()))
 			.toList();
 
@@ -232,7 +231,7 @@ public class BusinessKnowledgeServiceImpl implements BusinessKnowledgeService {
 	}
 
 	@Override
-	public void retryEmbedding(Long id) {
+	public void retryEmbedding(Integer id) {
 		BusinessKnowledge knowledge = businessKnowledgeMapper.selectById(id);
 		if (knowledge == null) {
 			throw new RuntimeException("BusinessKnowledge not found with id: " + id);
@@ -243,7 +242,7 @@ public class BusinessKnowledgeServiceImpl implements BusinessKnowledgeService {
 		}
 
 		// 非召回的不处理
-		if (knowledge.getIsRecall() == null || knowledge.getIsRecall() == 0) {
+		if (knowledge.getIsRecall() == null || !knowledge.getIsRecall()) {
 			throw new RuntimeException("BusinessKnowledge is not recalled, please recall it first.");
 		}
 

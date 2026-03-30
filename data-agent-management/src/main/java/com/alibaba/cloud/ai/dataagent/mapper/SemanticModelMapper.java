@@ -32,9 +32,17 @@ public interface SemanticModelMapper {
 	@Select("""
 			SELECT * FROM semantic_model
 			WHERE agent_id = #{agentId}
-			ORDER BY created_time DESC
+			ORDER BY table_name,created_time DESC
 			""")
-	List<SemanticModel> selectByAgentId(@Param("agentId") Long agentId);
+	List<SemanticModel> selectByAgentId(@Param("agentId") Integer agentId);
+
+	@Select("""
+			SELECT * FROM semantic_model
+			WHERE agent_id = #{agentId}
+			ORDER BY table_name,created_time DESC
+			OFFSET #{offset} LIMIT #{limit}
+			""")
+	List<SemanticModel> pageSelectByAgentId(@Param("agentId") Integer agentId,@Param("offset") int offset,@Param("limit") int limit);
 
 	/**
 	 * Query by id
@@ -43,21 +51,46 @@ public interface SemanticModelMapper {
 			SELECT * FROM semantic_model
 			WHERE id = #{id}
 			""")
-	SemanticModel selectById(@Param("id") Long id);
+	SemanticModel selectById(@Param("id") Integer id);
 
 	/**
 	 * Search semantic models by keyword
 	 */
 	@Select("""
 			SELECT * FROM semantic_model
-			WHERE column_name LIKE CONCAT('%', #{keyword}, '%')
+			WHERE agent_id = #{agentId} AND (column_name LIKE CONCAT('%', #{keyword}, '%')
 			   OR business_name LIKE CONCAT('%', #{keyword}, '%')
 			   OR business_description LIKE CONCAT('%', #{keyword}, '%')
-			   OR synonyms LIKE CONCAT('%', #{keyword}, '%')
-			ORDER BY created_time DESC
+			   OR synonyms LIKE CONCAT('%', #{keyword}, '%'))
+			ORDER BY table_name,created_time DESC
 			""")
-	List<SemanticModel> searchByKeyword(@Param("keyword") String keyword);
+	List<SemanticModel> searchByKeyword(@Param("agentId") Integer agentId,@Param("keyword") String keyword);
 
+	@Select("""
+			SELECT * FROM semantic_model
+			WHERE agent_id = #{agentId} AND (column_name LIKE CONCAT('%', #{keyword}, '%')
+			   OR business_name LIKE CONCAT('%', #{keyword}, '%')
+			   OR business_description LIKE CONCAT('%', #{keyword}, '%')
+			   OR synonyms LIKE CONCAT('%', #{keyword}, '%'))
+			ORDER BY table_name,created_time DESC
+			OFFSET #{offset} LIMIT #{limit}
+			""")
+	List<SemanticModel> pageSearchByKeyword(@Param("agentId") Integer agentId,@Param("keyword") String keyword,@Param("offset") int offset,@Param("limit") int limit);
+
+
+	@Select("""
+			<script>
+			SELECT COUNT(*) FROM semantic_model
+			WHERE agent_id = #{agentId}
+			<if test="keyword != null and keyword != ''">
+				AND (column_name LIKE CONCAT('%', #{keyword}, '%')
+			   OR business_name LIKE CONCAT('%', #{keyword}, '%')
+			   OR business_description LIKE CONCAT('%', #{keyword}, '%')
+			   OR synonyms LIKE CONCAT('%', #{keyword}, '%'))
+			</if>			
+			</script>
+			""")
+	Long countByConditions(@Param("agentId") Integer agentId,@Param("keyword") String keyword);
 	/**
 	 * Batch enable fields
 	 */
@@ -66,7 +99,7 @@ public interface SemanticModelMapper {
 			SET status = 1
 			WHERE id = #{id}
 			""")
-	int enableById(@Param("id") Long id);
+	int enableById(@Param("id") Integer id);
 
 	/**
 	 * Batch disable fields
@@ -76,7 +109,7 @@ public interface SemanticModelMapper {
 			SET status = 0
 			WHERE id = #{id}
 			""")
-	int disableById(@Param("id") Long id);
+	int disableById(@Param("id") Integer id);
 
 	/**
 	 * Query semantic models by agent ID and enabled status
@@ -85,9 +118,9 @@ public interface SemanticModelMapper {
 			SELECT * FROM semantic_model
 			WHERE agent_id = #{agentId}
 			  AND status != 0
-			ORDER BY created_time DESC
+			ORDER BY table_name, created_time DESC
 			""")
-	List<SemanticModel> selectEnabledByAgentId(@Param("agentId") Long agentId);
+	List<SemanticModel> selectEnabledByAgentId(@Param("agentId") Integer agentId);
 
 	@Insert("""
 			INSERT INTO semantic_model
@@ -123,7 +156,7 @@ public interface SemanticModelMapper {
 			DELETE FROM semantic_model
 			WHERE id = #{id}
 			""")
-	int deleteById(@Param("id") Long id);
+	int deleteById(@Param("id") Integer id);
 
 	/**
 	 * Query semantic models by datasource ID, status and table names
@@ -137,7 +170,7 @@ public interface SemanticModelMapper {
 			  <foreach item='tableName' index='index' collection='tableNames' open='(' separator=',' close=')'>
 			    #{tableName}
 			  </foreach>
-			ORDER BY created_time DESC
+			ORDER BY table_name, created_time DESC
 			</script>
 			""")
 	List<SemanticModel> selectByDatasourceIdAndTableNames(@Param("datasourceId") Integer datasourceId,

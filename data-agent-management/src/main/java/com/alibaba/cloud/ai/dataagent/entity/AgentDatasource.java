@@ -30,11 +30,11 @@ public class AgentDatasource {
 
 	private Integer id;
 
-	private Long agentId;
+	private Integer agentId;
 
 	private Integer datasourceId;
 
-	private Integer isActive;
+	private Boolean isActive;
 
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	@DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -50,10 +50,10 @@ public class AgentDatasource {
 	// 当前数据源选中的表
 	private List<String> selectTables;
 
-	public AgentDatasource(Long agentId, Integer datasourceId) {
+	public AgentDatasource(Integer agentId, Integer datasourceId) {
 		this.agentId = agentId;
 		this.datasourceId = datasourceId;
-		this.isActive = 1;
+		this.isActive = true;
 	}
 
 }

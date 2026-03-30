@@ -30,3 +30,30 @@ export interface PageResponse<T = unknown> {
   pageSize: number;
   totalPages: number;
 }
+
+// 格式化日期时间
+export const formatDateTime = (dateTime: string | undefined) => {
+  if (!dateTime) return '-';
+  try {
+    const date = new Date(dateTime);
+    return date.toLocaleString('zh-CN', {
+      year: '2-digit',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+  } catch {
+    return dateTime;
+  }
+};
+
+// 格式化文件大小
+export const formatFileSize = (bytes: number): string => {
+  if (!bytes) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+};

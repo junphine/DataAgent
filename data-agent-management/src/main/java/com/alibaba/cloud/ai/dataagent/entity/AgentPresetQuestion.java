@@ -16,6 +16,8 @@
 package com.alibaba.cloud.ai.dataagent.entity;
 
 import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -26,9 +28,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class AgentPresetQuestion {
 
-	private Long id;
+	private Integer id;
 
-	private Long agentId;
+	private Integer agentId;
 
 	private String question;
 
@@ -40,11 +42,13 @@ public class AgentPresetQuestion {
 
 	private Boolean isRecall;
 
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	private LocalDateTime createTime;
 
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	private LocalDateTime updateTime;
 
-	public AgentPresetQuestion(Long agentId, String question, Integer sortOrder) {
+	public AgentPresetQuestion(Integer agentId, String question, Integer sortOrder) {
 		this.agentId = agentId;
 		this.question = question;
 		this.sortOrder = sortOrder;

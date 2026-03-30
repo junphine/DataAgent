@@ -268,7 +268,7 @@ public class DataAgentProperties {
 		/**
 		 * 相似度阈值配置，用于过滤相似度分数大于等于此阈值的文档
 		 */
-		private double defaultSimilarityThreshold = 0.4;
+		private double defaultSimilarityThreshold = 0.5;
 
 		/**
 		 * 查询时返回的最大文档数量
@@ -293,7 +293,7 @@ public class DataAgentProperties {
 		/**
 		 * SimpleVectorStore本地序列化文件地址
 		 */
-		private String filePath = "./vectorstore/vectorstore.json";
+		private String filePath = "./vectorstore";
 
 	}
 

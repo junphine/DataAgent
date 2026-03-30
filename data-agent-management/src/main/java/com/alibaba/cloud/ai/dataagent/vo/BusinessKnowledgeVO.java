@@ -29,7 +29,7 @@ import java.time.LocalDateTime;
 @Builder
 public class BusinessKnowledgeVO {
 
-	private Long id;
+	private Integer id;
 
 	private String businessTerm;
 
@@ -40,7 +40,7 @@ public class BusinessKnowledgeVO {
 	@JsonFormat(shape = JsonFormat.Shape.BOOLEAN)
 	private Boolean isRecall;
 
-	private Long agentId;
+	private Integer agentId;
 
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	private LocalDateTime createdTime;

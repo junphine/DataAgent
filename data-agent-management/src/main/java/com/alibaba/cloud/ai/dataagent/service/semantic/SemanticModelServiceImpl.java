@@ -15,16 +15,21 @@
  */
 package com.alibaba.cloud.ai.dataagent.service.semantic;
 
+import com.alibaba.cloud.ai.dataagent.dto.knowledge.agentknowledge.AgentKnowledgeQueryDTO;
 import com.alibaba.cloud.ai.dataagent.dto.schema.SemanticModelAddDTO;
 import com.alibaba.cloud.ai.dataagent.dto.schema.SemanticModelBatchImportDTO;
 import com.alibaba.cloud.ai.dataagent.dto.schema.SemanticModelImportItem;
 import com.alibaba.cloud.ai.dataagent.entity.AgentDatasource;
+import com.alibaba.cloud.ai.dataagent.entity.AgentKnowledge;
 import com.alibaba.cloud.ai.dataagent.entity.SemanticModel;
 import com.alibaba.cloud.ai.dataagent.mapper.AgentDatasourceMapper;
 import com.alibaba.cloud.ai.dataagent.mapper.SemanticModelMapper;
+import com.alibaba.cloud.ai.dataagent.vo.AgentKnowledgeVO;
 import com.alibaba.cloud.ai.dataagent.vo.BatchImportResult;
 import java.io.InputStream;
 import java.util.List;
+
+import com.alibaba.cloud.ai.dataagent.vo.PageResult;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -46,12 +51,12 @@ public class SemanticModelServiceImpl implements SemanticModelService {
 	}
 
 	@Override
-	public List<SemanticModel> getEnabledByAgentId(Long agentId) {
+	public List<SemanticModel> getEnabledByAgentId(Integer agentId) {
 		return semanticModelMapper.selectEnabledByAgentId(agentId);
 	}
 
 	@Override
-	public List<SemanticModel> getByAgentIdAndTableNames(Long agentId, List<String> tableNames) {
+	public List<SemanticModel> getByAgentIdAndTableNames(Integer agentId, List<String> tableNames) {
 		Integer datasourceId = findDatasourceIdByAgentId(agentId);
 
 		if (datasourceId == null || tableNames == null || tableNames.isEmpty()) {
@@ -62,7 +67,31 @@ public class SemanticModelServiceImpl implements SemanticModelService {
 	}
 
 	@Override
-	public SemanticModel getById(Long id) {
+	public PageResult<SemanticModel> queryByConditionsWithPage(Integer agentId,String keyword,Integer pageNum,Integer pageSize) {
+		if(pageNum==null) pageNum = 1;
+		if(pageSize==null) pageSize = 20;
+		int offset = (pageNum - 1) * pageSize;
+
+		Long total = semanticModelMapper.countByConditions(agentId,keyword);
+
+		List<SemanticModel> dataList = null;
+		if(keyword==null || keyword.isBlank())
+			dataList = semanticModelMapper.pageSelectByAgentId(agentId, offset, pageSize);
+		else
+			dataList = semanticModelMapper.pageSearchByKeyword(agentId, keyword, offset, pageSize);
+
+		PageResult<SemanticModel> pageResult = new PageResult<>();
+		pageResult.setData(dataList);
+		pageResult.setTotal(total);
+		pageResult.setPageNum(pageNum);
+		pageResult.setPageSize(pageSize);
+		pageResult.calculateTotalPages();
+
+		return pageResult;
+	}
+
+	@Override
+	public SemanticModel getById(Integer id) {
 		return semanticModelMapper.selectById(id);
 	}
 
@@ -97,7 +126,7 @@ public class SemanticModelServiceImpl implements SemanticModelService {
 	}
 
 	/** 根据agentId查找关联的datasourceId 如果有多个数据源，返回第一个启用的数据源 */
-	private Integer findDatasourceIdByAgentId(Long agentId) {
+	private Integer findDatasourceIdByAgentId(Integer agentId) {
 		List<AgentDatasource> agentDatasources = agentDatasourceMapper.selectByAgentId(agentId);
 
 		if (agentDatasources.isEmpty()) {
@@ -106,7 +135,7 @@ public class SemanticModelServiceImpl implements SemanticModelService {
 
 		// 优先返回启用的数据源
 		for (AgentDatasource ad : agentDatasources) {
-			if (ad.getIsActive() != null && ad.getIsActive() == 1) {
+			if (ad.getIsActive() != null && ad.getIsActive()) {
 				return ad.getDatasourceId();
 			}
 		}
@@ -116,27 +145,27 @@ public class SemanticModelServiceImpl implements SemanticModelService {
 	}
 
 	@Override
-	public void enableSemanticModel(Long id) {
+	public void enableSemanticModel(Integer id) {
 		semanticModelMapper.enableById(id);
 	}
 
 	@Override
-	public void disableSemanticModel(Long id) {
+	public void disableSemanticModel(Integer id) {
 		semanticModelMapper.disableById(id);
 	}
 
 	@Override
-	public List<SemanticModel> getByAgentId(Long agentId) {
+	public List<SemanticModel> getByAgentId(Integer agentId) {
 		return semanticModelMapper.selectByAgentId(agentId);
 	}
 
 	@Override
-	public List<SemanticModel> search(String keyword) {
-		return semanticModelMapper.searchByKeyword(keyword);
+	public List<SemanticModel> search(Integer agentId,String keyword) {
+		return semanticModelMapper.searchByKeyword(agentId,keyword);
 	}
 
 	@Override
-	public void deleteSemanticModel(Long id) {
+	public void deleteSemanticModel(Integer id) {
 		semanticModelMapper.deleteById(id);
 	}
 
@@ -215,7 +244,7 @@ public class SemanticModelServiceImpl implements SemanticModelService {
 	}
 
 	@Override
-	public BatchImportResult importFromExcel(InputStream inputStream, String filename, Long agentId) {
+	public BatchImportResult importFromExcel(InputStream inputStream, String filename, Integer agentId) {
 		log.info("开始Excel导入: agentId={}, 文件名={}", agentId, filename);
 
 		try {
@@ -244,7 +273,7 @@ public class SemanticModelServiceImpl implements SemanticModelService {
 	}
 
 	@Override
-	public void updateSemanticModel(Long id, SemanticModel semanticModel) {
+	public void updateSemanticModel(Integer id, SemanticModel semanticModel) {
 		semanticModel.setId(id);
 		semanticModelMapper.updateById(semanticModel);
 	}

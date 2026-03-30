@@ -19,12 +19,6 @@ import com.alibaba.cloud.ai.dataagent.properties.CodeExecutorProperties;
 import com.alibaba.cloud.ai.dataagent.properties.DataAgentProperties;
 import com.alibaba.cloud.ai.dataagent.properties.FileStorageProperties;
 import com.alibaba.cloud.ai.dataagent.service.vectorstore.SimpleVectorStoreInitialization;
-import com.alibaba.cloud.ai.dataagent.splitter.LineTextSplitter;
-import com.alibaba.cloud.ai.dataagent.splitter.SentenceSplitter;
-import com.alibaba.cloud.ai.transformer.splitter.RecursiveCharacterTextSplitter;
-import com.alibaba.cloud.ai.dataagent.splitter.SemanticTextSplitter;
-import com.alibaba.cloud.ai.dataagent.splitter.ParagraphTextSplitter;
-import com.alibaba.cloud.ai.dataagent.util.McpServerToolUtil;
 import com.alibaba.cloud.ai.dataagent.util.NodeBeanUtil;
 import com.alibaba.cloud.ai.dataagent.service.aimodelconfig.AiModelRegistry;
 import com.alibaba.cloud.ai.dataagent.strategy.EnhancedTokenCountBatchingStrategy;
@@ -39,14 +33,6 @@ import com.knuddels.jtokkit.api.EncodingType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.embedding.BatchingStrategy;
 import org.springframework.ai.embedding.EmbeddingModel;
-import org.springframework.ai.tool.ToolCallback;
-import org.springframework.ai.tool.ToolCallbackProvider;
-import org.springframework.ai.tool.resolution.DelegatingToolCallbackResolver;
-import org.springframework.ai.tool.resolution.SpringBeanToolCallbackResolver;
-import org.springframework.ai.tool.resolution.StaticToolCallbackResolver;
-import org.springframework.ai.tool.resolution.ToolCallbackResolver;
-import org.springframework.ai.transformer.splitter.TextSplitter;
-import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.SimpleVectorStore;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.aop.TargetSource;
@@ -62,7 +48,6 @@ import org.springframework.boot.web.client.RestClientCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -302,24 +287,6 @@ public class DataAgentConfiguration implements DisposableBean {
 				properties.getEmbeddingBatch().getMaxTextCount());
 	}
 
-	@Bean
-	public ToolCallbackResolver toolCallbackResolver(GenericApplicationContext context) {
-		List<ToolCallback> allFunctionAndToolCallbacks = new ArrayList<>(
-				McpServerToolUtil.excludeMcpServerTool(context, ToolCallback.class));
-		McpServerToolUtil.excludeMcpServerTool(context, ToolCallbackProvider.class)
-			.stream()
-			.map(pr -> List.of(pr.getToolCallbacks()))
-			.forEach(allFunctionAndToolCallbacks::addAll);
-
-		var staticToolCallbackResolver = new StaticToolCallbackResolver(allFunctionAndToolCallbacks);
-
-		var springBeanToolCallbackResolver = SpringBeanToolCallbackResolver.builder()
-			.applicationContext(context)
-			.build();
-
-		return new DelegatingToolCallbackResolver(List.of(staticToolCallbackResolver, springBeanToolCallbackResolver));
-	}
-
 	/**
 	 * 动态生成 EmbeddingModel 的代理 Bean。 原理： 1. 这是一个 Bean，Milvus/PgVector Starter 能看到它，启动不会报错。
 	 * 2. 它是动态代理，内部没有写死任何方法。 3. 每次被调用时，它会执行 getTarget() -> registry.getEmbeddingModel()。
@@ -431,96 +398,5 @@ public class DataAgentConfiguration implements DisposableBean {
 		}
 	}
 
-	@Bean(name = "token")
-	public TextSplitter textSplitter(DataAgentProperties properties) {
-		DataAgentProperties.TextSplitter textSplitterProps = properties.getTextSplitter();
-		DataAgentProperties.TextSplitter.TokenTextSplitterConfig config = textSplitterProps.getToken();
-		return new TokenTextSplitter(textSplitterProps.getChunkSize(), config.getMinChunkSizeChars(),
-				config.getMinChunkLengthToEmbed(), config.getMaxNumChunks(), config.isKeepSeparator());
-	}
-
-	/**
-	 * 递归字符文本分块器
-	 * @param properties 分块配置
-	 * @return RecursiveCharacterTextSplitter实例
-	 */
-	@Bean(name = "recursive")
-	public TextSplitter recursiveTextSplitter(DataAgentProperties properties) {
-		DataAgentProperties.TextSplitter textSplitterProps = properties.getTextSplitter();
-		DataAgentProperties.TextSplitter.RecursiveTextSplitterConfig config = textSplitterProps.getRecursive();
-		// RecursiveCharacterTextSplitter
-		String[] separators = config.getSeparators();
-		if (separators != null && separators.length > 0) {
-			return new RecursiveCharacterTextSplitter(textSplitterProps.getChunkSize(), separators);
-		}
-		else {
-			return new RecursiveCharacterTextSplitter(textSplitterProps.getChunkSize());
-		}
-	}
-
-	/**
-	 * 句子分块器
-	 * @param properties 分块配置
-	 * @return SentenceSplitter实例
-	 */
-	@Bean(name = "sentence")
-	public TextSplitter sentenceSplitter(DataAgentProperties properties) {
-		DataAgentProperties.TextSplitter textSplitterConfig = properties.getTextSplitter();
-		DataAgentProperties.TextSplitter.SentenceTextSplitterConfig sentenceConfig = textSplitterConfig.getSentence();
-
-		return SentenceSplitter.builder()
-			.withChunkSize(textSplitterConfig.getChunkSize())
-			.withSentenceOverlap(sentenceConfig.getSentenceOverlap())
-			.build();
-	}
-
-	/**
-	 * 语义分块器
-	 * @param properties 分块配置
-	 * @param embeddingModel Embedding 模型
-	 * @return SemanticTextSplitter实例
-	 */
-	@Bean(name = "semantic")
-	public TextSplitter semanticSplitter(DataAgentProperties properties, EmbeddingModel embeddingModel) {
-		DataAgentProperties.TextSplitter textSplitterProps = properties.getTextSplitter();
-		DataAgentProperties.TextSplitter.SemanticTextSplitterConfig config = textSplitterProps.getSemantic();
-		return SemanticTextSplitter.builder()
-			.embeddingModel(embeddingModel)
-			.minChunkSize(config.getMinChunkSize())
-			.maxChunkSize(config.getMaxChunkSize())
-			.similarityThreshold(config.getSimilarityThreshold())
-			.build();
-	}
-
-	/**
-	 * 段落分块器
-	 * @param properties 分块配置
-	 * @return ParagraphTextSplitter实例
-	 */
-	@Bean(name = "paragraph")
-	public TextSplitter paragraphSplitter(DataAgentProperties properties) {
-		DataAgentProperties.TextSplitter textSplitterProps = properties.getTextSplitter();
-		DataAgentProperties.TextSplitter.ParagraphTextSplitterConfig config = textSplitterProps.getParagraph();
-		return ParagraphTextSplitter.builder()
-			.chunkSize(textSplitterProps.getChunkSize())
-			.paragraphOverlapChars(config.getParagraphOverlapChars())
-			.build();
-	}
-
-	/**
-	 * 段落分块器
-	 * @param properties 分块配置
-	 * @return ParagraphTextSplitter实例
-	 */
-	@Bean(name = "line")
-	public TextSplitter lineSplitter(DataAgentProperties properties) {
-		DataAgentProperties.TextSplitter textSplitterConfig = properties.getTextSplitter();
-		DataAgentProperties.TextSplitter.SentenceTextSplitterConfig sentenceConfig = textSplitterConfig.getSentence();
-
-		return LineTextSplitter.builder()
-				.withChunkSize(textSplitterConfig.getChunkSize())
-				.withSentenceOverlap(sentenceConfig.getSentenceOverlap())
-				.build();
-	}
 
 }

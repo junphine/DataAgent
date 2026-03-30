@@ -26,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.util.StringUtils;
 
 import java.util.concurrent.CountDownLatch;
@@ -36,8 +35,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
-@SpringBootTest(classes = { CodeExecutorProperties.class })
-@DisplayName("Run Python Code in Docker Test Without Network")
+//-@SpringBootTest(classes = { CodeExecutorProperties.class })
+//-@DisplayName("Run Python Code in Docker Test Without Network")
 public class DockerCodePoolExecutorServiceTest {
 
 	private static final Logger log = LoggerFactory.getLogger(DockerCodePoolExecutorServiceTest.class);

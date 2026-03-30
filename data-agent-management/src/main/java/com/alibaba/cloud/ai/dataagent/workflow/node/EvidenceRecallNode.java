@@ -127,7 +127,7 @@ public class EvidenceRecallNode implements NodeAction {
 
 			// 构建证据内容
 			String evidence = buildFormattedEvidenceContent(retrievalResult.businessTermDocuments(),
-					retrievalResult.agentKnowledgeDocuments());
+					retrievalResult.agentKnowledgeDocuments(),retrievalResult.agentQADocuments());
 			log.info("Evidence content built as follows \n {} \n", evidence);
 			// 输出证据内容
 			outputEvidenceContent(retrievalResult.allDocuments(), sink);
@@ -165,54 +165,67 @@ public class EvidenceRecallNode implements NodeAction {
 			.stream()
 			.toList();
 
+		// 获取智能体QA样例
+		List<Document> agentQADocuments = vectorStoreService
+				.getDocumentsForAgent(agentId, standaloneQuery, DocumentMetadataConstant.AGENT_PRESET_QA)
+				.stream()
+				.toList();
+
 		// 合并所有证据文档
 		List<Document> allDocuments = new ArrayList<>();
 		if (!businessTermDocuments.isEmpty())
 			allDocuments.addAll(businessTermDocuments);
 		if (!agentKnowledgeDocuments.isEmpty())
 			allDocuments.addAll(agentKnowledgeDocuments);
-
+		if(!agentQADocuments.isEmpty())
+			allDocuments.addAll(agentQADocuments);
 		// 添加文档检索日志
-		log.info("Retrieved documents for agent {}: {} business term docs, {} agent knowledge docs, total {} docs",
-				agentId, businessTermDocuments.size(), agentKnowledgeDocuments.size(), allDocuments.size());
+		log.info("Retrieved documents for agent {}: {} business term docs, {} agent knowledge docs, {} agent QA docs",
+				agentId, businessTermDocuments.size(), agentKnowledgeDocuments.size(), agentQADocuments.size());
 
-		return new DocumentRetrievalResult(businessTermDocuments, agentKnowledgeDocuments, allDocuments);
+		return new DocumentRetrievalResult(businessTermDocuments, agentKnowledgeDocuments, agentQADocuments, allDocuments);
 	}
 
 	// 构建证据内容，输出格式
 	// 1. [来源: 2025Q3报告-销售数据.md] ...华东地区的增长主要来自于核心用户...
 	// 2. [来源: 客服FAQ] Q: 退款怎么算? A: 只统计已入库退货...
 	private String buildFormattedEvidenceContent(List<Document> businessTermDocuments,
-			List<Document> agentKnowledgeDocuments) {
+			List<Document> agentKnowledgeDocuments,List<Document> samplesKnowledgeDocuments) {
 		// 构建业务知识内容
 		String businessKnowledgeContent = buildBusinessKnowledgeContent(businessTermDocuments);
 
 		// 构建智能体知识内容
 		String agentKnowledgeContent = buildAgentKnowledgeContent(agentKnowledgeDocuments);
 
+		// 构建案例知识内容
+		String samplesKnowledgeContent = buildAgentKnowledgeContent(samplesKnowledgeDocuments);
+
 		// 使用PromptHelper的模板方法进行渲染
 		String businessPrompt = PromptHelper.buildBusinessKnowledgePrompt(businessKnowledgeContent);
 		String agentPrompt = PromptHelper.buildAgentKnowledgePrompt(agentKnowledgeContent);
+		String samplesPrompt = PromptHelper.buildSamplesKnowledgePrompt(samplesKnowledgeContent);
 
 		// 添加证据构建日志
-		log.info("Building evidence content: business knowledge length {}, agent knowledge length {}",
-				businessKnowledgeContent.length(), agentKnowledgeContent.length());
+		log.info("Building evidence content: business knowledge length {}, agent knowledge length {}, samples {}",
+				businessKnowledgeContent.length(), agentKnowledgeContent.length(),samplesPrompt.length());
 
 		// 拼接业务知识和智能体知识作为证据
-		return businessKnowledgeContent.isEmpty() && agentKnowledgeContent.isEmpty() ? "无"
-				: businessPrompt + (agentKnowledgeContent.isEmpty() ? "" : "\n\n" + agentPrompt);
+		return businessPrompt + "\n" + agentPrompt+"\n" + samplesPrompt;
 	}
 
 	private String buildBusinessKnowledgeContent(List<Document> businessTermDocuments) {
 		if (businessTermDocuments.isEmpty()) {
 			return "";
 		}
-
 		StringBuilder result = new StringBuilder();
-
 		// 直接使用Document的完整内容，每行一个Document
 		for (Document doc : businessTermDocuments) {
-			result.append(doc.getText()).append("\n");
+			String desc = (String)doc.getMetadata().get(DocumentMetadataConstant.DESCRIPTION);
+			result.append(doc.getText());
+			if(desc!=null && !desc.isBlank()) {
+				result.append(",说明: ");
+				result.append(desc).append("\n");
+			}
 		}
 
 		return result.toString();
@@ -231,10 +244,10 @@ public class EvidenceRecallNode implements NodeAction {
 			String knowledgeType = (String) metadata.get(DocumentMetadataConstant.CONCRETE_AGENT_KNOWLEDGE_TYPE);
 
 			// 根据知识类型调用不同的处理方法
-			if (KnowledgeType.QA.getCode().equals(knowledgeType)) {
+			if (KnowledgeType.QA.getCode().equals(knowledgeType) && doc.getMetadata().containsKey(DocumentMetadataConstant.DB_AGENT_PRESET_QA_ID)) {
 				processQaKnowledge(doc, i, result);
 			}
-			else if (KnowledgeType.FAQ.getCode().equals(knowledgeType)) {
+			else if (KnowledgeType.FAQ.getCode().equals(knowledgeType) || KnowledgeType.QA.getCode().equals(knowledgeType)) {
 				processFaqKnowledge(doc, i, result);
 			}
 			else {
@@ -251,7 +264,7 @@ public class EvidenceRecallNode implements NodeAction {
 	private void processQaKnowledge(Document doc, int index, StringBuilder result) {
 		Map<String, Object> metadata = doc.getMetadata();
 		String content = doc.getText();
-		Long knowledgeId = ((Number) metadata.get(DocumentMetadataConstant.DB_AGENT_KNOWLEDGE_ID)).longValue();
+		Integer knowledgeId = ((Integer) metadata.get(DocumentMetadataConstant.DB_AGENT_PRESET_QA_ID));
 		String knowledgeType = (String) metadata.get(DocumentMetadataConstant.CONCRETE_AGENT_KNOWLEDGE_TYPE);
 
 		log.debug("Processing {} type knowledge with id: {}", knowledgeType, knowledgeId);
@@ -290,7 +303,7 @@ public class EvidenceRecallNode implements NodeAction {
 	private void processFaqKnowledge(Document doc, int index, StringBuilder result) {
 		Map<String, Object> metadata = doc.getMetadata();
 		String content = doc.getText();
-		Integer knowledgeId = ((Number) metadata.get(DocumentMetadataConstant.DB_AGENT_KNOWLEDGE_ID)).intValue();
+		Integer knowledgeId = ((Integer) metadata.get(DocumentMetadataConstant.DB_AGENT_KNOWLEDGE_ID));
 		String knowledgeType = (String) metadata.get(DocumentMetadataConstant.CONCRETE_AGENT_KNOWLEDGE_TYPE);
 
 		log.debug("Processing {} type knowledge with id: {}", knowledgeType, knowledgeId);
@@ -330,7 +343,7 @@ public class EvidenceRecallNode implements NodeAction {
 	private void processDocumentKnowledge(Document doc, int index, StringBuilder result) {
 		Map<String, Object> metadata = doc.getMetadata();
 		String content = doc.getText();
-		Integer knowledgeId = ((Number) metadata.get(DocumentMetadataConstant.DB_AGENT_KNOWLEDGE_ID)).intValue();
+		Integer knowledgeId = ((Integer) metadata.get(DocumentMetadataConstant.DB_AGENT_KNOWLEDGE_ID));
 		String knowledgeType = (String) metadata.get(DocumentMetadataConstant.CONCRETE_AGENT_KNOWLEDGE_TYPE);
 		String title = "";
 		String sourceFilename = "";
@@ -387,7 +400,9 @@ public class EvidenceRecallNode implements NodeAction {
 		}
 	}
 
-	private record DocumentRetrievalResult(List<Document> businessTermDocuments, List<Document> agentKnowledgeDocuments,
+	private record DocumentRetrievalResult(List<Document> businessTermDocuments,
+										   List<Document> agentKnowledgeDocuments,
+										   List<Document> agentQADocuments,
 			List<Document> allDocuments) {
 	}
 

@@ -16,12 +16,9 @@
 package com.alibaba.cloud.ai.dataagent.mapper;
 
 import com.alibaba.cloud.ai.dataagent.entity.UserPromptConfig;
-import com.alibaba.cloud.ai.dataagent.service.MySqlContainerConfiguration;
 import org.junit.jupiter.api.Test;
 import org.mybatis.spring.boot.test.autoconfigure.MybatisTest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
-import org.springframework.boot.testcontainers.context.ImportTestcontainers;
 import org.springframework.test.context.TestPropertySource;
 
 import java.time.LocalDateTime;
@@ -33,8 +30,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @MybatisTest
 @TestPropertySource(
 		properties = { "spring.sql.init.mode=never", "mybatis.configuration.map-underscore-to-camel-case=true" })
-@ImportTestcontainers(MySqlContainerConfiguration.class)
-@ImportAutoConfiguration(MySqlContainerConfiguration.class)
 public class UserPromptConfigMapperTest {
 
 	@Autowired
@@ -68,18 +63,18 @@ public class UserPromptConfigMapperTest {
 		// Given
 		UserPromptConfig config1 = createTestUserPromptConfig();
 		config1.setPromptType("report-generator");
-		config1.setAgentId(1L);
+		config1.setAgentId(1);
 		UserPromptConfig config2 = createTestUserPromptConfig();
 		config2.setId(UUID.randomUUID().toString());
 		config2.setName("配置2");
 		config2.setPromptType("report-generator");
-		config2.setAgentId(1L);
+		config2.setAgentId(1);
 
 		userPromptConfigMapper.insert(config1);
 		userPromptConfigMapper.insert(config2);
 
 		// When
-		List<UserPromptConfig> configs = userPromptConfigMapper.selectByPromptType("report-generator", 1L);
+		List<UserPromptConfig> configs = userPromptConfigMapper.selectByPromptType("report-generator", 1);
 
 		// Then
 		assertTrue(configs.size() >= 2);
@@ -92,20 +87,20 @@ public class UserPromptConfigMapperTest {
 		UserPromptConfig enabledConfig = createTestUserPromptConfig();
 		enabledConfig.setPromptType("planner");
 		enabledConfig.setEnabled(true);
-		enabledConfig.setAgentId(2L);
+		enabledConfig.setAgentId(2);
 
 		UserPromptConfig disabledConfig = createTestUserPromptConfig();
 		disabledConfig.setId(UUID.randomUUID().toString());
 		disabledConfig.setName("禁用配置");
 		disabledConfig.setPromptType("planner");
 		disabledConfig.setEnabled(false);
-		disabledConfig.setAgentId(2L);
+		disabledConfig.setAgentId(2);
 
 		userPromptConfigMapper.insert(enabledConfig);
 		userPromptConfigMapper.insert(disabledConfig);
 
 		// When
-		UserPromptConfig activeConfig = userPromptConfigMapper.selectActiveByPromptType("planner", 2L);
+		UserPromptConfig activeConfig = userPromptConfigMapper.selectActiveByPromptType("planner", 2);
 
 		// Then
 		assertNotNull(activeConfig);
@@ -143,25 +138,25 @@ public class UserPromptConfigMapperTest {
 		UserPromptConfig config1 = createTestUserPromptConfig();
 		config1.setPromptType("test-type");
 		config1.setEnabled(true);
-		config1.setAgentId(3L);
+		config1.setAgentId(3);
 
 		UserPromptConfig config2 = createTestUserPromptConfig();
 		config2.setId(UUID.randomUUID().toString());
 		config2.setName("配置2");
 		config2.setPromptType("test-type");
 		config2.setEnabled(true);
-		config2.setAgentId(3L);
+		config2.setAgentId(3);
 
 		userPromptConfigMapper.insert(config1);
 		userPromptConfigMapper.insert(config2);
 
 		// When
-		int disableResult = userPromptConfigMapper.disableAllByPromptType("test-type", 3L);
+		int disableResult = userPromptConfigMapper.disableAllByPromptType("test-type", 3);
 
 		// Then
 		assertEquals(2, disableResult);
 
-		List<UserPromptConfig> configs = userPromptConfigMapper.selectByPromptType("test-type", 3L);
+		List<UserPromptConfig> configs = userPromptConfigMapper.selectByPromptType("test-type", 3);
 		assertTrue(configs.stream().allMatch(c -> !c.getEnabled()));
 	}
 
@@ -192,7 +187,7 @@ public class UserPromptConfigMapperTest {
 		activeConfig.setPromptType("test-type");
 		activeConfig.setEnabled(true);
 		activeConfig.setPriority(2);
-		activeConfig.setAgentId(4L);
+		activeConfig.setAgentId(4);
 
 		UserPromptConfig inactiveConfig = createTestUserPromptConfig();
 		inactiveConfig.setId(UUID.randomUUID().toString());
@@ -200,13 +195,13 @@ public class UserPromptConfigMapperTest {
 		inactiveConfig.setPromptType("test-type");
 		inactiveConfig.setEnabled(false);
 		inactiveConfig.setPriority(1);
-		inactiveConfig.setAgentId(4L);
+		inactiveConfig.setAgentId(4);
 
 		userPromptConfigMapper.insert(activeConfig);
 		userPromptConfigMapper.insert(inactiveConfig);
 
 		// When
-		List<UserPromptConfig> activeConfigs = userPromptConfigMapper.getActiveConfigsByType("test-type", 4L);
+		List<UserPromptConfig> activeConfigs = userPromptConfigMapper.getActiveConfigsByType("test-type", 4);
 
 		// Then
 		assertTrue(activeConfigs.size() >= 1);

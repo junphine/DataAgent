@@ -33,6 +33,17 @@ interface SemanticModel {
   updateTime?: string;
 }
 
+/**
+ * 分页查询请求参数
+ */
+interface SemanticModelQueryDto {
+  agentId: number;
+  keyword?: string;
+  embeddingStatus?: string;
+  pageNum?: number;
+  pageSize?: number;
+}
+
 interface SemanticModelAddDto {
   agentId: number;
   tableName: string;
@@ -81,6 +92,12 @@ class SemanticModelService {
 
     const response = await axios.get<ApiResponse<SemanticModel[]>>(API_BASE_URL, { params });
     return response.data.data || [];
+  }
+
+  async queryByPage(query: SemanticModelQueryDto): Promise<SemanticModel[]> {
+    const params: SemanticModelQueryDto = query;
+    const response = await axios.get<ApiResponse<SemanticModel[]>>(API_BASE_URL+'/queryByPage', { params });
+    return response.data || { data:[] };
   }
 
   /**
@@ -227,6 +244,7 @@ class SemanticModelService {
 export default new SemanticModelService();
 export type {
   SemanticModel,
+  SemanticModelQueryDto,
   SemanticModelAddDto,
   SemanticModelImportItem,
   SemanticModelBatchImportDTO,

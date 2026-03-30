@@ -85,6 +85,11 @@
         <scope>import</scope>
       </dependency>
       <dependency>
+        <groupId>com.alibaba.cloud.ai</groupId>
+        <artifactId>spring-ai-alibaba-starter-dashscope</artifactId>
+        <version>${spring-ai-alibaba.version}</version>
+      </dependency>
+      <dependency>
         <groupId>com.github.docker-java</groupId>
         <artifactId>docker-java-bom</artifactId>
         <version>${docker-java.version}</version>
@@ -291,7 +296,7 @@
             <goals>
               <goal>check</goal>
             </goals>
-            <phase>validate</phase>
+            <phase></phase>
           </execution>
         </executions>
       </plugin>

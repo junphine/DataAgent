@@ -102,12 +102,12 @@ public class UserPromptServiceImpl implements UserPromptService {
 	}
 
 	@Override
-	public List<UserPromptConfig> getActiveConfigsByType(String promptType, Long agentId) {
+	public List<UserPromptConfig> getActiveConfigsByType(String promptType, Integer agentId) {
 		return userPromptConfigMapper.getActiveConfigsByType(promptType, agentId);
 	}
 
 	@Override
-	public UserPromptConfig getActiveConfigByType(String promptType, Long agentId) {
+	public UserPromptConfig getActiveConfigByType(String promptType, Integer agentId) {
 		return userPromptConfigMapper.selectActiveByPromptType(promptType, agentId);
 	}
 
@@ -117,7 +117,7 @@ public class UserPromptServiceImpl implements UserPromptService {
 	}
 
 	@Override
-	public List<UserPromptConfig> getConfigsByType(String promptType, Long agentId) {
+	public List<UserPromptConfig> getConfigsByType(String promptType, Integer agentId) {
 		return userPromptConfigMapper.getConfigsByType(promptType, agentId);
 	}
 
@@ -160,7 +160,7 @@ public class UserPromptServiceImpl implements UserPromptService {
 	}
 
 	@Override
-	public List<UserPromptConfig> getOptimizationConfigs(String promptType, Long agentId) {
+	public List<UserPromptConfig> getOptimizationConfigs(String promptType, Integer agentId) {
 		return getActiveConfigsByType(promptType, agentId);
 	}
 

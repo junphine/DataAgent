@@ -128,10 +128,10 @@ public class AgentKnowledgeResourceManager {
 		List<String> headers = null;
 
 		try (InputStreamReader reader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8);
-			 CSVParser csvParser = new CSVParser(reader, CSVFormat.DEFAULT.builder()
+			 CSVParser csvParser = CSVParser.parse(reader, CSVFormat.DEFAULT.builder()
 					 .setHeader()
 					 .setSkipHeaderRecord(hasHeader)
-					 .build())) {
+					 .get())) {
 
 			// 获取表头
 			headers = csvParser.getHeaderNames();
@@ -185,7 +185,7 @@ public class AgentKnowledgeResourceManager {
 		try {
 
 			Map<String, Object> metadata = new HashMap<>();
-			metadata.put(Constant.AGENT_ID, agentId.toString());
+			metadata.put(Constant.AGENT_ID, agentId);
 			metadata.put(DocumentMetadataConstant.DB_AGENT_KNOWLEDGE_ID, knowledgeId);
 
 			agentVectorStoreService.deleteDocumentsByMetedata(agentId.toString(), metadata);

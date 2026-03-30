@@ -15,12 +15,25 @@
  */
 package com.alibaba.cloud.ai.dataagent.config;
 
+import java.util.ArrayList;
+import java.util.List;
 import com.alibaba.cloud.ai.dataagent.annotation.McpServerTool;
 import com.alibaba.cloud.ai.dataagent.service.mcp.McpServerService;
+import com.alibaba.cloud.ai.dataagent.util.McpServerToolUtil;
+import io.modelcontextprotocol.server.McpServerFeatures;
+
+import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.tool.method.MethodToolCallbackProvider;
+import org.springframework.ai.tool.resolution.DelegatingToolCallbackResolver;
+import org.springframework.ai.tool.resolution.SpringBeanToolCallbackResolver;
+import org.springframework.ai.tool.resolution.StaticToolCallbackResolver;
+import org.springframework.ai.tool.resolution.ToolCallbackResolver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.support.GenericApplicationContext;
+import static io.modelcontextprotocol.spec.McpSchema.*;
+
 
 // TODO 2025/12/08 合并包后移动到DataAgentConfiguration  中
 @Configuration
@@ -33,6 +46,43 @@ public class McpServerConfig {
 	@McpServerTool
 	public ToolCallbackProvider mcpServerTools(McpServerService mcpServerService) {
 		return MethodToolCallbackProvider.builder().toolObjects(mcpServerService).build();
+	}
+
+
+	@Bean
+	public ToolCallbackResolver toolCallbackResolver(GenericApplicationContext context) {
+		List<ToolCallback> allFunctionAndToolCallbacks = new ArrayList<>(
+				McpServerToolUtil.excludeMcpServerTool(context, ToolCallback.class));
+		McpServerToolUtil.excludeMcpServerTool(context, ToolCallbackProvider.class)
+				.stream()
+				.map(pr -> List.of(pr.getToolCallbacks()))
+				.forEach(allFunctionAndToolCallbacks::addAll);
+
+		var staticToolCallbackResolver = new StaticToolCallbackResolver(allFunctionAndToolCallbacks);
+
+		var springBeanToolCallbackResolver = SpringBeanToolCallbackResolver.builder()
+				.applicationContext(context)
+				.build();
+
+		return new DelegatingToolCallbackResolver(List.of(staticToolCallbackResolver, springBeanToolCallbackResolver));
+	}
+
+	@Bean
+	public List<McpServerFeatures.SyncCompletionSpecification> codeCompletions() {
+
+
+		var completion = new McpServerFeatures.SyncCompletionSpecification(
+				new PromptReference("code-completion","sql gen","Provides code completion suggestions"),
+				(exchange, request) -> {
+					// 返回完成建议的实现
+					return new CompleteResult(
+							new CompleteResult.CompleteCompletion(List.of("suggestion1", "First suggestion"),2,false)
+
+					);
+				}
+		);
+
+		return List.of(completion);
 	}
 
 }

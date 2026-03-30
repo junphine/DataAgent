@@ -33,7 +33,7 @@ import java.time.LocalDateTime;
 @Builder
 public class BusinessKnowledge {
 
-	private Long id;
+	private Integer id;
 
 	private String businessTerm; // Business term
 
@@ -42,9 +42,9 @@ public class BusinessKnowledge {
 	private String synonyms; // Synonyms, comma-separated
 
 	@Builder.Default
-	private Integer isRecall = 1; // Whether to recall (0: not recall, 1: recall)
+	private Boolean isRecall = true; // Whether to recall (0: not recall, 1: recall)
 
-	private Long agentId; // Associated agent ID
+	private Integer agentId; // Associated agent ID
 
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	private LocalDateTime createdTime;
@@ -60,6 +60,6 @@ public class BusinessKnowledge {
 
 	// 0=未删除, 1=已删除
 	@Builder.Default
-	private Integer isDeleted = 0;
+	private Boolean isDeleted = false;
 
 }

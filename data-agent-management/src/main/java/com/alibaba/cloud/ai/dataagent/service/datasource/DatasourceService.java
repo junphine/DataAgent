@@ -73,7 +73,7 @@ public interface DatasourceService {
 	 */
 	// 应该使用 AgentDatasourceService 中的方法
 	@Deprecated
-	List<AgentDatasource> getAgentDatasource(Long agentId);
+	List<AgentDatasource> getAgentDatasource(Integer agentId);
 
 	List<String> getDatasourceTables(Integer datasourceId) throws Exception;
 

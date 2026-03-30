@@ -200,7 +200,7 @@ public class DatasourceServiceImpl implements DatasourceService {
 
 	@Override
 	@Deprecated
-	public List<AgentDatasource> getAgentDatasource(Long agentId) {
+	public List<AgentDatasource> getAgentDatasource(Integer agentId) {
 		List<AgentDatasource> adentDatasources = agentDatasourceMapper.selectByAgentIdWithDatasource(agentId);
 
 		// Manually fill in the data source information (since MyBatis Plus does not

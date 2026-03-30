@@ -182,7 +182,7 @@ public class DamengJdbcDdl extends AbstractJdbcDdl {
 
 	@Override
 	public List<String> sampleColumn(Connection connection, String schema, String table, String column) {
-		String sql = "SELECT " + column + " FROM " + table + " FETCH FIRST 99 ROWS ONLY";
+		String sql = "SELECT distinct " + column + " FROM " + table + " FETCH FIRST 99 ROWS ONLY";
 		List<String> sampleInfo = Lists.newArrayList();
 		try {
 			String[][] resultArr = SqlExecutor.executeSqlAndReturnArr(connection, null, sql);

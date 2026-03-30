@@ -32,7 +32,7 @@ import java.time.LocalDateTime;
 @Data
 public class Agent {
 
-	private Long id;
+	private Integer id;
 
 	private String name; // Agent name
 

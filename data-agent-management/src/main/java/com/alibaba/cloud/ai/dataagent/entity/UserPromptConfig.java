@@ -15,6 +15,7 @@
  */
 package com.alibaba.cloud.ai.dataagent.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -45,7 +46,7 @@ public class UserPromptConfig {
 	/**
 	 * Associated agent ID, null means global configuration
 	 */
-	private Long agentId;
+	private Integer agentId;
 
 	/**
 	 * User-defined system prompt content
@@ -78,11 +79,13 @@ public class UserPromptConfig {
 	/**
 	 * Creation time
 	 */
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	private LocalDateTime createTime;
 
 	/**
 	 * Update time
 	 */
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	private LocalDateTime updateTime;
 
 	/**

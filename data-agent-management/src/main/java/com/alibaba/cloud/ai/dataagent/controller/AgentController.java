@@ -65,7 +65,7 @@ public class AgentController {
 
 	/** Get agent details by ID */
 	@GetMapping("/{id}")
-	public Agent get(@PathVariable Long id) {
+	public Agent get(@PathVariable Integer id) {
 		return checkAgentExists(id);
 	}
 
@@ -81,7 +81,7 @@ public class AgentController {
 
 	/** Update agent */
 	@PutMapping("/{id}")
-	public Agent update(@PathVariable Long id, @RequestBody Agent agent) {
+	public Agent update(@PathVariable Integer id, @RequestBody Agent agent) {
 		checkAgentExists(id);
 		agent.setId(id);
 		return agentService.save(agent);
@@ -89,14 +89,14 @@ public class AgentController {
 
 	/** Delete agent */
 	@DeleteMapping("/{id}")
-	public void delete(@PathVariable Long id) {
+	public void delete(@PathVariable Integer id) {
 		checkAgentExists(id);
 		agentService.deleteById(id);
 	}
 
 	/** Publish agent */
 	@PostMapping("/{id}/publish")
-	public Agent publish(@PathVariable Long id) {
+	public Agent publish(@PathVariable Integer id) {
 		Agent agent = checkAgentExists(id);
 		agent.setStatus("published");
 		return agentService.save(agent);
@@ -104,7 +104,7 @@ public class AgentController {
 
 	/** Offline agent */
 	@PostMapping("/{id}/offline")
-	public Agent offline(@PathVariable Long id) {
+	public Agent offline(@PathVariable Integer id) {
 		Agent agent = checkAgentExists(id);
 		agent.setStatus("offline");
 		return agentService.save(agent);
@@ -112,7 +112,7 @@ public class AgentController {
 
 	/** Get masked API Key status */
 	@GetMapping("/{id}/api-key")
-	public ApiResponse<ApiKeyResponse> getApiKey(@PathVariable Long id) {
+	public ApiResponse<ApiKeyResponse> getApiKey(@PathVariable Integer id) {
 		Agent agent = checkAgentExists(id);
 		String masked = agentService.getApiKeyMasked(id);
 		return buildApiKeyResponse(masked, agent.getApiKeyEnabled(), "获取 API Key 成功");
@@ -120,7 +120,7 @@ public class AgentController {
 
 	/** Generate API Key */
 	@PostMapping("/{id}/api-key/generate")
-	public ApiResponse<ApiKeyResponse> generateApiKey(@PathVariable Long id) {
+	public ApiResponse<ApiKeyResponse> generateApiKey(@PathVariable Integer id) {
 		checkAgentExists(id);
 		Agent agent = agentService.generateApiKey(id);
 		return buildApiKeyResponse(agent.getApiKey(), agent.getApiKeyEnabled(), "生成 API Key 成功");
@@ -128,7 +128,7 @@ public class AgentController {
 
 	/** Reset API Key */
 	@PostMapping("/{id}/api-key/reset")
-	public ApiResponse<ApiKeyResponse> resetApiKey(@PathVariable Long id) {
+	public ApiResponse<ApiKeyResponse> resetApiKey(@PathVariable Integer id) {
 		checkAgentExists(id);
 		Agent agent = agentService.resetApiKey(id);
 		return buildApiKeyResponse(agent.getApiKey(), agent.getApiKeyEnabled(), "重置 API Key 成功");
@@ -136,7 +136,7 @@ public class AgentController {
 
 	/** Delete API Key */
 	@DeleteMapping("/{id}/api-key")
-	public ApiResponse<ApiKeyResponse> deleteApiKey(@PathVariable Long id) {
+	public ApiResponse<ApiKeyResponse> deleteApiKey(@PathVariable Integer id) {
 		checkAgentExists(id);
 		Agent agent = agentService.deleteApiKey(id);
 		return buildApiKeyResponse(agent.getApiKey(), agent.getApiKeyEnabled(), "删除 API Key 成功");
@@ -144,14 +144,14 @@ public class AgentController {
 
 	/** Toggle API Key enable flag */
 	@PostMapping("/{id}/api-key/enable")
-	public ApiResponse<ApiKeyResponse> toggleApiKey(@PathVariable Long id, @RequestParam("enabled") boolean enabled) {
+	public ApiResponse<ApiKeyResponse> toggleApiKey(@PathVariable Integer id, @RequestParam("enabled") boolean enabled) {
 		checkAgentExists(id);
 		Agent agent = agentService.toggleApiKey(id, enabled);
 		return buildApiKeyResponse(agent.getApiKey() == null ? null : "****", agent.getApiKeyEnabled(),
 				"更新 API Key 状态成功");
 	}
 
-	private Agent checkAgentExists(Long id) {
+	private Agent checkAgentExists(Integer id) {
 		Agent agent = agentService.findById(id);
 		if (agent == null) {
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "agent with id: %d not found".formatted(id));

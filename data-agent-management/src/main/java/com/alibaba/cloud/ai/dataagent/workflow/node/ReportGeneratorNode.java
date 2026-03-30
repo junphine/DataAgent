@@ -87,10 +87,10 @@ public class ReportGeneratorNode implements NodeAction {
 
 		// Get agent id from state
 		String agentIdStr = StateUtil.getStringValue(state, AGENT_ID);
-		Long agentId = null;
+		Integer agentId = null;
 		try {
 			if (agentIdStr != null) {
-				agentId = Long.parseLong(agentIdStr);
+				agentId = Integer.parseInt(agentIdStr);
 			}
 		}
 		catch (NumberFormatException ignore) {
@@ -142,7 +142,7 @@ public class ReportGeneratorNode implements NodeAction {
 	 * Generates the analysis report.
 	 */
 	private Flux<ChatResponse> generateReport(String userInput, Plan plan, HashMap<String, String> executionResults,
-			String summaryAndRecommendations, Long agentId) {
+			String summaryAndRecommendations, Integer agentId) {
 		// Build user requirements and plan description
 		String userRequirementsAndPlan = buildUserRequirementsAndPlan(userInput, plan);
 

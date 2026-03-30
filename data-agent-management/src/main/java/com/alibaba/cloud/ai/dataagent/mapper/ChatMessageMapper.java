@@ -40,7 +40,7 @@ public interface ChatMessageMapper {
 			SELECT * FROM chat_message
 			WHERE id = #{id}
 			""")
-	ChatMessage selectById(@Param("id") Long id);
+	ChatMessage selectById(@Param("id") Integer id);
 
 	/**
 	 * Query message count by session ID
@@ -73,6 +73,6 @@ public interface ChatMessageMapper {
 			DELETE FROM chat_message
 			WHERE id = #{id}
 			""")
-	int deleteById(@Param("id") Long id);
+	int deleteById(@Param("id") Integer id);
 
 }

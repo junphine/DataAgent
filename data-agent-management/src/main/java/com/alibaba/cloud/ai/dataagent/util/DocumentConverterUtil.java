@@ -60,8 +60,10 @@ public class DocumentConverterUtil {
 	 */
 	public static Document convertColumnToDocument(Integer datasourceId, TableInfoBO tableInfoBO,
 			ColumnInfoBO columnInfoBO) {
-		String text = StringUtils.isBlank(columnInfoBO.getDescription()) ? columnInfoBO.getName()
-				: columnInfoBO.getDescription();
+		String text = tableInfoBO.getName()+"."+columnInfoBO.getName();
+		if(!StringUtils.isBlank(columnInfoBO.getDescription())){
+			text += " // " + columnInfoBO.getDescription();
+		}
 		Map<String, Object> metadata = new HashMap<>();
 		metadata.put("name", columnInfoBO.getName());
 		metadata.put("tableName", tableInfoBO.getName());
@@ -70,13 +72,13 @@ public class DocumentConverterUtil {
 		metadata.put("primary", columnInfoBO.isPrimary());
 		metadata.put("notnull", columnInfoBO.isNotnull());
 		metadata.put(DocumentMetadataConstant.VECTOR_TYPE, DocumentMetadataConstant.COLUMN);
-		metadata.put(Constant.DATASOURCE_ID, datasourceId.toString());
+		metadata.put(Constant.DATASOURCE_ID, datasourceId);
 
 		if (columnInfoBO.getSamples() != null) {
 			metadata.put("samples", columnInfoBO.getSamples());
 		}
-
-		return new Document(text, metadata);
+		String id = tableInfoBO.getName()+"."+columnInfoBO.getName();
+		return new Document(id, text, metadata);
 	}
 
 	/**
@@ -87,7 +89,7 @@ public class DocumentConverterUtil {
 	 */
 	public static Document convertTableToDocument(Integer datasourceId, TableInfoBO tableInfoBO) {
 		String text = StringUtils.isBlank(tableInfoBO.getDescription()) ? tableInfoBO.getName()
-				: tableInfoBO.getDescription();
+				: tableInfoBO.getName()+ " // "+ tableInfoBO.getDescription();
 		Map<String, Object> metadata = new HashMap<>();
 		metadata.put("schema", Optional.ofNullable(tableInfoBO.getSchema()).orElse(""));
 		metadata.put("name", tableInfoBO.getName());
@@ -95,8 +97,11 @@ public class DocumentConverterUtil {
 		metadata.put("foreignKey", Optional.ofNullable(tableInfoBO.getForeignKey()).orElse(""));
 		metadata.put("primaryKey", Optional.ofNullable(tableInfoBO.getPrimaryKeys()).orElse(new ArrayList<>()));
 		metadata.put(DocumentMetadataConstant.VECTOR_TYPE, DocumentMetadataConstant.TABLE);
-		metadata.put(Constant.DATASOURCE_ID, datasourceId.toString());
-		return new Document(text, metadata);
+		metadata.put(Constant.DATASOURCE_ID, datasourceId);
+		String id = tableInfoBO.getName();
+		if(tableInfoBO.getSchema()!=null && !tableInfoBO.getSchema().isBlank())
+			id = tableInfoBO.getSchema()+"."+tableInfoBO.getName();
+		return new Document(id, text, metadata);
 	}
 
 	public static List<Document> convertTablesToDocuments(Integer datasourceId, List<TableInfoBO> tables) {
@@ -109,17 +114,19 @@ public class DocumentConverterUtil {
 
 		// 构建文档内容，包含业务名词、说明和同义词
 		String businessTerm = businessKnowledge.getBusinessTerm();
-		String description = Optional.ofNullable(businessKnowledge.getDescription()).orElse("无");
-		String synonyms = Optional.ofNullable(businessKnowledge.getSynonyms()).orElse("无");
+		String description = Optional.ofNullable(businessKnowledge.getDescription()).orElse("");
+		String synonyms = Optional.ofNullable(businessKnowledge.getSynonyms()).orElse("");
 
-		String content = String.format("业务名词: %s, 说明: %s, 同义词: %s", businessTerm, description, synonyms);
-
+		String content = String.format("业务名词: %s", businessTerm);
+		if(!synonyms.isBlank()){
+			content = content + ", 同义词:"+ synonyms;
+		}
 		// 构建元数据
 		Map<String, Object> metadata = new HashMap<>();
 		metadata.put(DocumentMetadataConstant.VECTOR_TYPE, DocumentMetadataConstant.BUSINESS_TERM);
-		metadata.put(Constant.AGENT_ID, businessKnowledge.getAgentId().toString());
+		metadata.put(Constant.AGENT_ID, businessKnowledge.getAgentId());
 		metadata.put(DocumentMetadataConstant.DB_BUSINESS_TERM_ID, businessKnowledge.getId());
-
+		metadata.put(DocumentMetadataConstant.DESCRIPTION, description);
 		return new Document(content, metadata);
 	}
 
@@ -128,7 +135,7 @@ public class DocumentConverterUtil {
 		String content = knowledge.getQuestion();
 		Map<String, Object> metadata = new HashMap<>();
 		// answer和isRecall经常变更的放到关系数据库
-		metadata.put(Constant.AGENT_ID, knowledge.getAgentId().toString());
+		metadata.put(Constant.AGENT_ID, knowledge.getAgentId());
 		metadata.put(DocumentMetadataConstant.VECTOR_TYPE, DocumentMetadataConstant.AGENT_KNOWLEDGE);
 		metadata.put(DocumentMetadataConstant.DB_AGENT_KNOWLEDGE_ID, knowledge.getId());
 		metadata.put(DocumentMetadataConstant.CONCRETE_AGENT_KNOWLEDGE_TYPE, knowledge.getType().getCode());
@@ -136,14 +143,14 @@ public class DocumentConverterUtil {
 		return new Document(content, metadata);
 	}
 
-	public static Document convertQaFaqKnowledgeToDocument(AgentPresetQuestion knowledge) {
+	public static Document convertPresetQuestionAnwserToDocument(AgentPresetQuestion knowledge) {
 		// 使用question作为Document的content字段
 		String content = knowledge.getQuestion();
 		Map<String, Object> metadata = new HashMap<>();
 		// answer和isRecall经常变更的放到关系数据库
-		metadata.put(Constant.AGENT_ID, knowledge.getAgentId().toString());
-		metadata.put(DocumentMetadataConstant.VECTOR_TYPE, DocumentMetadataConstant.AGENT_KNOWLEDGE);
-		metadata.put(DocumentMetadataConstant.DB_AGENT_KNOWLEDGE_ID, knowledge.getId());
+		metadata.put(Constant.AGENT_ID, knowledge.getAgentId());
+		metadata.put(DocumentMetadataConstant.VECTOR_TYPE, DocumentMetadataConstant.AGENT_PRESET_QA);
+		metadata.put(DocumentMetadataConstant.DB_AGENT_PRESET_QA_ID, knowledge.getId());
 		metadata.put(DocumentMetadataConstant.CONCRETE_AGENT_KNOWLEDGE_TYPE, KnowledgeType.QA.getCode());
 
 		return new Document(content, metadata);
@@ -160,10 +167,9 @@ public class DocumentConverterUtil {
 		List<Document> documentsWithMetadata = new ArrayList<>();
 
 		for (Document doc : documents) {
-			// isRecall经常变更的放到关系数据库不放metadata中
-			// 创建元数据
+			// isRecall经常变更的放到关系数据库不放metadata中创建元数据
 			Map<String, Object> metadata = new HashMap<>(doc.getMetadata());
-			metadata.put(Constant.AGENT_ID, knowledge.getAgentId().toString());
+			metadata.put(Constant.AGENT_ID, knowledge.getAgentId());
 			metadata.put(DocumentMetadataConstant.DB_AGENT_KNOWLEDGE_ID, knowledge.getId());
 			metadata.put(DocumentMetadataConstant.VECTOR_TYPE, DocumentMetadataConstant.AGENT_KNOWLEDGE);
 			metadata.put(DocumentMetadataConstant.CONCRETE_AGENT_KNOWLEDGE_TYPE, knowledge.getType().getCode());

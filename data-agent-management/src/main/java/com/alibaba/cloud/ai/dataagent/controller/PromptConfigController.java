@@ -110,7 +110,7 @@ public class PromptConfigController {
 	 */
 	@GetMapping("/list-by-type/{promptType}")
 	public ResponseEntity<Map<String, Object>> getConfigsByType(@PathVariable(value = "promptType") String promptType,
-			@RequestParam(value = "agentId", required = false) Long agentId) {
+			@RequestParam(value = "agentId", required = false) Integer agentId) {
 		List<UserPromptConfig> configs = promptConfigService.getConfigsByType(promptType, agentId);
 
 		Map<String, Object> response = new HashMap<>();
@@ -129,7 +129,7 @@ public class PromptConfigController {
 	 */
 	@GetMapping("/active/{promptType}")
 	public ResponseEntity<Map<String, Object>> getActiveConfig(@PathVariable(value = "promptType") String promptType,
-			@RequestParam(value = "agentId", required = false) Long agentId) {
+			@RequestParam(value = "agentId", required = false) Integer agentId) {
 		UserPromptConfig config = promptConfigService.getActiveConfigByType(promptType, agentId);
 
 		Map<String, Object> response = new HashMap<>();
@@ -148,7 +148,7 @@ public class PromptConfigController {
 	 */
 	@GetMapping("/active-all/{promptType}")
 	public ResponseEntity<Map<String, Object>> getActiveConfigs(@PathVariable(value = "promptType") String promptType,
-			@RequestParam(value = "agentId", required = false) Long agentId) {
+			@RequestParam(value = "agentId", required = false) Integer agentId) {
 		List<UserPromptConfig> configs = promptConfigService.getActiveConfigsByType(promptType, agentId);
 
 		Map<String, Object> response = new HashMap<>();

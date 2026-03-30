@@ -31,7 +31,7 @@ public interface AgentMapper {
 	@Select("""
 			SELECT * FROM agent WHERE id = #{id}
 			""")
-	Agent findById(Long id);
+	Agent findById(Integer id);
 
 	@Select("""
 			SELECT * FROM agent WHERE status = #{status} ORDER BY create_time DESC
@@ -98,19 +98,18 @@ public interface AgentMapper {
 			SET api_key = #{apiKey}, api_key_enabled = #{apiKeyEnabled}, update_time = NOW()
 			WHERE id = #{id}
 			""")
-	int updateApiKey(@Param("id") Long id, @Param("apiKey") String apiKey,
-			@Param("apiKeyEnabled") Integer apiKeyEnabled);
+	int updateApiKey(@Param("id") Integer id, @Param("apiKey") String apiKey,@Param("apiKeyEnabled") Integer apiKeyEnabled);
 
 	@Update("""
 			UPDATE agent
 			SET api_key_enabled = #{enabled}, update_time = NOW()
 			WHERE id = #{id}
 			""")
-	int toggleApiKey(@Param("id") Long id, @Param("enabled") Integer enabled);
+	int toggleApiKey(@Param("id") Integer id, @Param("enabled") Integer enabled);
 
 	@Delete("""
 			DELETE FROM agent WHERE id = #{id}
 			""")
-	int deleteById(Long id);
+	int deleteById(Integer id);
 
 }

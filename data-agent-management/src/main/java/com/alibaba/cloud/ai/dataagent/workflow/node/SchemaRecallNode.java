@@ -68,7 +68,7 @@ public class SchemaRecallNode implements NodeAction {
 		String agentId = StateUtil.getStringValue(state, AGENT_ID);
 
 		// 查询 Agent 的激活数据源
-		Integer datasourceId = agentDatasourceMapper.selectActiveDatasourceIdByAgentId(Long.valueOf(agentId));
+		Integer datasourceId = agentDatasourceMapper.selectActiveDatasourceIdByAgentId(Integer.valueOf(agentId));
 
 		if (datasourceId == null) {
 			log.warn("Agent {} has no active datasource", agentId);

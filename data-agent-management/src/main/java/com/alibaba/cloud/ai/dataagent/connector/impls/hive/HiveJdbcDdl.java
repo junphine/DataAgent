@@ -183,7 +183,7 @@ public class HiveJdbcDdl extends AbstractJdbcDdl {
 	@Override
 	public List<String> sampleColumn(Connection connection, String schema, String table, String column) {
 		String fullTableName = StringUtils.isNotBlank(schema) ? schema + "." + table : table;
-		String sql = String.format("SELECT `%s` FROM %s LIMIT 99", column, fullTableName);
+		String sql = String.format("SELECT distinct `%s` FROM %s LIMIT 99", column, fullTableName);
 
 		List<String> sampleInfo = Lists.newArrayList();
 		try {

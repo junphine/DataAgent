@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.alibaba.cloud.ai.dataagent.entity.AgentDatasource;
 import com.alibaba.cloud.ai.dataagent.entity.Datasource;
-import com.alibaba.cloud.ai.dataagent.service.MySqlContainerConfiguration;
+
 import java.sql.Statement;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -29,8 +29,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mybatis.spring.boot.test.autoconfigure.MybatisTest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
-import org.springframework.boot.testcontainers.context.ImportTestcontainers;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -39,8 +37,7 @@ import org.springframework.test.context.TestPropertySource;
 @MybatisTest
 @TestPropertySource(
 		properties = { "spring.sql.init.mode=never", "mybatis.configuration.map-underscore-to-camel-case=true" })
-@ImportTestcontainers(MySqlContainerConfiguration.class)
-@ImportAutoConfiguration(MySqlContainerConfiguration.class)
+
 public class AgentDatasourceMapperTest {
 
 	@Autowired
@@ -52,7 +49,7 @@ public class AgentDatasourceMapperTest {
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
 
-	private Long agentId;
+	private Integer agentId;
 
 	@BeforeEach
 	public void setUpAgent() {
@@ -64,7 +61,7 @@ public class AgentDatasourceMapperTest {
 	@Test
 	public void testAgentDatasourceCreateNewRelationEnabled() {
 		// Given
-		Long agentId = this.agentId;
+		Integer agentId = this.agentId;
 		Integer datasourceId = createTestDatasourceAndGetId();
 
 		// When
@@ -82,7 +79,7 @@ public class AgentDatasourceMapperTest {
 	@Test
 	public void testAgentDatasourceSelectByAgentId() {
 		// Given
-		Long agentId = this.agentId;
+		Integer agentId = this.agentId;
 		Integer datasourceId1 = createTestDatasourceAndGetId();
 		Integer datasourceId2 = createTestDatasourceAndGetId();
 
@@ -102,7 +99,7 @@ public class AgentDatasourceMapperTest {
 	@Test
 	public void testAgentDatasourceSelectByAgentIdAndDatasourceId() {
 		// Given
-		Long agentId = this.agentId;
+		Integer agentId = this.agentId;
 		Integer datasourceId = createTestDatasourceAndGetId();
 		agentDatasourceMapper.createNewRelationEnabled(agentId, datasourceId);
 
@@ -118,7 +115,7 @@ public class AgentDatasourceMapperTest {
 	@Test
 	public void testAgentDatasourceUpdateRelation() {
 		// Given
-		Long agentId = this.agentId;
+		Integer agentId = this.agentId;
 		Integer datasourceId = createTestDatasourceAndGetId();
 		agentDatasourceMapper.createNewRelationEnabled(agentId, datasourceId);
 
@@ -142,7 +139,7 @@ public class AgentDatasourceMapperTest {
 	@Test
 	public void testAgentDatasourceDisableAllByAgentId() {
 		// Given
-		Long agentId = this.agentId;
+		Integer agentId = this.agentId;
 		Integer datasourceId1 = createTestDatasourceAndGetId();
 		Integer datasourceId2 = createTestDatasourceAndGetId();
 
@@ -156,13 +153,13 @@ public class AgentDatasourceMapperTest {
 		assertEquals(2, disableResult);
 
 		List<AgentDatasource> relations = agentDatasourceMapper.selectByAgentId(agentId);
-		assertTrue(relations.stream().allMatch(r -> r.getIsActive() != null && r.getIsActive() == 0));
+		assertTrue(relations.stream().allMatch(r -> r.getIsActive() != null && !r.getIsActive()));
 	}
 
 	@Test
 	public void testAgentDatasourceCountActiveByAgentIdExcluding() {
 		// Given
-		Long agentId = this.agentId;
+		Integer agentId = this.agentId;
 		Integer datasourceId1 = createTestDatasourceAndGetId();
 		Integer datasourceId2 = createTestDatasourceAndGetId();
 		Integer datasourceId3 = createTestDatasourceAndGetId();
@@ -181,7 +178,7 @@ public class AgentDatasourceMapperTest {
 	@Test
 	public void testAgentDatasourceRemoveRelation() {
 		// Given
-		Long agentId = this.agentId;
+		Integer agentId = this.agentId;
 		Integer datasourceId = createTestDatasourceAndGetId();
 		agentDatasourceMapper.createNewRelationEnabled(agentId, datasourceId);
 
@@ -197,8 +194,8 @@ public class AgentDatasourceMapperTest {
 	@Test
 	public void testAgentDatasourceDeleteAllByDatasourceId() {
 		// Given
-		Long agentId1 = createTestAgentAndGetId();
-		Long agentId2 = createTestAgentAndGetId();
+		Integer agentId1 = createTestAgentAndGetId();
+		Integer agentId2 = createTestAgentAndGetId();
 		Integer datasourceId = createTestDatasourceAndGetId();
 
 		agentDatasourceMapper.createNewRelationEnabled(agentId1, datasourceId);
@@ -242,7 +239,7 @@ public class AgentDatasourceMapperTest {
 		return datasource.getId();
 	}
 
-	private Long createTestAgentAndGetId() {
+	private Integer createTestAgentAndGetId() {
 		KeyHolder keyHolder = new GeneratedKeyHolder();
 		jdbcTemplate.update(con -> {
 			var ps = con.prepareStatement(
@@ -253,7 +250,7 @@ public class AgentDatasourceMapperTest {
 			return ps;
 		}, keyHolder);
 		Number key = keyHolder.getKey();
-		Long id = key == null ? null : key.longValue();
+		Integer id = key == null ? null : key.intValue();
 		// 立即校验插入是否可见且存在，避免外键引用失败
 		if (id == null) {
 			throw new IllegalStateException("创建测试Agent失败：未获取到自增ID");

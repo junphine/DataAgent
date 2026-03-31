@@ -121,13 +121,6 @@ public class AgentStartupInitialization implements ApplicationRunner, Disposable
 		try {
 			Integer agentId = agent.getId();
 
-			boolean hasData = isAlreadyInitialized(agentId);
-
-			if (hasData) {
-				log.info("Agent {} already has vector data , skipping initialization", agentId);
-				return true;
-			}
-
 			AgentDatasource activeDatasource = agentDatasourceService.getCurrentAgentDatasource(agentId);
 
 			Integer datasourceId = activeDatasource.getDatasourceId();
@@ -139,13 +132,22 @@ public class AgentStartupInitialization implements ApplicationRunner, Disposable
 				return false;
 			}
 
+			boolean hasData = isAlreadyInitialized(agentId,datasourceId);
+
+			if (hasData) {
+				log.info("Agent {} already has vector data , skipping initialization", agentId);
+				return true;
+			}
+
 			log.info("Initializing agent {} with datasource {} and {} tables", agentId, datasourceId, tables.size());
 
-			Boolean result = agentDatasourceService.initializeSchemaForAgentWithDatasource(agentId, datasourceId,
-					tables);
+			Boolean result = agentDatasourceService.initializeSchemaForAgentWithDatasource(agentId, datasourceId, tables);
 
 			if (result) {
 				log.info("Successfully initialized datasource for agent {} with {} tables", agentId, tables.size());
+
+				agentVectorStoreService.flushVectorStore(datasourceId.toString(),DocumentMetadataConstant.TABLE);
+				agentVectorStoreService.flushVectorStore(datasourceId.toString(),DocumentMetadataConstant.COLUMN);
 				return true;
 			}
 			else {
@@ -160,10 +162,10 @@ public class AgentStartupInitialization implements ApplicationRunner, Disposable
 		}
 	}
 
-	private boolean isAlreadyInitialized(Integer agentId) {
+	private boolean isAlreadyInitialized(Integer agentId,Integer datasourceId) {
 		try {
 			String agentIdStr = String.valueOf(agentId);
-			return agentVectorStoreService.hasDocuments(agentIdStr, DocumentMetadataConstant.COLUMN);
+			return agentVectorStoreService.hasDocuments(datasourceId.toString(), DocumentMetadataConstant.COLUMN);
 		}
 		catch (Exception e) {
 			log.error("Failed to check initialization status for agent: {}, assuming not initialized", agentId, e);

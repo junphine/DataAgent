@@ -15,35 +15,49 @@
  */
 package com.alibaba.cloud.ai.dataagent.config;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import com.alibaba.cloud.ai.dataagent.annotation.McpServerTool;
+import com.alibaba.cloud.ai.dataagent.entity.Agent;
+import com.alibaba.cloud.ai.dataagent.service.agent.AgentService;
+import com.alibaba.cloud.ai.dataagent.service.graph.GraphService;
+import com.alibaba.cloud.ai.dataagent.service.mcp.McpAgentService;
 import com.alibaba.cloud.ai.dataagent.service.mcp.McpServerService;
 import com.alibaba.cloud.ai.dataagent.util.McpServerToolUtil;
 import io.modelcontextprotocol.server.McpServerFeatures;
 
+import io.modelcontextprotocol.server.McpSyncServer;
+import org.springframework.ai.mcp.McpToolUtils;
+import org.springframework.ai.support.ToolCallbacks;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.ToolCallbackProvider;
+import org.springframework.ai.tool.definition.DefaultToolDefinition;
+import org.springframework.ai.tool.metadata.ToolMetadata;
+import org.springframework.ai.tool.method.MethodToolCallback;
 import org.springframework.ai.tool.method.MethodToolCallbackProvider;
 import org.springframework.ai.tool.resolution.DelegatingToolCallbackResolver;
 import org.springframework.ai.tool.resolution.SpringBeanToolCallbackResolver;
 import org.springframework.ai.tool.resolution.StaticToolCallbackResolver;
 import org.springframework.ai.tool.resolution.ToolCallbackResolver;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.GenericApplicationContext;
 import static io.modelcontextprotocol.spec.McpSchema.*;
 
 
-// TODO 2025/12/08 合并包后移动到DataAgentConfiguration  中
 @Configuration
-public class McpServerConfig {
+public class McpServerConfig{
+
 
 	// McpServerTool自定义注解 是为了解决如下场景：
 	// ChatClient初始化依赖 chatModel，而如dashscopeChatModel等通过starter装配的ChatModel初始化会
 	// 立马扫描tool了，但是我们的tool功能需要依赖LLM（比如NL2SQL），所以间接依赖了chatClient，循环依赖。
-	@Bean
-	@McpServerTool
+	//@Bean
+	//@McpServerTool
 	public ToolCallbackProvider mcpServerTools(McpServerService mcpServerService) {
 		return MethodToolCallbackProvider.builder().toolObjects(mcpServerService).build();
 	}
@@ -70,10 +84,10 @@ public class McpServerConfig {
 	@Bean
 	public List<McpServerFeatures.SyncCompletionSpecification> codeCompletions() {
 
-
 		var completion = new McpServerFeatures.SyncCompletionSpecification(
-				new PromptReference("code-completion","sql gen","Provides code completion suggestions"),
+				new PromptReference("code-completion","sql gen","Provides sql code completion suggestions"),
 				(exchange, request) -> {
+					String name = request.argument().name();
 					// 返回完成建议的实现
 					return new CompleteResult(
 							new CompleteResult.CompleteCompletion(List.of("suggestion1", "First suggestion"),2,false)
@@ -84,5 +98,4 @@ public class McpServerConfig {
 
 		return List.of(completion);
 	}
-
 }

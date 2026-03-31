@@ -192,7 +192,7 @@ public class BusinessKnowledgeServiceImpl implements BusinessKnowledgeService {
 		metadata.put(Constant.AGENT_ID, knowledge.getAgentId());
 		metadata.put(DocumentMetadataConstant.DB_BUSINESS_TERM_ID, knowledge.getId());
 		metadata.put(DocumentMetadataConstant.VECTOR_TYPE, DocumentMetadataConstant.BUSINESS_TERM);
-		agentVectorStoreService.deleteDocumentsByMetedata(knowledge.getAgentId().toString(), metadata);
+		agentVectorStoreService.deleteDocumentsByMetadata(knowledge.getAgentId().toString(), metadata);
 	}
 
 	@Override

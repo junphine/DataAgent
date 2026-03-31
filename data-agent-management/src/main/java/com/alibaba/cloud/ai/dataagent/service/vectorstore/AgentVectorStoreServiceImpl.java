@@ -58,6 +58,7 @@ public class AgentVectorStoreServiceImpl implements AgentVectorStoreService, Dis
 	private final DynamicFilterService dynamicFilterService;
 
 	private Map<String,VectorStore> vectorStoreMap = new ConcurrentHashMap<>();
+	private Map<String,Boolean> vectorStoreMapStatus = new ConcurrentHashMap<>();
 
 	public AgentVectorStoreServiceImpl(VectorStore vectorStore,EmbeddingModel embeddingModel,
 			Optional<HybridRetrievalStrategy> hybridRetrievalStrategy, DataAgentProperties dataAgentProperties,
@@ -96,6 +97,9 @@ public class AgentVectorStoreServiceImpl implements AgentVectorStoreService, Dis
 
 	public boolean flushVectorStore(String agentId, String vectorType){
 		String key = agentId+"."+vectorType;
+		if(vectorStoreMapStatus.containsKey(key)){
+			return false;
+		}
 		VectorStore vectorStore = vectorStoreMap.get(key);
 		if(vectorStore!=null && vectorStore instanceof SimpleVectorStore){
 			SimpleVectorStore instance = (SimpleVectorStore)vectorStore;
@@ -110,6 +114,7 @@ public class AgentVectorStoreServiceImpl implements AgentVectorStoreService, Dis
 				}
 
 				instance.save(path.toFile());
+				vectorStoreMapStatus.put(key,true);
 				return true;
 			}
 			catch (Throwable t) {
@@ -159,7 +164,7 @@ public class AgentVectorStoreServiceImpl implements AgentVectorStoreService, Dis
 		Map<String, Object> metadata = new HashMap<>(Map.ofEntries(
 				Map.entry(DocumentMetadataConstant.VECTOR_TYPE, vectorType)));
 
-		return this.deleteDocumentsByMetedata(agentId, metadata);
+		return this.deleteDocumentsByMetadata(agentId, metadata);
 	}
 
 	@Override
@@ -194,6 +199,7 @@ public class AgentVectorStoreServiceImpl implements AgentVectorStoreService, Dis
 		}
 		if(lastVectorType!=null) {
 			vectorStore(agentId, lastVectorType).add(documents);
+			vectorStoreMapStatus.remove(agentId+"."+lastVectorType);
 		}
 	}
 
@@ -213,11 +219,10 @@ public class AgentVectorStoreServiceImpl implements AgentVectorStoreService, Dis
 	}
 
 	@Override
-	public Boolean deleteDocumentsByMetedata(String agentId, Map<String, Object> metadata) {
+	public Boolean deleteDocumentsByMetadata(String agentId, Map<String, Object> metadata) {
 		Assert.hasText(agentId, "AgentId cannot be empty.");
 		Assert.notNull(metadata, "Metadata cannot be null.");
-		// 添加agentId元数据过滤条件, 用于删除指定agentId下的所有数据，因为metadata中用户调用可能忘记添加agentId
-		metadata.put(Constant.AGENT_ID, Integer.valueOf(agentId));
+
 		String filterExpression = buildFilterExpressionString(metadata);
 		String vectorType = (String) metadata.get(DocumentMetadataConstant.VECTOR_TYPE);
 		VectorStore vectorStore = vectorStore(agentId,vectorType);
@@ -230,6 +235,8 @@ public class AgentVectorStoreServiceImpl implements AgentVectorStoreService, Dis
 		else {
 			vectorStore.delete(filterExpression);
 		}
+
+		vectorStoreMapStatus.remove(agentId+"."+vectorType);
 
 		return true;
 	}

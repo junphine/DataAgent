@@ -17,6 +17,8 @@ package com.alibaba.cloud.ai.dataagent.service.graph;
 
 import com.alibaba.cloud.ai.dataagent.service.langfuse.LangfuseService;
 import com.alibaba.cloud.ai.dataagent.enums.TextType;
+import com.alibaba.cloud.ai.dataagent.util.JsonUtil;
+import com.alibaba.cloud.ai.dataagent.vo.ChatResponse;
 import com.alibaba.cloud.ai.dataagent.workflow.node.PlannerNode;
 import com.alibaba.cloud.ai.dataagent.dto.GraphRequest;
 import com.alibaba.cloud.ai.dataagent.service.graph.Context.MultiTurnContextManager;
@@ -26,6 +28,7 @@ import com.alibaba.cloud.ai.graph.*;
 import com.alibaba.cloud.ai.graph.exception.GraphRunnerException;
 import com.alibaba.cloud.ai.graph.exception.GraphStateException;
 import com.alibaba.cloud.ai.graph.streaming.StreamingOutput;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.opentelemetry.api.trace.Span;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.codec.ServerSentEvent;
@@ -37,6 +40,7 @@ import reactor.core.publisher.Sinks;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -69,12 +73,79 @@ public class GraphServiceImpl implements GraphService {
 
 	@Override
 	public String nl2sql(String naturalQuery, String agentId) throws GraphRunnerException {
+		String threadId = naturalQuery.substring(0,64).trim();
 		OverAllState state = compiledGraph
 			.invoke(Map.of(IS_ONLY_NL2SQL, true, INPUT_KEY, naturalQuery, AGENT_ID, agentId),
-					RunnableConfig.builder().build())
+					RunnableConfig.builder().threadId(threadId).build())
 			.orElseThrow();
 		return state.value(SQL_GENERATE_OUTPUT, "");
 	}
+
+	@Override
+	public ChatResponse nl2sqlResult(String naturalQuery, Map<String,Object> metaData, String agentId) {
+		ChatResponse output = new ChatResponse();
+		try {
+			String threadId = naturalQuery.substring(0,64).trim();
+			String feedbackContent = (String)metaData.get("HUMAN_FEEDBACK_CONTENT");
+			OverAllState state;
+			if(feedbackContent!=null && !feedbackContent.isBlank()){
+
+				Map<String, Object> feedbackData = Map.of("feedback", false, "feedback_content",
+						feedbackContent);
+				if (feedbackContent.length()>2) { // isRejectedPlan()
+					multiTurnContextManager.restartLastTurn(threadId);
+				}
+				Map<String, Object> stateUpdate = new HashMap<>();
+				stateUpdate.put(HUMAN_FEEDBACK_DATA, feedbackData);
+				stateUpdate.put(MULTI_TURN_CONTEXT, multiTurnContextManager.buildContext(threadId));
+
+				RunnableConfig baseConfig = RunnableConfig.builder().threadId(threadId).build();
+				RunnableConfig updatedConfig;
+				try {
+					updatedConfig = compiledGraph.updateState(baseConfig, stateUpdate);
+				}
+				catch (Exception e) {
+					throw new IllegalStateException("Failed to update graph state for human feedback", e);
+				}
+				RunnableConfig resumeConfig = RunnableConfig.builder(updatedConfig)
+						.addMetadata(RunnableConfig.HUMAN_FEEDBACK_METADATA_KEY, feedbackData)
+						.build();
+
+				state = compiledGraph
+						.invoke(metaData, resumeConfig)
+						.orElseThrow();
+			}
+			else {
+
+				state = compiledGraph
+						.invoke(metaData, RunnableConfig.builder().threadId(threadId).build())
+						.orElseThrow();
+			}
+
+			String sql = state.value(SQL_GENERATE_OUTPUT, "");
+			output.setSql(sql);
+
+			Map<String,Object> sqlOutput = state.value(SQL_EXECUTE_NODE_OUTPUT,Map.class).get();
+			if(sqlOutput!=null){
+				output.setResult(JsonUtil.getObjectMapper().writeValueAsString(sqlOutput));
+			}
+			else {
+				output.setMessageType("error");
+				String scOutput = state.value(SEMANTIC_CONSISTENCY_NODE_OUTPUT, "");
+				output.setMessage(scOutput);
+			}
+			return output;
+
+		} catch (NoSuchElementException e){
+			output.setError(e.getMessage());
+			output.setMessageType("error");
+			return output;
+		} catch (JsonProcessingException e) {
+			output.setError(e.getMessage());
+			output.setMessageType("error");
+			return output;
+        }
+    }
 
 	@Override
 	public void graphStreamProcess(Sinks.Many<ServerSentEvent<GraphNodeResponse>> sink, GraphRequest graphRequest) {

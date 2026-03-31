@@ -43,4 +43,6 @@ public interface AgentService {
 
 	String getApiKeyMasked(Integer id);
 
+	boolean validateApiKey(String agentId,String apiKey);
+
 }

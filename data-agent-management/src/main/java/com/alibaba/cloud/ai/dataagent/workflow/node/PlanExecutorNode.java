@@ -43,8 +43,7 @@ import static com.alibaba.cloud.ai.dataagent.constant.Constant.*;
 public class PlanExecutorNode implements NodeAction {
 
 	// Supported node types
-	private static final Set<String> SUPPORTED_NODES = Set.of(SQL_GENERATE_NODE, PYTHON_GENERATE_NODE,
-			REPORT_GENERATOR_NODE);
+	private static final Set<String> SUPPORTED_NODES = Set.of(SQL_GENERATE_NODE, PYTHON_GENERATE_NODE, REPORT_GENERATOR_NODE);
 
 	@Override
 	public Map<String, Object> apply(OverAllState state) throws Exception {

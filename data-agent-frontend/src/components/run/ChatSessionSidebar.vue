@@ -70,7 +70,7 @@
       <el-divider style="margin: 0" />
 
       <!-- 会话列表 -->
-      <div class="session-list" style="margin-top: 20px">
+      <div class="session-list" style="margin-top: 10px">
         <div
           v-for="session in sessions"
           :key="session.id"
@@ -97,24 +97,28 @@
               @keyup.esc="cancelEditSessionTitle(session)"
               ref="sessionTitleInputRef"
             />
+            <br/>
+            <div class="session-time">
+              {{ formatTime(session.updateTime || session.createTime) }}
+            </div>
             <div class="session-actions">
-              <el-button type="text" size="small" @click.stop="startEditSessionTitle(session)">
-                <el-icon><Edit /></el-icon>
-              </el-button>
-              <el-button type="text" size="small" @click.stop="togglePinSession(session)">
-                <el-icon>
-                  <StarFilled v-if="session.isPinned" />
-                  <Star v-else />
-                </el-icon>
-              </el-button>
-              <el-button type="text" size="small" @click.stop="deleteSession(session)">
-                <el-icon><Delete /></el-icon>
-              </el-button>
+              <el-button-group>
+                <el-button type="text" size="small" @click.stop="startEditSessionTitle(session)">
+                  <el-icon><Edit /></el-icon>
+                </el-button>
+                <el-button type="text" size="small" @click.stop="togglePinSession(session)">
+                  <el-icon>
+                    <StarFilled v-if="session.isPinned" />
+                    <Star v-else />
+                  </el-icon>
+                </el-button>
+                <el-button type="text" size="small" @click.stop="deleteSession(session)">
+                  <el-icon><Delete /></el-icon>
+                </el-button>
+              </el-button-group>
             </div>
           </div>
-          <div class="session-time">
-            {{ formatTime(session.updateTime || session.createTime) }}
-          </div>
+
         </div>
       </div>
     </template>
@@ -494,7 +498,6 @@
   }
 
   .session-header {
-    display: flex;
     justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 8px;
@@ -512,12 +515,13 @@
   }
 
   .session-actions {
-    display: flex;
+    float: right;
     gap: 4px;
     flex-shrink: 0;
   }
 
   .session-time {
+    float: left;
     font-size: 12px;
     color: #909399;
   }

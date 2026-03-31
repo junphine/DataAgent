@@ -101,7 +101,7 @@ public class AgentServiceImpl implements AgentService {
 			// Also clean up the agent's vector data
 			if (agentVectorStoreService != null) {
 				try {
-					agentVectorStoreService.deleteDocumentsByMetedata(id.toString(), new HashMap<>());
+					agentVectorStoreService.deleteDocumentsByMetadata(id.toString(), new HashMap<>());
 					log.info("Successfully deleted vector data for agent: {}", id);
 				}
 				catch (Exception vectorException) {
@@ -170,6 +170,23 @@ public class AgentServiceImpl implements AgentService {
 			return null;
 		}
 		return ApiKeyUtil.mask(apiKey);
+	}
+
+	@Override
+	public boolean validateApiKey(String agentId, String apiKey) {
+		if(agentId==null){
+			Integer matchedAgentId = agentMapper.validateApiKey(apiKey);
+			if(matchedAgentId!=null){
+				return true;
+			}
+		}
+		else{
+			Agent agent = requireAgent(Integer.valueOf(agentId));
+			if(agent.getApiKeyEnabled()==0 || agent.getApiKey().equals(apiKey)){
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private Agent requireAgent(Integer id) {

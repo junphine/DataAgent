@@ -16,10 +16,13 @@
 package com.alibaba.cloud.ai.dataagent.service.graph;
 
 import com.alibaba.cloud.ai.dataagent.dto.GraphRequest;
+import com.alibaba.cloud.ai.dataagent.vo.ChatResponse;
 import com.alibaba.cloud.ai.graph.exception.GraphRunnerException;
 import com.alibaba.cloud.ai.dataagent.vo.GraphNodeResponse;
 import org.springframework.http.codec.ServerSentEvent;
 import reactor.core.publisher.Sinks;
+
+import java.util.Map;
 
 /**
  * @author vlsmb
@@ -35,6 +38,8 @@ public interface GraphService {
 	 * @throws GraphRunnerException 图运行异常
 	 */
 	String nl2sql(String naturalQuery, String agentId) throws GraphRunnerException;
+
+	ChatResponse nl2sqlResult(String naturalQuery, Map<String,Object> metaData, String agentId) throws GraphRunnerException;
 
 	/**
 	 * 流式处理NL2SQL或者DataAgent请求

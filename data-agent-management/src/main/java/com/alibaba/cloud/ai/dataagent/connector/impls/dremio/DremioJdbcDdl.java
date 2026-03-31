@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.cloud.ai.dataagent.connector.impls.postgre;
+package com.alibaba.cloud.ai.dataagent.connector.impls.dremio;
 
 import com.alibaba.cloud.ai.dataagent.bo.schema.ColumnInfoBO;
 import com.alibaba.cloud.ai.dataagent.bo.schema.DatabaseInfoBO;
@@ -44,9 +44,9 @@ import static com.alibaba.cloud.ai.dataagent.util.ColumnTypeUtil.wrapType;
  * @since 2024/3/15
  */
 @Service
-public class PostgreJdbcDdl extends AbstractJdbcDdl {
+public class DremioJdbcDdl extends AbstractJdbcDdl {
 
-	private static final Logger log = LoggerFactory.getLogger(PostgreJdbcDdl.class);
+	private static final Logger log = LoggerFactory.getLogger(DremioJdbcDdl.class);
 
 	@Override
 	public List<DatabaseInfoBO> showDatabases(Connection connection) {
@@ -295,7 +295,7 @@ public class PostgreJdbcDdl extends AbstractJdbcDdl {
 
 	@Override
 	public BizDataSourceTypeEnum getDataSourceType() {
-		return BizDataSourceTypeEnum.POSTGRESQL;
+		return BizDataSourceTypeEnum.DREMIO;
 	}
 
 }

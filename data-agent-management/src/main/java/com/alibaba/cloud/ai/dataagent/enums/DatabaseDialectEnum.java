@@ -24,16 +24,12 @@ public enum DatabaseDialectEnum {
 	SQLite("SQLite"),
 
 	POSTGRESQL("PostgreSQL"),
-
 	H2("H2"),
-
 	DAMENG("Dameng"),
-
 	SQL_SERVER("SqlServer"),
-
 	ORACLE("Oracle"),
-
-	HIVE("Hive");
+	HIVE("Hive"),
+	DREMIO("Dremio");
 
 	public final String code;
 

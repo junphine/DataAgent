@@ -112,4 +112,9 @@ public interface AgentMapper {
 			""")
 	int deleteById(Integer id);
 
+	@Select("""
+   			SELECT id FROM agent WHERE api_key_enabled=1 AND api_key=#{apiKey}	
+			""")
+	Integer validateApiKey(@Param("apiKey") String apiKey);
+
 }

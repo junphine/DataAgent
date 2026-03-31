@@ -33,7 +33,7 @@ spring:
         name: data—retract-server
         type: SYNC
         protocol: SSE
-        requestTimeout: 120
+        request-timeout: 120s
 
     vectorstore:
       type: simple

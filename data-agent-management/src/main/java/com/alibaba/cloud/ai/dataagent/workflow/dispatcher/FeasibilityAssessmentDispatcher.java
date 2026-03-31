@@ -38,6 +38,10 @@ public class FeasibilityAssessmentDispatcher implements EdgeAction {
 			log.info("[FeasibilityAssessmentNodeDispatcher]需求类型为数据分析，进入PlannerNode节点");
 			return PLANNER_NODE;
 		}
+		else if (value != null && value.contains("【需求类型】：《需要澄清》")) {
+			log.info("[FeasibilityAssessmentNodeDispatcher]需求类型为需要澄清，进入PlannerNode节点");
+			return PLANNER_NODE;
+		}
 		else {
 			log.info("[FeasibilityAssessmentNodeDispatcher]需求类型非数据分析，返回END节点");
 			return END;

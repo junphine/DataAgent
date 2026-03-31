@@ -45,7 +45,9 @@ public class TestApplication {
 		ToolCallback[] toolCallbacks = tools.getToolCallbacks();
 		System.out.println("Available tools:");
 		for (ToolCallback toolCallback : toolCallbacks) {
-			System.out.println(">>> " + toolCallback.getToolDefinition().name());
+			System.out.println(">>> ##" + toolCallback.getToolDefinition().name());
+			System.out.println(">>> " + toolCallback.getToolDefinition().description());
+			System.out.println(">>> " + toolCallback.getToolDefinition().inputSchema());
 		}
 
 		return args -> {

@@ -59,8 +59,10 @@ public enum BizDataSourceTypeEnum {
 
 	MYSQL_VIRTUAL(51, "mysql-virtual", DatabaseDialectEnum.MYSQL.getCode(), DbAccessTypeEnum.MEMORY.getCode()),
 
-	POSTGRESQL_VIRTUAL(52, "postgresql-virtual", DatabaseDialectEnum.POSTGRESQL.getCode(),
-			DbAccessTypeEnum.MEMORY.getCode());
+	POSTGRESQL_VIRTUAL(52, "postgresql-virtual", DatabaseDialectEnum.POSTGRESQL.getCode(),DbAccessTypeEnum.MEMORY.getCode()),
+
+	DREMIO(53, "dremio", DatabaseDialectEnum.DREMIO.getCode(), DbAccessTypeEnum.JDBC.getCode());
+
 
 	public final Integer code;
 
@@ -157,6 +159,10 @@ public enum BizDataSourceTypeEnum {
 
 	public static boolean isOracleDialect(String typeName) {
 		return isDialect(typeName, DatabaseDialectEnum.ORACLE.getCode());
+	}
+
+	public static boolean isDremioDialect(String typeName) {
+		return isDialect(typeName, DatabaseDialectEnum.DREMIO.getCode());
 	}
 
 	public static boolean isAdbPg(String typeName) {

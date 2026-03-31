@@ -15,13 +15,6 @@
  */
 package com.alibaba.cloud.ai.dataagent.workflow.node;
 
-import static com.alibaba.cloud.ai.dataagent.constant.Constant.PLAN_CURRENT_STEP;
-import static com.alibaba.cloud.ai.dataagent.constant.Constant.SQL_EXECUTE_NODE_OUTPUT;
-import static com.alibaba.cloud.ai.dataagent.constant.Constant.SQL_GENERATE_COUNT;
-import static com.alibaba.cloud.ai.dataagent.constant.Constant.SQL_GENERATE_OUTPUT;
-import static com.alibaba.cloud.ai.dataagent.constant.Constant.SQL_REGENERATE_REASON;
-import static com.alibaba.cloud.ai.dataagent.constant.Constant.SQL_RESULT_LIST_MEMORY;
-
 import com.alibaba.cloud.ai.dataagent.bo.DbConfigBO;
 import com.alibaba.cloud.ai.dataagent.bo.schema.DisplayStyleBO;
 import com.alibaba.cloud.ai.dataagent.bo.schema.ResultBO;
@@ -57,6 +50,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
+
+import static com.alibaba.cloud.ai.dataagent.constant.Constant.*;
 
 /**
  * SQL execution node that executes SQL queries against the database.
@@ -141,24 +136,31 @@ public class SqlExecuteNode implements NodeAction {
 			emitter.next(ChatResponseUtil.createPureResponse(TextType.SQL.getStartSign()));
 			emitter.next(ChatResponseUtil.createResponse(sqlQuery));
 			emitter.next(ChatResponseUtil.createPureResponse(TextType.SQL.getEndSign()));
-			ResultBO resultBO = ResultBO.builder().build();
+
 
 			try {
 				// Execute SQL query and get results immediately
 				ResultSetBO resultSetBO = dbAccessor.executeSqlAndReturnObject(dbConfig, dbQueryParameter);
-				// 调用大模型获取图表配置信息并填充到ResultSetBO中
-				DisplayStyleBO displayStyleBO = enrichResultSetWithChartConfig(state, resultSetBO);
-				resultBO.setResultSet(resultSetBO);
-				resultBO.setDisplayStyle(displayStyleBO);
-
-				String strResultSetJson = JsonUtil.getObjectMapper().writeValueAsString(resultSetBO);
-				String strResultJson = JsonUtil.getObjectMapper().writeValueAsString(resultBO);
-
 				// 数据执行成功
 				emitter.next(ChatResponseUtil.createResponse("执行SQL完成"));
 				emitter.next(ChatResponseUtil.createResponse("SQL查询结果："));
 				emitter.next(ChatResponseUtil.createPureResponse(TextType.RESULT_SET.getStartSign()));
-				emitter.next(ChatResponseUtil.createPureResponse(strResultJson));
+				String strResultSetJson = JsonUtil.getObjectMapper().writeValueAsString(resultSetBO);
+				if(!state.value(NOT_GENERATE_REPORT,false)) {
+					// 调用大模型获取图表配置信息并填充到ResultSetBO中
+					ResultBO resultBO = ResultBO.builder().build();
+					DisplayStyleBO displayStyleBO = enrichResultSetWithChartConfig(state, resultSetBO);
+
+					resultBO.setResultSet(resultSetBO);
+					resultBO.setDisplayStyle(displayStyleBO);
+
+					String strResultJson = JsonUtil.getObjectMapper().writeValueAsString(resultBO);
+					emitter.next(ChatResponseUtil.createPureResponse(strResultJson));
+				}
+				else{
+					emitter.next(ChatResponseUtil.createPureResponse(strResultSetJson));
+				}
+
 				emitter.next(ChatResponseUtil.createPureResponse(TextType.RESULT_SET.getEndSign()));
 
 				// Update step results with the query output

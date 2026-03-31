@@ -61,9 +61,7 @@ public class DatasourceController {
 	@GetMapping("/types")
 	public ApiResponse<List<DatasourceTypeDTO>> getDatasourceTypes() {
 		// 定义标准的 JDBC 数据源类型
-		List<BizDataSourceTypeEnum> standardTypes = Arrays.asList(BizDataSourceTypeEnum.MYSQL,
-				BizDataSourceTypeEnum.POSTGRESQL, BizDataSourceTypeEnum.DAMENG, BizDataSourceTypeEnum.SQL_SERVER,
-				BizDataSourceTypeEnum.ORACLE, BizDataSourceTypeEnum.HIVE);
+		List<BizDataSourceTypeEnum> standardTypes = Arrays.asList(BizDataSourceTypeEnum.values());
 
 		List<DatasourceTypeDTO> types = standardTypes.stream()
 			.map(type -> DatasourceTypeDTO.builder()
@@ -71,7 +69,7 @@ public class DatasourceController {
 				.typeName(type.getTypeName())
 				.dialect(type.getDialect())
 				.protocol(type.getProtocol())
-				.displayName(type.getDialect()) // 使用 dialect 作为显示名称
+				.displayName(type.name()) // 使用 enum.name 作为显示名称
 				.build())
 			.collect(Collectors.toList());
 

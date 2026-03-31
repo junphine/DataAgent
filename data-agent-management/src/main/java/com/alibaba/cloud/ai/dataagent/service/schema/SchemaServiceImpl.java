@@ -174,8 +174,7 @@ public class SchemaServiceImpl implements SchemaService {
 			List<Document> tableDocs = convertTablesToDocuments(datasourceId, tables);
 
 			// 存储文档
-			log.info("Storing {} columns and {} tables for datasource: {}", columnDocs.size(), tableDocs.size(),
-					datasourceId);
+			log.info("Storing {} columns and {} tables for datasource: {}", columnDocs.size(), tableDocs.size(), datasourceId);
 			storeSchemaDocuments(datasourceId, columnDocs, tableDocs);
 			log.info("Successfully stored all documents for datasource: {}", datasourceId);
 			return true;
@@ -277,10 +276,10 @@ public class SchemaServiceImpl implements SchemaService {
 		metadata.put(Constant.DATASOURCE_ID, datasourceId);
 		metadata.put(DocumentMetadataConstant.VECTOR_TYPE, DocumentMetadataConstant.COLUMN);
 
-		agentVectorStoreService.deleteDocumentsByMetadata(metadata);
+		agentVectorStoreService.deleteDocumentsByMetadata(datasourceId.toString(),metadata);
 
 		metadata.put(DocumentMetadataConstant.VECTOR_TYPE, DocumentMetadataConstant.TABLE);
-		agentVectorStoreService.deleteDocumentsByMetadata(metadata);
+		agentVectorStoreService.deleteDocumentsByMetadata(datasourceId.toString(),metadata);
 	}
 
 	@Override

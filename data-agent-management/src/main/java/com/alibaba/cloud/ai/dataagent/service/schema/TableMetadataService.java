@@ -228,7 +228,7 @@ public class TableMetadataService {
 	 * @param columns 列信息列表
 	 * @return 表的样本数据映射
 	 */
-	private Map<String, List<String>> fetchTableSampleData(DbConfigBO dbConfig, Accessor accessor, String tableName,
+	private Map<String, List<String>> fetchTableSampleDataFast(DbConfigBO dbConfig, Accessor accessor, String tableName,
 			List<ColumnInfoBO> columns) {
 
 		try {
@@ -244,6 +244,34 @@ public class TableMetadataService {
 			log.info("Embedding for table: {}, result size: {}", tableName, resultSet.getData().size());
 
 			return processResultSet(resultSet, columns);
+		}
+		catch (Exception e) {
+			log.error("Failed to fetch sample data for table: {},use empty map as default value", tableName, e);
+			return new HashMap<>();
+		}
+	}
+
+	private Map<String, List<String>> fetchTableSampleData(DbConfigBO dbConfig, Accessor accessor, String tableName,
+														   List<ColumnInfoBO> columns) {
+		Map<String, List<String>> tableSampleData = new HashMap<>();
+		try {
+			// 构建批量查询SQL，一次查询一个列的样本数据
+			for(ColumnInfoBO column: columns) {
+				String columnName = column.getName();
+				DbQueryParameter batchParam = new DbQueryParameter();
+				batchParam.setSchema(dbConfig.getSchema());
+				batchParam.setTable(tableName);
+				batchParam.setColumn(columnName);
+
+				List<String> samplesSet = accessor.sampleColumn(dbConfig, batchParam);
+				log.info("Embedding for table: {}, result size: {}", tableName, samplesSet.size());
+				if(samplesSet.size()>5)
+					tableSampleData.put(columnName, samplesSet.subList(0,5));
+				else
+					tableSampleData.put(columnName, samplesSet);
+			}
+
+			return tableSampleData;
 		}
 		catch (Exception e) {
 			log.error("Failed to fetch sample data for table: {},use empty map as default value", tableName, e);

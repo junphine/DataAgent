@@ -31,7 +31,7 @@ public interface AgentVectorStoreService {
 
 	Boolean deleteDocumentsByVectorType(String agentId, String vectorType) throws Exception;
 
-	Boolean deleteDocumentsByMetedata(String agentId, Map<String, Object> metadata);
+	Boolean deleteDocumentsByMetadata(String agentId, Map<String, Object> metadata);
 
 	Boolean deleteDocumentsByMetadata(Map<String, Object> metadata);
 

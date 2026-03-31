@@ -41,9 +41,15 @@ public class PlanExecutorDispatcher implements EdgeAction {
 			log.info("Plan validation passed. Proceeding to next step.");
 			String nextNode = state.value(PLAN_NEXT_NODE, END);
 			// 如果返回的是"END"，直接返回END常量
-			if ("END".equals(nextNode)) {
+			if ("END".equalsIgnoreCase(nextNode)) {
 				log.info("Plan execution completed successfully.");
 				return END;
+			}
+			if(REPORT_GENERATOR_NODE.equals(nextNode)){
+				// 如果返回的是"报告生成"，但是用户不需要报告，直接返回END常量
+				if(state.value(NOT_GENERATE_REPORT,false)){
+					return END;
+				}
 			}
 			return nextNode;
 		}

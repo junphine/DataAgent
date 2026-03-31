@@ -315,7 +315,7 @@
           </el-col>
           <el-col
             :span="12"
-            v-if="newDatasource.type === 'postgresql' || newDatasource.type === 'oracle'"
+            v-if="needsSchemaCheck(newDatasource)"
           >
             <div class="form-item">
               <label>Schema 名 *</label>
@@ -452,7 +452,7 @@
       </el-col>
       <el-col
         :span="12"
-        v-if="editingDatasource.type === 'postgresql' || editingDatasource.type === 'oracle'"
+        v-if="needsSchemaCheck(editingDatasource)"
       >
         <div class="form-item">
           <label>Schema 名 *</label>
@@ -881,6 +881,18 @@
         }
       });
 
+      const needsSchemaCheck = (editingDatasource:DatasourceType) => {
+        if(!editingDatasource || !editingDatasource.value) return true;
+        if(!datasourceTypes.value) return true;
+        for(let type of datasourceTypes.value){
+          if(type.typeName===editingDatasource.value.typeName){
+            let dialect = type.dialect;
+            return ['PostgreSQL','Oracle','Dremio','SqlServer'].find(dialect);
+          }
+        }
+        return false;
+      };
+
       // 初始化Agent数据源列表
       const loadAgentDatasource = async () => {
         selectedDatasourceId.value = null;
@@ -1120,8 +1132,7 @@
       };
 
       const createNewDatasource = async () => {
-        const needsSchema =
-          newDatasource.value.type === 'postgresql' || newDatasource.value.type === 'oracle';
+        const needsSchema = needsSchemaCheck(newDatasource);
         const formErrors: string[] = validateDatasourceForm(
           newDatasource.value,
           needsSchema,
@@ -1153,9 +1164,7 @@
       const editDatasource = (row: Datasource) => {
         editingDatasource.value = JSON.parse(JSON.stringify(row));
         // 如果是PostgreSQL或Oracle，分离数据库名和schema名
-        const needsSchema =
-          editingDatasource.value.type === 'postgresql' ||
-          editingDatasource.value.type === 'oracle';
+        const needsSchema = needsSchemaCheck(editingDatasource);
         if (needsSchema && editingDatasource.value.databaseName) {
           const parts = editingDatasource.value.databaseName.split('|');
           if (parts.length === 2) {
@@ -1171,9 +1180,7 @@
       };
 
       const saveEditDatasource = async () => {
-        const needsSchema =
-          editingDatasource.value.type === 'postgresql' ||
-          editingDatasource.value.type === 'oracle';
+        const needsSchema = needsSchemaCheck(editingDatasource);
         const formErrors: string[] = validateDatasourceForm(
           editingDatasource.value,
           needsSchema,
@@ -1615,6 +1622,7 @@
         // 数据源类型
         datasourceTypes,
         loadDatasourceTypes,
+        needsSchemaCheck,
         // 逻辑外键管理
         Connection,
         Link,

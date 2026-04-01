@@ -39,7 +39,9 @@ public class ApiKeyAuthInterceptor implements WebFilter {
         }
 
         String apiKey = exchange.getRequest().getHeaders().getFirst(apiKeyHeader);
-        apiKey = apiKey.replace("Bearer ","");
+        if(apiKey!=null) {
+            apiKey = apiKey.replace("Bearer ", "");
+        }
 
         String[] parts = path.split("/");
         String agentId = parts.length>2 ? parts[2] : null;

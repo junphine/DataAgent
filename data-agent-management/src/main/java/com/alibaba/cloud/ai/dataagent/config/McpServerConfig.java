@@ -16,6 +16,7 @@
 package com.alibaba.cloud.ai.dataagent.config;
 
 import java.lang.reflect.Method;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import com.alibaba.cloud.ai.dataagent.annotation.McpServerTool;
@@ -24,15 +25,23 @@ import com.alibaba.cloud.ai.dataagent.service.agent.AgentService;
 import com.alibaba.cloud.ai.dataagent.service.graph.GraphService;
 import com.alibaba.cloud.ai.dataagent.service.mcp.McpAgentService;
 import com.alibaba.cloud.ai.dataagent.service.mcp.McpServerService;
+import com.alibaba.cloud.ai.dataagent.util.JsonUtil;
 import com.alibaba.cloud.ai.dataagent.util.McpServerToolUtil;
+import io.modelcontextprotocol.json.jackson.JacksonMcpJsonMapper;
+import io.modelcontextprotocol.server.McpAsyncServer;
+import io.modelcontextprotocol.server.McpServer;
 import io.modelcontextprotocol.server.McpServerFeatures;
 
 import io.modelcontextprotocol.server.McpSyncServer;
+import io.modelcontextprotocol.server.transport.WebFluxSseServerTransportProvider;
+import io.modelcontextprotocol.server.transport.WebFluxStreamableServerTransportProvider;
+import io.modelcontextprotocol.spec.McpSchema;
 import org.springframework.ai.mcp.McpToolUtils;
 import org.springframework.ai.support.ToolCallbacks;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.tool.definition.DefaultToolDefinition;
+import org.springframework.ai.tool.definition.ToolDefinition;
 import org.springframework.ai.tool.metadata.ToolMetadata;
 import org.springframework.ai.tool.method.MethodToolCallback;
 import org.springframework.ai.tool.method.MethodToolCallbackProvider;
@@ -41,16 +50,27 @@ import org.springframework.ai.tool.resolution.SpringBeanToolCallbackResolver;
 import org.springframework.ai.tool.resolution.StaticToolCallbackResolver;
 import org.springframework.ai.tool.resolution.ToolCallbackResolver;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.support.GenericApplicationContext;
+import org.springframework.web.reactive.function.server.RouterFunction;
+import org.springframework.web.reactive.function.server.RouterFunctions;
+import org.springframework.web.reactive.function.server.ServerResponse;
+
 import static io.modelcontextprotocol.spec.McpSchema.*;
 
 
 @Configuration
-public class McpServerConfig{
+public class McpServerConfig {
+
+	@Autowired
+	private AgentService agentService;
+	@Autowired
+	private GraphService graphService;
 
 
 	// McpServerTool自定义注解 是为了解决如下场景：
@@ -97,5 +117,173 @@ public class McpServerConfig{
 		);
 
 		return List.of(completion);
+	}
+
+
+	// 动态注册 tool
+	public void registerAsyncTool(List<McpServerFeatures.AsyncToolSpecification> tools,Agent agent) {
+		String inputSchema = """
+        {
+            "type": "object",
+            "properties": {
+            	"naturalQuery": {
+    				"type": "string",
+					"description": "数据查询语句"
+				},
+				"humanFeedbackContent": {
+					"type": "string",
+					"description": "多轮对话中用户的反馈信息"
+				},
+				"nl2sqlOnly": {
+					"type": "boolean",
+					"default": false,
+					"description": "只返回生成的SQL语句，而不执行它。"
+				},
+                "limit": {
+                    "type": "integer",
+                    "default": 10,
+                    "description": "要查询结果返回的最大数量"
+                }
+            },
+            "required": ["naturalQuery"]
+        }
+        """;
+
+		McpAgentService mcpAgent = new McpAgentService(agent,graphService);
+		try {
+			DefaultToolDefinition toolDef = new DefaultToolDefinition(agent.getName(),agent.getDescription(),inputSchema);
+			Method toolMethod = McpAgentService.class.getMethod("streamResultSet", String.class,String.class,Boolean.class,Integer.class);
+			ToolCallback toolCallback = new MethodToolCallback(toolDef, ToolMetadata.from(toolMethod),toolMethod,mcpAgent,null);
+			McpServerFeatures.AsyncToolSpecification atool = McpToolUtils.toAsyncToolSpecification(toolCallback);
+			tools.add(atool);
+		} catch (NoSuchMethodException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public void registerSyncTool(List<McpServerFeatures.SyncToolSpecification> tools,Agent agent) {
+		String inputSchema = """
+        {
+            "type": "object",
+            "properties": {
+            	"naturalQuery": {
+    				"type": "string",
+					"description": "数据查询语句"
+				},
+				"humanFeedbackContent": {
+					"type": "string",
+					"description": "多轮对话中用户的反馈信息"
+				},
+				"nl2sqlOnly": {
+					"type": "boolean",
+					"default": false,
+					"description": "只返回生成的SQL语句，而不执行它。"
+				},
+                "limit": {
+                    "type": "integer",
+                    "default": 10,
+                    "description": "要查询结果返回的最大数量"
+                }
+            },
+            "required": ["naturalQuery"]
+        }
+        """;
+
+		McpAgentService mcpAgent = new McpAgentService(agent,graphService);
+		try {
+			DefaultToolDefinition toolDef = new DefaultToolDefinition(agent.getName(),agent.getDescription(),inputSchema);
+
+			Method syncToolMethod = McpAgentService.class.getMethod("nl2Sql2DataToolCallback", String.class,String.class,Boolean.class,Integer.class);
+			ToolCallback toolSyncCallback = new MethodToolCallback(toolDef, ToolMetadata.from(syncToolMethod),syncToolMethod,mcpAgent,null);
+			McpServerFeatures.SyncToolSpecification stool = McpToolUtils.toSyncToolSpecification(toolSyncCallback);
+			tools.add(stool);
+
+		} catch (NoSuchMethodException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+
+
+	// 专为 SSE 端点准备的工具集
+	@Bean
+	public List<McpServerFeatures.SyncToolSpecification> sseTools() {
+		List<McpServerFeatures.SyncToolSpecification> tools = new ArrayList<>();
+		List<Agent> agents = agentService.findByStatus("published");
+		agents.forEach((Agent agent) -> {
+			registerSyncTool(tools,agent);
+		});
+		// 你可以在这里添加更多SSE专用的工具
+		return tools;
+	}
+
+	// 专为 Streamable-HTTP 端点准备的工具集
+	@Bean
+	public List<McpServerFeatures.AsyncToolSpecification> streamableHttpTools() {
+		List<McpServerFeatures.AsyncToolSpecification> tools = new ArrayList<>();
+		List<Agent> agents = agentService.findByStatus("published");
+		agents.forEach((Agent agent) -> {
+			registerAsyncTool(tools,agent);
+		});
+		// 你可以在这里添加更多HTTP专用的工具
+		return tools;
+	}
+
+	// ================= 2. 为SSE端点创建并配置服务器 =================
+	@Bean
+	public McpSyncServer sseMcpServer(List<McpServerFeatures.SyncToolSpecification> sseTools,
+									  @Qualifier("sseTransport") WebFluxSseServerTransportProvider sseTransport) {
+		// 创建服务器实例，只注册 sseTools 这个Bean中的工具
+		return McpServer.sync(sseTransport)
+				.serverInfo("data-agent-sse-server", "1.0.0")
+				.capabilities(McpSchema.ServerCapabilities.builder()
+						.tools(true) // 开启工具能力
+						.build())
+				.tools(sseTools) // 关键：只注册SSE专用工具集
+				.requestTimeout(Duration.ofMinutes(10))
+				.build();
+	}
+
+	// ================= 3. 为Streamable-HTTP端点创建并配置服务器 =================
+	@Bean
+	@Primary
+	public McpAsyncServer streamableHttpMcpServer(List<McpServerFeatures.AsyncToolSpecification> streamableHttpTools,WebFluxStreamableServerTransportProvider httpTransport) {
+		// 创建服务器实例，只注册 streamableHttpTools 这个Bean中的工具
+		return McpServer.async(httpTransport)
+				.serverInfo("data-agent-streamable-http-server", "1.0.0")
+				.capabilities(McpSchema.ServerCapabilities.builder()
+						.tools(true)
+						.build())
+				.tools(streamableHttpTools) // 关键：只注册HTTP专用工具集
+				.requestTimeout(Duration.ofMinutes(10))
+				.build();
+	}
+
+	@Bean
+	@Qualifier("sseTransport")
+	public WebFluxSseServerTransportProvider sseTransport() {
+		// 直接实例化 Provider
+		return WebFluxSseServerTransportProvider.builder()
+				.jsonMapper(new JacksonMcpJsonMapper(JsonUtil.getObjectMapper()))
+				.messageEndpoint("/sse")
+				.keepAliveInterval(Duration.ofMinutes(5))
+				.build();
+	}
+
+	@Bean
+	@Primary
+	public WebFluxStreamableServerTransportProvider httpTransport() {
+		// 直接实例化 Provider
+		return WebFluxStreamableServerTransportProvider.builder()
+				.jsonMapper(new JacksonMcpJsonMapper(JsonUtil.getObjectMapper()))
+				.messageEndpoint("/mcp")
+				.keepAliveInterval(Duration.ofMinutes(5))
+				.build();
+	}
+
+	@Bean
+	public RouterFunction<?> sseMcpRouterFunction(
+			@Qualifier("sseTransport") WebFluxSseServerTransportProvider sseTransport) {
+		return sseTransport.getRouterFunction();
 	}
 }

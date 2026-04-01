@@ -51,6 +51,7 @@ public class TestApplication {
 		}
 
 		return args -> {
+
 			var chatClient = chatClientBuilder
 					.defaultToolCallbacks(tools.getToolCallbacks())
 					.build();

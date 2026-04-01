@@ -17,9 +17,11 @@ package com.alibaba.cloud.ai.dataagent.service.graph;
 
 import com.alibaba.cloud.ai.dataagent.dto.GraphRequest;
 import com.alibaba.cloud.ai.dataagent.vo.ChatResponse;
+import com.alibaba.cloud.ai.graph.NodeOutput;
 import com.alibaba.cloud.ai.graph.exception.GraphRunnerException;
 import com.alibaba.cloud.ai.dataagent.vo.GraphNodeResponse;
 import org.springframework.http.codec.ServerSentEvent;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 
 import java.util.Map;
@@ -31,7 +33,7 @@ import java.util.Map;
 public interface GraphService {
 
 	/**
-	 * 自然语言转SQL，仅返回SQL代码结果
+	 * 自然语言转SQL，仅返回SQL代码结果,无状态
 	 * @param naturalQuery 自然语言
 	 * @param agentId Agent Id
 	 * @return SQL结果
@@ -39,6 +41,13 @@ public interface GraphService {
 	 */
 	String nl2sql(String naturalQuery, String agentId) throws GraphRunnerException;
 
+	/**
+	 * 自然语言转SQL，仅返回SQL执行结果,无状态
+	 * @param naturalQuery 自然语言
+	 * @param agentId Agent Id
+	 * @return SQL结果
+	 * @throws GraphRunnerException 图运行异常
+	 */
 	ChatResponse nl2sqlResult(String naturalQuery, Map<String,Object> metaData, String agentId) throws GraphRunnerException;
 
 	/**
@@ -46,7 +55,7 @@ public interface GraphService {
 	 * @param sink 输出Sink
 	 * @param graphRequest 请求体
 	 */
-	void graphStreamProcess(Sinks.Many<ServerSentEvent<GraphNodeResponse>> sink, GraphRequest graphRequest);
+	Flux<NodeOutput> graphStreamProcess(Sinks.Many<ServerSentEvent<GraphNodeResponse>> sink, GraphRequest graphRequest);
 
 	/**
 	 * 停止指定 threadId 的流式处理

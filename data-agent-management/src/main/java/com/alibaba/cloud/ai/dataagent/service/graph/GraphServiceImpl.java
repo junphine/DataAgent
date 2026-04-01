@@ -73,7 +73,10 @@ public class GraphServiceImpl implements GraphService {
 
 	@Override
 	public String nl2sql(String naturalQuery, String agentId) throws GraphRunnerException {
-		String threadId = naturalQuery.substring(0,64).trim();
+		String threadId = naturalQuery.replaceAll("\\s","");
+		if(threadId.length()>64){
+			threadId = threadId.substring(0,64);
+		}
 		OverAllState state = compiledGraph
 			.invoke(Map.of(IS_ONLY_NL2SQL, true, INPUT_KEY, naturalQuery, AGENT_ID, agentId),
 					RunnableConfig.builder().threadId(threadId).build())
@@ -85,13 +88,15 @@ public class GraphServiceImpl implements GraphService {
 	public ChatResponse nl2sqlResult(String naturalQuery, Map<String,Object> metaData, String agentId) {
 		ChatResponse output = new ChatResponse();
 		try {
-			String threadId = naturalQuery.substring(0,64).trim();
+			String threadId = naturalQuery.replaceAll("\\s","");
+			if(threadId.length()>64){
+				threadId = threadId.substring(0,64);
+			}
 			String feedbackContent = (String)metaData.get("HUMAN_FEEDBACK_CONTENT");
 			OverAllState state;
 			if(feedbackContent!=null && !feedbackContent.isBlank()){
 
-				Map<String, Object> feedbackData = Map.of("feedback", false, "feedback_content",
-						feedbackContent);
+				Map<String, Object> feedbackData = Map.of("feedback", false, "feedback_content", feedbackContent);
 				if (feedbackContent.length()>2) { // isRejectedPlan()
 					multiTurnContextManager.restartLastTurn(threadId);
 				}
@@ -111,21 +116,28 @@ public class GraphServiceImpl implements GraphService {
 						.addMetadata(RunnableConfig.HUMAN_FEEDBACK_METADATA_KEY, feedbackData)
 						.build();
 
-				state = compiledGraph
-						.invoke(metaData, resumeConfig)
+				state = compiledGraph.invoke(metaData, resumeConfig)
 						.orElseThrow();
 			}
 			else {
 
-				state = compiledGraph
-						.invoke(metaData, RunnableConfig.builder().threadId(threadId).build())
+				String multiTurnContext = multiTurnContextManager.buildContext(threadId);
+				multiTurnContextManager.beginTurn(threadId, naturalQuery);
+				metaData.put(MULTI_TURN_CONTEXT, multiTurnContext);
+				metaData.put(TRACE_THREAD_ID, threadId);
+
+				state = compiledGraph.invoke(metaData, RunnableConfig.builder().threadId(threadId).build())
 						.orElseThrow();
 			}
 
 			String sql = state.value(SQL_GENERATE_OUTPUT, "");
 			output.setSql(sql);
 
-			Map<String,Object> sqlOutput = state.value(SQL_EXECUTE_NODE_OUTPUT,Map.class).get();
+			Map<String,Object> sqlOutput = state.value(SQL_EXECUTE_NODE_OUTPUT,Map.class).orElse(null);
+			Object codeOutput = state.value(PYTHON_ANALYSIS_NODE_OUTPUT).orElse(null);
+			if(sqlOutput!=null && codeOutput!=null){
+				sqlOutput.put("pythonCodeOutput",codeOutput);
+			}
 			if(sqlOutput!=null){
 				output.setResult(JsonUtil.getObjectMapper().writeValueAsString(sqlOutput));
 			}
@@ -148,7 +160,7 @@ public class GraphServiceImpl implements GraphService {
     }
 
 	@Override
-	public void graphStreamProcess(Sinks.Many<ServerSentEvent<GraphNodeResponse>> sink, GraphRequest graphRequest) {
+	public Flux<NodeOutput> graphStreamProcess(Sinks.Many<ServerSentEvent<GraphNodeResponse>> sink, GraphRequest graphRequest) {
 		if (!StringUtils.hasText(graphRequest.getThreadId())) {
 			graphRequest.setThreadId(UUID.randomUUID().toString());
 		}
@@ -157,10 +169,10 @@ public class GraphServiceImpl implements GraphService {
 		StreamContext context = streamContextMap.computeIfAbsent(threadId, k -> new StreamContext());
 		context.setSink(sink);
 		if (StringUtils.hasText(graphRequest.getHumanFeedbackContent())) {
-			handleHumanFeedback(graphRequest);
+			return handleHumanFeedback(graphRequest);
 		}
 		else {
-			handleNewProcess(graphRequest);
+			return handleNewProcess(graphRequest);
 		}
 	}
 
@@ -186,11 +198,12 @@ public class GraphServiceImpl implements GraphService {
 		}
 	}
 
-	private void handleNewProcess(GraphRequest graphRequest) {
+	private Flux<NodeOutput> handleNewProcess(GraphRequest graphRequest) {
 		String query = graphRequest.getQuery();
 		String agentId = graphRequest.getAgentId();
 		String threadId = graphRequest.getThreadId();
 		boolean nl2sqlOnly = graphRequest.isNl2sqlOnly();
+		boolean dataOnly = graphRequest.isDataOnly();
 		boolean humanReviewEnabled = graphRequest.isHumanFeedback() & !(nl2sqlOnly);
 		if (!StringUtils.hasText(threadId) || !StringUtils.hasText(agentId) || !StringUtils.hasText(query)) {
 			throw new IllegalArgumentException("Invalid arguments");
@@ -202,7 +215,7 @@ public class GraphServiceImpl implements GraphService {
 		// 检查是否已经清理，如果已清理则不再启动新的流
 		if (context.isCleaned()) {
 			log.warn("StreamContext already cleaned for threadId: {}, skipping stream start", threadId);
-			return;
+			return null;
 		}
 		// 开始 Langfuse 追踪
 		Span span = langfuseReporter.startLLMSpan("graph-stream", graphRequest);
@@ -211,16 +224,24 @@ public class GraphServiceImpl implements GraphService {
 		String multiTurnContext = multiTurnContextManager.buildContext(threadId);
 		multiTurnContextManager.beginTurn(threadId, query);
 		Flux<NodeOutput> nodeOutputFlux = compiledGraph.stream(
-				Map.of(IS_ONLY_NL2SQL, nl2sqlOnly, INPUT_KEY, query, AGENT_ID, agentId, HUMAN_REVIEW_ENABLED,
-						humanReviewEnabled, MULTI_TURN_CONTEXT, multiTurnContext, TRACE_THREAD_ID, threadId),
+				Map.of(IS_ONLY_NL2SQL, nl2sqlOnly,
+						INPUT_KEY, query,
+						AGENT_ID, agentId,
+						HUMAN_REVIEW_ENABLED,humanReviewEnabled,
+						MULTI_TURN_CONTEXT, multiTurnContext,
+						TRACE_THREAD_ID, threadId,
+						NOT_GENERATE_REPORT,dataOnly),
 				RunnableConfig.builder().threadId(threadId).build());
+
 		subscribeToFlux(context, nodeOutputFlux, graphRequest, agentId, threadId);
+		return nodeOutputFlux;
 	}
 
-	private void handleHumanFeedback(GraphRequest graphRequest) {
+	private Flux<NodeOutput> handleHumanFeedback(GraphRequest graphRequest) {
 		String agentId = graphRequest.getAgentId();
 		String threadId = graphRequest.getThreadId();
 		String feedbackContent = graphRequest.getHumanFeedbackContent();
+		boolean dataOnly = graphRequest.isDataOnly();
 		if (!StringUtils.hasText(threadId) || !StringUtils.hasText(agentId) || !StringUtils.hasText(feedbackContent)) {
 			throw new IllegalArgumentException("Invalid arguments");
 		}
@@ -230,7 +251,7 @@ public class GraphServiceImpl implements GraphService {
 		}
 		if (context.isCleaned()) {
 			log.warn("StreamContext already cleaned for threadId: {}, skipping stream start", threadId);
-			return;
+			return null;
 		}
 		// 开始 Langfuse 追踪
 		Span span = langfuseReporter.startLLMSpan("graph-feedback", graphRequest);
@@ -259,6 +280,7 @@ public class GraphServiceImpl implements GraphService {
 
 		Flux<NodeOutput> nodeOutputFlux = compiledGraph.stream(null, resumeConfig);
 		subscribeToFlux(context, nodeOutputFlux, graphRequest, agentId, threadId);
+		return nodeOutputFlux;
 	}
 
 	/**
@@ -349,7 +371,7 @@ public class GraphServiceImpl implements GraphService {
 	 * 处理节点输出
 	 */
 	private void handleNodeOutput(GraphRequest request, NodeOutput output) {
-		log.debug("Received output: {}", output.getClass().getSimpleName());
+		// log.debug("Received output: {}", output.getClass().getSimpleName());
 		if (output instanceof StreamingOutput streamingOutput) {
 			handleStreamNodeOutput(request, streamingOutput);
 		}
@@ -365,7 +387,7 @@ public class GraphServiceImpl implements GraphService {
 		}
 		String node = output.node();
 		String chunk = output.chunk();
-		log.debug("Received Stream output: {}", chunk);
+		//-log.debug("Received Stream output: {}", chunk);
 
 		if (chunk == null || chunk.isEmpty()) {
 			return;

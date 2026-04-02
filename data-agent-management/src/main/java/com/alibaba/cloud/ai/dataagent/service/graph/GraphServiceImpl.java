@@ -73,10 +73,8 @@ public class GraphServiceImpl implements GraphService {
 
 	@Override
 	public String nl2sql(String naturalQuery, String agentId) throws GraphRunnerException {
-		String threadId = naturalQuery.replaceAll("\\s","");
-		if(threadId.length()>64){
-			threadId = threadId.substring(0,64);
-		}
+		String threadId = UUID.randomUUID().toString();
+
 		OverAllState state = compiledGraph
 			.invoke(Map.of(IS_ONLY_NL2SQL, true, INPUT_KEY, naturalQuery, AGENT_ID, agentId),
 					RunnableConfig.builder().threadId(threadId).build())
@@ -88,9 +86,9 @@ public class GraphServiceImpl implements GraphService {
 	public ChatResponse nl2sqlResult(String naturalQuery, Map<String,Object> metaData, String agentId) {
 		ChatResponse output = new ChatResponse();
 		try {
-			String threadId = naturalQuery.replaceAll("\\s","");
-			if(threadId.length()>64){
-				threadId = threadId.substring(0,64);
+			String threadId = (String)metaData.get(TRACE_THREAD_ID);
+			if(threadId==null){
+				threadId = UUID.randomUUID().toString();
 			}
 			String feedbackContent = (String)metaData.get("HUMAN_FEEDBACK_CONTENT");
 			OverAllState state;
@@ -146,6 +144,7 @@ public class GraphServiceImpl implements GraphService {
 				String scOutput = state.value(SEMANTIC_CONSISTENCY_NODE_OUTPUT, "");
 				output.setMessage(scOutput);
 			}
+			output.setSessionId(threadId);
 			return output;
 
 		} catch (NoSuchElementException e){

@@ -30,6 +30,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springaicommunity.mcp.annotation.McpTool;
+import org.springaicommunity.mcp.annotation.McpToolParam;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.http.MediaType;
@@ -45,6 +47,7 @@ import reactor.core.publisher.Sinks;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static com.alibaba.cloud.ai.dataagent.constant.Constant.*;
 
@@ -62,11 +65,12 @@ public class McpAgentService {
 		return graphService.nl2sql(naturalQuery, agent.getId().toString());
 	}
 
-	@Tool(name="nl2sql2data-agent",description = "获取企业各方面的内部数据，将自然语言查询转换为SQL语句，然后再执行这个语句获取数据。",returnDirect = true)
-	public ChatResponse nl2Sql2DataToolCallback(@ToolParam(description="自然语言查询描述") String naturalQuery,
-												@ToolParam(description="多轮对话中用户的反馈信息",required=false) String humanFeedbackContent,
-												@ToolParam(description="不执行SQL，只返回SQL语句",required=false) Boolean nl2sqlOnly,
-												@ToolParam(description="返回最大结果数",required=false) Integer limit
+	@McpTool(name="nl2sql2data-agent",description = "获取企业各方面的内部数据，将自然语言查询转换为SQL语句，然后再执行这个语句获取数据。")
+	public ChatResponse nl2Sql2DataToolCallback(@McpToolParam(description="自然语言查询描述") String naturalQuery,
+												@McpToolParam(description="多轮对话中用户的反馈信息",required=false) String humanFeedbackContent,
+												@McpToolParam(description="不执行SQL，只返回SQL语句",required=false) Boolean nl2sqlOnly,
+												@McpToolParam(description="返回最大结果数",required=false) Integer limit,
+												@McpToolParam(description="支持多轮对话时，需要传入当前对话的sessionId",required=false) String sessionId
 												) throws GraphRunnerException{
 		Assert.hasText(naturalQuery, "Natural query cannot be empty");
 		String[] parts = naturalQuery.split(" // ");
@@ -80,23 +84,26 @@ public class McpAgentService {
 		metaData.put(INPUT_KEY, naturalQuery);
 		metaData.put("HUMAN_FEEDBACK_CONTENT", humanFeedbackContent);
 		metaData.put(NOT_GENERATE_REPORT,true);
+		metaData.put(TRACE_THREAD_ID,sessionId);
 
 		return graphService.nl2sqlResult(naturalQuery, metaData, agent.getId().toString());
 	}
 
 	// Flux<ServerSentEvent<ChatResponse>>
-	public ChatResponse streamResultSet(
+
+	@McpTool(name="nl2sql2data-async-agent", title="自然语言进行数据查询",description = "获取企业各方面的内部数据，将自然语言查询转换为SQL语句，然后再执行这个语句获取数据。")
+	public List<ChatResponse> streamResultSet(
 			 String naturalQuery,
 			 String humanFeedbackContent,
-			 Boolean nl2sqlOnly,Integer limit) {
+			 Boolean nl2sqlOnly,Integer limit,String sessionId) {
 
 		Sinks.Many<ServerSentEvent<GraphNodeResponse>> sink = Sinks.many().unicast().onBackpressureBuffer();
 		boolean humanFeedback = humanFeedbackContent!=null && !humanFeedbackContent.isBlank();
 		boolean rejectedPlan = false;
 		boolean bNl2sqlOnly = nl2sqlOnly==null? false: nl2sqlOnly;
-		String threadId = naturalQuery.replaceAll("\\s","");
-		if(threadId.length()>64){
-			threadId = threadId.substring(0,64);
+		String threadId = sessionId;
+		if(threadId==null){
+			threadId = UUID.randomUUID().toString();
 		}
 		GraphRequest request = GraphRequest.builder()
 				.agentId(agent.getId().toString())
@@ -110,10 +117,12 @@ public class McpAgentService {
 				.build();
 
 		Flux<NodeOutput> nodeOutput = graphService.graphStreamProcess(sink, request);
-		return toChatResponse(nodeOutput.blockLast());
+		ChatResponse resp = toChatResponse(nodeOutput.blockLast());
+		resp.setSessionId(threadId);
+		return List.of(resp);
 		/*
 		long timestamp = System.currentTimeMillis();
-		ServerSentEvent event = ServerSentEvent.builder(toChatResponse(nodeOutput.blockLast()))
+		ServerSentEvent event = ServerSentEvent.builder(resp)
 				.id(String.valueOf(timestamp))
 				.event("streamResultSet")
 				.build();

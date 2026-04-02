@@ -27,6 +27,7 @@ import com.alibaba.cloud.ai.dataagent.service.mcp.McpAgentService;
 import com.alibaba.cloud.ai.dataagent.service.mcp.McpServerService;
 import com.alibaba.cloud.ai.dataagent.util.JsonUtil;
 import com.alibaba.cloud.ai.dataagent.util.McpServerToolUtil;
+import com.alibaba.cloud.ai.graph.exception.GraphRunnerException;
 import io.modelcontextprotocol.json.jackson.JacksonMcpJsonMapper;
 import io.modelcontextprotocol.server.McpAsyncServer;
 import io.modelcontextprotocol.server.McpServer;
@@ -105,13 +106,25 @@ public class McpServerConfig {
 	public List<McpServerFeatures.SyncCompletionSpecification> codeCompletions() {
 
 		var completion = new McpServerFeatures.SyncCompletionSpecification(
-				new PromptReference("code-completion","sql gen","Provides sql code completion suggestions"),
+				new PromptReference("sql-code-completion","Sql Generate","Provides sql code completion suggestions"),
 				(exchange, request) -> {
 					String name = request.argument().name();
+					String value = request.argument().value();
+					List<Agent> agents = agentService.findByStatus("published");
+					List<String> suggestions = new ArrayList<>();
+					agents.parallelStream().forEach((Agent agent) -> {
+						try {
+							String sql = graphService.nl2sql(value,agent.getId().toString());
+							if(sql!=null && sql.toLowerCase().contains("SELECT")) {
+								suggestions.add(sql);
+							}
+						} catch (GraphRunnerException e) {
+							throw new RuntimeException(e);
+						}
+					});
 					// 返回完成建议的实现
 					return new CompleteResult(
-							new CompleteResult.CompleteCompletion(List.of("suggestion1", "First suggestion"),2,false)
-
+							new CompleteResult.CompleteCompletion(suggestions,suggestions.size(),false)
 					);
 				}
 		);
@@ -143,7 +156,11 @@ public class McpServerConfig {
                     "type": "integer",
                     "default": 10,
                     "description": "要查询结果返回的最大数量"
-                }
+                },
+                "sessionId": {
+					"type": "string",
+					"description": "支持多轮对话时，需要传入当前对话的sessionId，sessionId从第一次对话返回结果里面取。"
+				}
             },
             "required": ["naturalQuery"]
         }
@@ -152,7 +169,7 @@ public class McpServerConfig {
 		McpAgentService mcpAgent = new McpAgentService(agent,graphService);
 		try {
 			DefaultToolDefinition toolDef = new DefaultToolDefinition(agent.getName(),agent.getDescription(),inputSchema);
-			Method toolMethod = McpAgentService.class.getMethod("streamResultSet", String.class,String.class,Boolean.class,Integer.class);
+			Method toolMethod = McpAgentService.class.getMethod("streamResultSet", String.class,String.class,Boolean.class,Integer.class,String.class);
 			ToolCallback toolCallback = new MethodToolCallback(toolDef, ToolMetadata.from(toolMethod),toolMethod,mcpAgent,null);
 			McpServerFeatures.AsyncToolSpecification atool = McpToolUtils.toAsyncToolSpecification(toolCallback);
 			tools.add(atool);
@@ -182,8 +199,12 @@ public class McpServerConfig {
                 "limit": {
                     "type": "integer",
                     "default": 10,
-                    "description": "要查询结果返回的最大数量"
-                }
+                    "description": "要查询结果返回的最大数量。"
+                },
+                "sessionId": {
+					"type": "string",
+					"description": "支持多轮对话时，需要传入当前对话的sessionId，sessionId从第一次对话返回结果里面取。"
+				}
             },
             "required": ["naturalQuery"]
         }
@@ -193,7 +214,7 @@ public class McpServerConfig {
 		try {
 			DefaultToolDefinition toolDef = new DefaultToolDefinition(agent.getName(),agent.getDescription(),inputSchema);
 
-			Method syncToolMethod = McpAgentService.class.getMethod("nl2Sql2DataToolCallback", String.class,String.class,Boolean.class,Integer.class);
+			Method syncToolMethod = McpAgentService.class.getMethod("nl2Sql2DataToolCallback", String.class,String.class,Boolean.class,Integer.class,String.class);
 			ToolCallback toolSyncCallback = new MethodToolCallback(toolDef, ToolMetadata.from(syncToolMethod),syncToolMethod,mcpAgent,null);
 			McpServerFeatures.SyncToolSpecification stool = McpToolUtils.toSyncToolSpecification(toolSyncCallback);
 			tools.add(stool);

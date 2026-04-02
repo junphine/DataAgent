@@ -145,7 +145,8 @@ public final class Constant {
 	// nl2sql接口预留相关
 	public static final String IS_ONLY_NL2SQL = "IS_ONLY_NL2SQL";
 
-	public static final String NOT_GENERATE_REPORT = "NOT_GENERATE_REPORT";
+	// 不返回所有数据，只返回最大结果数
+	public static final String ONLY_DATA_LIMIT = "ONLY_DATA_LIMIT";
 
 	// 人类复核相关
 	public static final String HUMAN_REVIEW_ENABLED = "HUMAN_REVIEW_ENABLED";

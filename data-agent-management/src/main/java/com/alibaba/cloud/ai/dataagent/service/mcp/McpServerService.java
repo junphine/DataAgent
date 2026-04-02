@@ -72,7 +72,7 @@ public class McpServerService {
 		Assert.hasText(naturalQuery, "Natural query cannot be empty");
 		Agent agent = agentMapper.findById(Integer.valueOf(agentId));
 		McpAgentService mcpAgentSrv = new McpAgentService(agent,graphService);
-		return mcpAgentSrv.nl2Sql2DataToolCallback(naturalQuery, null,false, 100, null);
+		return mcpAgentSrv.nl2Sql2DataToolCallback(naturalQuery, null,true, 100, null);
 	}
 
 }

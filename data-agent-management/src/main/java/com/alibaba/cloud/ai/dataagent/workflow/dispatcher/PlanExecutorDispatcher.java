@@ -47,7 +47,7 @@ public class PlanExecutorDispatcher implements EdgeAction {
 			}
 			if(REPORT_GENERATOR_NODE.equals(nextNode)){
 				// 如果返回的是"报告生成"，但是用户不需要报告，直接返回END常量
-				if(state.value(NOT_GENERATE_REPORT,false)){
+				if(state.value(IS_ONLY_NL2SQL,false)){
 					return END;
 				}
 			}

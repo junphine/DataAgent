@@ -57,12 +57,14 @@
               <!-- HTML类型消息直接渲染 -->
               <div v-if="message.messageType === 'html'" v-html="message.content"></div>
               <!-- 数据集消息尝试图表渲染 -->
-              <div v-else-if="message.messageType === 'result-set'" class="result-set-message">
+              <div v-else-if="message.messageType === 'result-set' && resultSetDisplayConfig.showSqlResults" class="result-set-message">
                 <ResultSetDisplay
                   v-if="message.content"
                   :resultData="JSON.parse(message.content)"
                   :pageSize="resultSetDisplayConfig.pageSize"
                 />
+              </div>
+              <div v-else-if="message.messageType === 'result-set'" class="result-set-message" >
               </div>
               <div
                 v-else-if="message.messageType === 'markdown-report'"
@@ -162,7 +164,7 @@
                   </div>
                   <!-- 如果是 RESULT_SET 节点，使用 ResultSetDisplay 组件 -->
                   <div
-                    v-else-if="nodeBlock.length > 0 && nodeBlock[0].textType === 'RESULT_SET'"
+                    v-else-if="nodeBlock.length > 0 && nodeBlock[0].textType === 'RESULT_SET' && resultSetDisplayConfig.showSqlResults"
                     class="agent-response-block"
                   >
                     <div class="agent-response-title">
@@ -666,6 +668,7 @@
 
             // 使用generateNodeHtml方法生成HTML代码，确保显示与保存一致
             const nodeHtml = generateNodeHtml(node);
+            if (!nodeHtml) return Promise.resolve();
 
             const aiMessage: ChatMessage = {
               sessionId,
@@ -987,7 +990,9 @@
       // 生成节点容器的HTML代码
       const generateNodeHtml = (node: GraphNodeResponse[]) => {
         const content = formatNodeContent(node);
-
+        if(!content){
+          return '';
+        }
         return `
         <div class="agent-response-block" style="display: block !important; width: 100% !important;">
           <div class="agent-response-title">${node.length > 0 ? node[0].nodeName : '空节点'}</div>

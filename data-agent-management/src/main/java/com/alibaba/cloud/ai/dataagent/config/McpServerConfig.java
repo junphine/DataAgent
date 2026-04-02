@@ -149,8 +149,8 @@ public class McpServerConfig {
 				},
 				"nl2sqlOnly": {
 					"type": "boolean",
-					"default": false,
-					"description": "只返回生成的SQL语句，而不执行它。"
+					"default": true,
+					"description": "只返回生成的SQL语句和SQL执行结果，不生成结果分析报告。"
 				},
                 "limit": {
                     "type": "integer",
@@ -193,8 +193,8 @@ public class McpServerConfig {
 				},
 				"nl2sqlOnly": {
 					"type": "boolean",
-					"default": false,
-					"description": "只返回生成的SQL语句，而不执行它。"
+					"default": true,
+					"description": "只返回生成的SQL语句和SQL执行结果，不生成结果分析报告。"
 				},
                 "limit": {
                     "type": "integer",

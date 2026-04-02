@@ -79,11 +79,11 @@ public class McpAgentService {
 			humanFeedbackContent = parts[1];
 		}
 		Map<String,Object> metaData = new HashMap<>();
-		metaData.put(IS_ONLY_NL2SQL,nl2sqlOnly);
+		metaData.put(IS_ONLY_NL2SQL, nl2sqlOnly == null || nl2sqlOnly);
 		metaData.put(AGENT_ID, agent.getId().toString());
 		metaData.put(INPUT_KEY, naturalQuery);
 		metaData.put("HUMAN_FEEDBACK_CONTENT", humanFeedbackContent);
-		metaData.put(NOT_GENERATE_REPORT,true);
+		metaData.put(ONLY_DATA_LIMIT,limit); // 结果数
 		metaData.put(TRACE_THREAD_ID,sessionId);
 
 		return graphService.nl2sqlResult(naturalQuery, metaData, agent.getId().toString());
@@ -113,7 +113,7 @@ public class McpAgentService {
 				.humanFeedbackContent(humanFeedbackContent)
 				.rejectedPlan(rejectedPlan)
 				.nl2sqlOnly(bNl2sqlOnly)
-				.dataOnly(true)
+				.dataOnly(limit)
 				.build();
 
 		Flux<NodeOutput> nodeOutput = graphService.graphStreamProcess(sink, request);

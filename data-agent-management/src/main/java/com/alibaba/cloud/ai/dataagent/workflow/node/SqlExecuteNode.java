@@ -137,7 +137,6 @@ public class SqlExecuteNode implements NodeAction {
 			emitter.next(ChatResponseUtil.createResponse(sqlQuery));
 			emitter.next(ChatResponseUtil.createPureResponse(TextType.SQL.getEndSign()));
 
-
 			try {
 				// Execute SQL query and get results immediately
 				ResultSetBO resultSetBO = dbAccessor.executeSqlAndReturnObject(dbConfig, dbQueryParameter);
@@ -145,21 +144,18 @@ public class SqlExecuteNode implements NodeAction {
 				emitter.next(ChatResponseUtil.createResponse("执行SQL完成"));
 				emitter.next(ChatResponseUtil.createResponse("SQL查询结果："));
 				emitter.next(ChatResponseUtil.createPureResponse(TextType.RESULT_SET.getStartSign()));
+
+				ResultBO resultBO = ResultBO.builder().build();
+				resultBO.setResultSet(resultSetBO);
 				String strResultSetJson = JsonUtil.getObjectMapper().writeValueAsString(resultSetBO);
-				if(!state.value(NOT_GENERATE_REPORT,false)) {
+				if(!state.value(IS_ONLY_NL2SQL,false)) {
 					// 调用大模型获取图表配置信息并填充到ResultSetBO中
-					ResultBO resultBO = ResultBO.builder().build();
+
 					DisplayStyleBO displayStyleBO = enrichResultSetWithChartConfig(state, resultSetBO);
-
-					resultBO.setResultSet(resultSetBO);
 					resultBO.setDisplayStyle(displayStyleBO);
-
-					String strResultJson = JsonUtil.getObjectMapper().writeValueAsString(resultBO);
-					emitter.next(ChatResponseUtil.createPureResponse(strResultJson));
 				}
-				else{
-					emitter.next(ChatResponseUtil.createPureResponse(strResultSetJson));
-				}
+				String strResultJson = JsonUtil.getObjectMapper().writeValueAsString(resultBO);
+				emitter.next(ChatResponseUtil.createPureResponse(strResultJson));
 
 				emitter.next(ChatResponseUtil.createPureResponse(TextType.RESULT_SET.getEndSign()));
 
@@ -195,8 +191,7 @@ public class SqlExecuteNode implements NodeAction {
 			}
 		});
 
-		// Create generator using utility class, returning pre-computed business logic
-		// result
+		// Create generator using utility class, returning pre-computed business logic result
 		Flux<GraphResponse<StreamingOutput>> generator = FluxUtil.createStreamingGeneratorWithMessages(this.getClass(),
 				state, v -> result, displayFlux);
 		return Map.of(SQL_EXECUTE_NODE_OUTPUT, generator);

@@ -19,6 +19,7 @@ import java.util.List;
 @Order(Ordered.HIGHEST_PRECEDENCE) // 最高优先级
 public class ApiKeyAuthInterceptor implements WebFilter {
     private static final String apiKeyHeader = "Authorization";
+    private static final String xApiKeyHeader = "X-API-Key";
 
     // 名单路径，需要鉴权
     private static final List<String> URL_LIST = List.of(
@@ -41,6 +42,9 @@ public class ApiKeyAuthInterceptor implements WebFilter {
         String apiKey = exchange.getRequest().getHeaders().getFirst(apiKeyHeader);
         if(apiKey!=null) {
             apiKey = apiKey.replace("Bearer ", "");
+        }
+        else{
+            apiKey = exchange.getRequest().getHeaders().getFirst(xApiKeyHeader);
         }
 
         String[] parts = path.split("/");

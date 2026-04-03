@@ -202,7 +202,7 @@ public class GraphServiceImpl implements GraphService {
 		String agentId = graphRequest.getAgentId();
 		String threadId = graphRequest.getThreadId();
 		boolean nl2sqlOnly = graphRequest.isNl2sqlOnly();
-		int dataOnly = graphRequest.getDataOnly();
+		Integer dataOnly = graphRequest.getDataOnly();
 		boolean humanReviewEnabled = graphRequest.isHumanFeedback() & !(nl2sqlOnly);
 		if (!StringUtils.hasText(threadId) || !StringUtils.hasText(agentId) || !StringUtils.hasText(query)) {
 			throw new IllegalArgumentException("Invalid arguments");
@@ -229,7 +229,7 @@ public class GraphServiceImpl implements GraphService {
 						HUMAN_REVIEW_ENABLED,humanReviewEnabled,
 						MULTI_TURN_CONTEXT, multiTurnContext,
 						TRACE_THREAD_ID, threadId,
-						ONLY_DATA_LIMIT,dataOnly),
+						ONLY_DATA_LIMIT,dataOnly==null?0:dataOnly),
 				RunnableConfig.builder().threadId(threadId).build());
 
 		subscribeToFlux(context, nodeOutputFlux, graphRequest, agentId, threadId);
@@ -240,7 +240,7 @@ public class GraphServiceImpl implements GraphService {
 		String agentId = graphRequest.getAgentId();
 		String threadId = graphRequest.getThreadId();
 		String feedbackContent = graphRequest.getHumanFeedbackContent();
-		int dataOnly = graphRequest.getDataOnly();
+		Integer dataOnly = graphRequest.getDataOnly();
 		if (!StringUtils.hasText(threadId) || !StringUtils.hasText(agentId) || !StringUtils.hasText(feedbackContent)) {
 			throw new IllegalArgumentException("Invalid arguments");
 		}

@@ -40,6 +40,6 @@ public class GraphRequest {
 
 	private boolean nl2sqlOnly;
 
-	private int dataOnly; // 返回最大数量
+	private Integer dataOnly; // 返回最大数量
 
 }

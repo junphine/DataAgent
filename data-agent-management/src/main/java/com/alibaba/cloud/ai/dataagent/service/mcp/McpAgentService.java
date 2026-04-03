@@ -28,6 +28,7 @@ import com.alibaba.cloud.ai.graph.OverAllState;
 import com.alibaba.cloud.ai.graph.exception.GraphRunnerException;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.modelcontextprotocol.spec.McpSchema;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springaicommunity.mcp.annotation.McpTool;
@@ -68,7 +69,7 @@ public class McpAgentService {
 	@McpTool(name="nl2sql2data-agent",description = "获取企业各方面的内部数据，将自然语言查询转换为SQL语句，然后再执行这个语句获取数据。")
 	public ChatResponse nl2Sql2DataToolCallback(@McpToolParam(description="自然语言查询描述") String naturalQuery,
 												@McpToolParam(description="多轮对话中用户的反馈信息",required=false) String humanFeedbackContent,
-												@McpToolParam(description="不执行SQL，只返回SQL语句",required=false) Boolean nl2sqlOnly,
+												@McpToolParam(description="不生成报告",required=false) Boolean nl2sqlOnly,
 												@McpToolParam(description="返回最大结果数",required=false) Integer limit,
 												@McpToolParam(description="支持多轮对话时，需要传入当前对话的sessionId",required=false) String sessionId
 												) throws GraphRunnerException{
@@ -89,7 +90,7 @@ public class McpAgentService {
 		return graphService.nl2sqlResult(naturalQuery, metaData, agent.getId().toString());
 	}
 
-	// Flux<ServerSentEvent<ChatResponse>>
+	// Flux<ServerSentEvent<ChatResponse>> Mono<McpSchema.TextContent>
 
 	@McpTool(name="nl2sql2data-async-agent", title="自然语言进行数据查询",description = "获取企业各方面的内部数据，将自然语言查询转换为SQL语句，然后再执行这个语句获取数据。")
 	public List<ChatResponse> streamResultSet(
@@ -100,11 +101,9 @@ public class McpAgentService {
 		Sinks.Many<ServerSentEvent<GraphNodeResponse>> sink = Sinks.many().unicast().onBackpressureBuffer();
 		boolean humanFeedback = humanFeedbackContent!=null && !humanFeedbackContent.isBlank();
 		boolean rejectedPlan = false;
-		boolean bNl2sqlOnly = nl2sqlOnly==null? false: nl2sqlOnly;
-		String threadId = sessionId;
-		if(threadId==null){
-			threadId = UUID.randomUUID().toString();
-		}
+		boolean bNl2sqlOnly = nl2sqlOnly == null || nl2sqlOnly;
+		final String threadId = sessionId!=null?sessionId:UUID.randomUUID().toString();
+
 		GraphRequest request = GraphRequest.builder()
 				.agentId(agent.getId().toString())
 				.threadId(threadId)
@@ -128,12 +127,18 @@ public class McpAgentService {
 				.build();
 		return Flux.just(event);
 		*/
-
-		/*
-		return nodeOutput.map((x)->{
+		/**
+		return nodeOutput.last().map((x)->{
 			return toChatResponse(x);
+		}).map(resp->{
+			resp.setSessionId(threadId);
+			try {
+				return new McpSchema.TextContent(JsonUtil.getObjectMapper().writeValueAsString(resp));
+			} catch (JsonProcessingException e) {
+				return new McpSchema.TextContent("error: "+e.getMessage());
+			}
 		});
-		*/
+		 */
 	}
 
 	private ChatResponse toChatResponse(NodeOutput x){

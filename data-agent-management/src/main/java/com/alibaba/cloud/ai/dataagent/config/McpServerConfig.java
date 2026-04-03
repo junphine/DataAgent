@@ -154,8 +154,8 @@ public class McpServerConfig {
 				},
                 "limit": {
                     "type": "integer",
-                    "default": 10,
-                    "description": "要查询结果返回的最大数量"
+                    "default": 0,
+                    "description": "要查询结果返回的最大数量，0代表不限制。"
                 },
                 "sessionId": {
 					"type": "string",
@@ -198,8 +198,8 @@ public class McpServerConfig {
 				},
                 "limit": {
                     "type": "integer",
-                    "default": 10,
-                    "description": "要查询结果返回的最大数量。"
+                    "default": 0,
+                    "description": "要查询结果返回的最大数量，0代表不限制。"
                 },
                 "sessionId": {
 					"type": "string",

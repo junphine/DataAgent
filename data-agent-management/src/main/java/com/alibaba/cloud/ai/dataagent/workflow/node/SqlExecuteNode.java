@@ -162,8 +162,15 @@ public class SqlExecuteNode implements NodeAction {
 				// Update step results with the query output
 				Map<String, String> existingResults = StateUtil.getObjectValue(state, SQL_EXECUTE_NODE_OUTPUT,
 						Map.class, new HashMap<>());
+
+				Map<String, String> existingSqls = StateUtil.getObjectValue(state, SQL_EXECUTE_SQL_OUTPUT,
+						Map.class, new HashMap<>());
+
 				Map<String, String> updatedResults = PlanProcessUtil.addStepResult(existingResults, currentStep,
 						strResultSetJson);
+
+				Map<String, String> updatedSqls = PlanProcessUtil.addStepResult(existingSqls, currentStep,
+						sqlQuery);
 
 				log.info("SQL execution successful, result count: {}",
 						resultSetBO.getData() != null ? resultSetBO.getData().size() : 0);
@@ -176,9 +183,11 @@ public class SqlExecuteNode implements NodeAction {
 				// Prepare the final result object
 				// Store List of SQL query results for use by code execution node
 				// Reset sql generate count retry times when sql execute success
-				result.putAll(Map.of(SQL_EXECUTE_NODE_OUTPUT, updatedResults, SQL_REGENERATE_REASON,
-						SqlRetryDto.empty(), SQL_RESULT_LIST_MEMORY, resultSetBO.getData(), PLAN_CURRENT_STEP,
-						currentStep + 1, SQL_GENERATE_COUNT, 0));
+				result.putAll(Map.of(SQL_EXECUTE_NODE_OUTPUT, updatedResults,
+						SQL_EXECUTE_SQL_OUTPUT,updatedSqls,
+						SQL_REGENERATE_REASON,SqlRetryDto.empty(),
+						SQL_RESULT_LIST_MEMORY, resultSetBO.getData(),
+						PLAN_CURRENT_STEP,currentStep + 1, SQL_GENERATE_COUNT, 0));
 			}
 			catch (Exception e) {
 				String errorMessage = e.getMessage();

@@ -62,6 +62,8 @@ public final class Constant {
 
 	public static final String SQL_GENERATE_OUTPUT = "SQL_GENERATE_OUTPUT";
 
+	public static final String SQL_EXECUTE_SQL_OUTPUT = "SQL_EXECUTE_SQL_OUTPUT";
+
 	public static final String SQL_GENERATE_SCHEMA_MISSING_ADVICE = "SQL_GENERATE_SCHEMA_MISSING_ADVICE";
 
 	public static final String SQL_GENERATE_COUNT = "SQL_GENERATE_COUNT";

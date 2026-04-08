@@ -147,6 +147,7 @@ public class DataAgentConfiguration implements DisposableBean {
 			keyStrategyHashMap.put(PLAN_REPAIR_COUNT, KeyStrategy.REPLACE);
 			// SQL Execute 节点输出
 			keyStrategyHashMap.put(SQL_EXECUTE_NODE_OUTPUT, KeyStrategy.REPLACE);
+			keyStrategyHashMap.put(SQL_EXECUTE_SQL_OUTPUT, KeyStrategy.REPLACE);
 			// Python代码运行相关
 			keyStrategyHashMap.put(SQL_RESULT_LIST_MEMORY, KeyStrategy.REPLACE);
 			keyStrategyHashMap.put(PYTHON_IS_SUCCESS, KeyStrategy.REPLACE);

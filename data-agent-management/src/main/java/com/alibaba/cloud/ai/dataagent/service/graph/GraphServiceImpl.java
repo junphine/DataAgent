@@ -131,6 +131,11 @@ public class GraphServiceImpl implements GraphService {
 			String sql = state.value(SQL_GENERATE_OUTPUT, "");
 			output.setSql(sql);
 
+			Map<String,Object> sqlStatements = state.value(SQL_EXECUTE_SQL_OUTPUT,Map.class).orElse(null);
+			if(sqlStatements!=null && sqlStatements.size()>1){
+				output.setSql(JsonUtil.getObjectMapper().writeValueAsString(sqlStatements));
+			}
+
 			Map<String,Object> sqlOutput = state.value(SQL_EXECUTE_NODE_OUTPUT,Map.class).orElse(null);
 			Object codeOutput = state.value(PYTHON_ANALYSIS_NODE_OUTPUT).orElse(null);
 			if(sqlOutput!=null && codeOutput!=null){

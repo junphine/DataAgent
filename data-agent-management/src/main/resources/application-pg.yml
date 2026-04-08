@@ -53,10 +53,10 @@ spring:
         max-sql-retry-count: 10
         # Langfuse 可观测性配置
         langfuse:
-          enabled: ${LANGFUSE_ENABLED:false}
-          host: ${LANGFUSE_HOST:}
-          public-key: ${LANGFUSE_PUBLIC_KEY:}
-          secret-key: ${LANGFUSE_SECRET_KEY:}
+          enabled: ${LANGFUSE_ENABLED:true}
+          host: ${LANGFUSE_HOST:https://us.cloud.langfuse.com}
+          public-key: ${LANGFUSE_PUBLIC_KEY:pk-lf-ef971627-0925-4a1b-8a90-f625ae6998cd}
+          secret-key: ${LANGFUSE_SECRET_KEY:sk-lf-67cc65a2-207b-4215-a8bb-13dd6a5954db}
   servlet:
     multipart:
       max-file-size: 10MB

@@ -1,39 +1,27 @@
 server:
   port: 8065
 
-springdoc:
-  api-docs:
-    path: /v3/api-docs
-  swagger-ui:
-    path: /swagger-ui.html
-
 # 存储 DataAgent 业务数据的数据库，并非Agent分析数据的来源
 spring:
-  profiles:
-    active: dev
-
   datasource:
-    url: ${DATA_AGENT_DATASOURCE_URL:jdbc:mysql://127.0.0.1:3306/saa_data_agent?useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&transformedBitIsBoolean=true&allowMultiQueries=true&allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=Asia/Shanghai}
-    username: ${DATA_AGENT_DATASOURCE_USERNAME:root}
-    password: ${DATA_AGENT_DATASOURCE_PASSWORD:root}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:postgresql://pgm-bp15i364768i0jh5.pg.rds.aliyuncs.com/nl2sql
+    username: zhang_junfeng
+    password: zjf@pb2026
+    driver-class-name: org.postgresql.Driver
     type: com.alibaba.druid.pool.DruidDataSource
   sql:
     init:
-      mode: ${DATA_AGENT_DATASOURCE_SQL_INIT:never}
-      schema-locations: classpath:sql/schema.sql
-      data-locations: classpath:sql/data.sql
+      mode: always
+      schema-locations:
+        - classpath:sql/pg/schema-pg.sql
+        - classpath:sql/pg/product_schema-pg.sql
+      data-locations:
+        - classpath:sql/pg/data-pg.sql
+        - classpath:sql/pg/product_data-pg.sql
       continue-on-error: true
       separator: ;
       encoding: utf-8
   ai:
-    mcp:
-      server:
-        name: data—agent-server
-        type: ASYNC
-        protocol: STREAMABLE
-        request-timeout: 120s
-
     vectorstore:
       type: simple
     alibaba:
@@ -65,11 +53,11 @@ spring:
         max-sql-retry-count: 10
         # Langfuse 可观测性配置
         langfuse:
-          enabled: ${LANGFUSE_ENABLED:false}
-          host: ${LANGFUSE_HOST:}
-          public-key: ${LANGFUSE_PUBLIC_KEY:}
-          secret-key: ${LANGFUSE_SECRET_KEY:}
-  webflux:
+          enabled: ${LANGFUSE_ENABLED:true}
+          host: ${LANGFUSE_HOST:https://us.cloud.langfuse.com}
+          public-key: ${LANGFUSE_PUBLIC_KEY:pk-lf-ef971627-0925-4a1b-8a90-f625ae6998cd}
+          secret-key: ${LANGFUSE_SECRET_KEY:sk-lf-67cc65a2-207b-4215-a8bb-13dd6a5954db}
+  servlet:
     multipart:
       max-file-size: 10MB
       max-request-size: 10MB
@@ -82,4 +70,3 @@ logging:
     com.alibaba.cloud.ai.dataagent.workflow.node: info
     com.alibaba.cloud.ai.mapper: info
     org.springframework.jdbc: info
-

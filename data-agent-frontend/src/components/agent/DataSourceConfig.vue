@@ -315,7 +315,7 @@
           </el-col>
           <el-col
             :span="12"
-            v-if="needsSchemaCheck(newDatasource)"
+            v-if="needsSchemaCheck(newDatasource.type)"
           >
             <div class="form-item">
               <label>Schema 名 *</label>
@@ -451,7 +451,7 @@
       </el-col>
       <el-col
         :span="12"
-        v-if="needsSchemaCheck(editingDatasource)"
+        v-if="needsSchemaCheck(editingDatasource.type)"
       >
         <div class="form-item">
           <label>Schema 名 *</label>
@@ -880,13 +880,13 @@
         }
       });
 
-      const needsSchemaCheck = (editingDatasource:DatasourceType) => {
-        if(!editingDatasource || !editingDatasource.value) return true;
+      const needsSchemaCheck = (dbType:String) => {
+        if(!dbType) return true;
         if(!datasourceTypes.value) return true;
         for(let type of datasourceTypes.value){
-          if(type.typeName===editingDatasource.value.typeName){
+          if(type.typeName===dbType){
             let dialect = type.dialect;
-            return ['PostgreSQL','Oracle','Dremio','SqlServer'].find(dialect);
+            return ['PostgreSQL','Oracle','Dremio','SqlServer'].includes(dialect);
           }
         }
         return false;
@@ -1131,7 +1131,7 @@
       };
 
       const createNewDatasource = async () => {
-        const needsSchema = needsSchemaCheck(newDatasource);
+        const needsSchema = needsSchemaCheck(newDatasource.value.type);
         const formErrors: string[] = validateDatasourceForm(
           newDatasource.value,
           needsSchema,
@@ -1163,7 +1163,7 @@
       const editDatasource = (row: Datasource) => {
         editingDatasource.value = JSON.parse(JSON.stringify(row));
         // 如果是PostgreSQL或Oracle，分离数据库名和schema名
-        const needsSchema = needsSchemaCheck(editingDatasource);
+        const needsSchema = needsSchemaCheck(editingDatasource.value.type);
         if (needsSchema && editingDatasource.value.databaseName) {
           const parts = editingDatasource.value.databaseName.split('|');
           if (parts.length === 2) {
@@ -1179,7 +1179,7 @@
       };
 
       const saveEditDatasource = async () => {
-        const needsSchema = needsSchemaCheck(editingDatasource);
+        const needsSchema = needsSchemaCheck(editingDatasource.value.type);
         const formErrors: string[] = validateDatasourceForm(
           editingDatasource.value,
           needsSchema,

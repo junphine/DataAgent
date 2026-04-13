@@ -11,7 +11,7 @@ spring:
     type: com.alibaba.druid.pool.DruidDataSource
   sql:
     init:
-      mode: always
+      mode: never
       schema-locations:
         - classpath:sql/pg/schema-pg.sql
         - classpath:sql/pg/product_schema-pg.sql

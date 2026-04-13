@@ -439,8 +439,7 @@
     <el-row :gutter="20">
       <el-col :span="12">
         <div class="form-item">
-          <label v-if="editingDatasource.type === 'postgresql'">数据库名 *</label>
-          <label v-else>数据库名 *</label>
+          <label>数据库名 *</label>
           <el-input
             v-model="editingDatasource.databaseName"
             :placeholder="

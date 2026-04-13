@@ -43,6 +43,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.transport.ProxyProvider;
 
+import java.util.Map;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -76,6 +78,7 @@ public class DynamicModelFactory {
 			.model(config.getModelName())
 			.temperature(config.getTemperature())
 			.maxTokens(config.getMaxTokens())
+			.reasoningEffort("law")
 			.streamUsage(true)
 			.build();
 		// 4. 返回统一的 OpenAiChatModel

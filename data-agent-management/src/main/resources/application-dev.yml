@@ -24,6 +24,9 @@ spring:
   ai:
     vectorstore:
       type: simple
+    dashscope:
+      agent:
+        api-key: sk-c255b2d0e7954c479f78d7c146248305
     alibaba:
       data-agent:
         vector-store:

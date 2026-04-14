@@ -78,7 +78,7 @@ public class DynamicModelFactory {
 			.model(config.getModelName())
 			.temperature(config.getTemperature())
 			.maxTokens(config.getMaxTokens())
-			.reasoningEffort("law")
+			.reasoningEffort("low")				
 			.streamUsage(true)
 			.build();
 		// 4. 返回统一的 OpenAiChatModel

@@ -72,6 +72,10 @@ public class PromptConstant {
 		return new PromptTemplate(PromptLoader.loadPrompt("sql-error-fixer"));
 	}
 
+	public static PromptTemplate getSqlTablesRecallPromptTemplate() {
+		return new PromptTemplate(PromptLoader.loadPrompt("sql-tables-recall"));
+	}
+
 	public static PromptTemplate getPythonGeneratorPromptTemplate() {
 		return new PromptTemplate(PromptLoader.loadPrompt("python-generator"));
 	}

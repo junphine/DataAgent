@@ -34,6 +34,8 @@ public interface SemanticModelService {
 
 	List<SemanticModel> getByAgentIdAndTableNames(Integer agentId, List<String> tableNames);
 
+	List<SemanticModel> getByDatasourceIdAndTableNames(Integer agentId, List<String> tableNames);
+
 	SemanticModel getById(Integer id);
 
 	void addSemanticModel(SemanticModel semanticModel);

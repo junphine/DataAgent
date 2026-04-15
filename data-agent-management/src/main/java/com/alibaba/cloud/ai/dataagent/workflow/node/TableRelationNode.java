@@ -120,7 +120,7 @@ public class TableRelationNode implements NodeAction {
 				agentDbConfig, result -> {
 					log.info("[{}] Schema processing result: {}", this.getClass().getSimpleName(), result);
 					resultMap.put(TABLE_RELATION_OUTPUT, result);
-
+					/**
 					// 从最终的SchemaDTO中获取表名列表
 					List<String> tableNames = result.getTable().stream().map(TableDTO::getName).toList();
 
@@ -131,6 +131,7 @@ public class TableRelationNode implements NodeAction {
 					// 构建语义模型提示并存储到resultMap中
 					String semanticModelPrompt = buildSemanticModelPrompt(semanticModels);
 					resultMap.put(GENEGRATED_SEMANTIC_MODEL_PROMPT, semanticModelPrompt);
+					 */
 				});
 
 		// Create display stream for user experience only

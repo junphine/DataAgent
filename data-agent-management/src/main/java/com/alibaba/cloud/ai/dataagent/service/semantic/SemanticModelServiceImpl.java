@@ -67,6 +67,15 @@ public class SemanticModelServiceImpl implements SemanticModelService {
 	}
 
 	@Override
+	public List<SemanticModel> getByDatasourceIdAndTableNames(Integer datasourceId, List<String> tableNames) {
+		if (datasourceId == null || tableNames == null || tableNames.isEmpty()) {
+			return List.of();
+		}
+
+		return semanticModelMapper.selectByDatasourceIdAndTableNames(datasourceId, tableNames);
+	}
+
+	@Override
 	public PageResult<SemanticModel> queryByConditionsWithPage(Integer agentId,String keyword,Integer pageNum,Integer pageSize) {
 		if(pageNum==null) pageNum = 1;
 		if(pageSize==null) pageSize = 20;

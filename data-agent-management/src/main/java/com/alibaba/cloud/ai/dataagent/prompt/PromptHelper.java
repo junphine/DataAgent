@@ -36,6 +36,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 import org.springframework.ai.converter.BeanOutputConverter;
+import org.springframework.ai.document.Document;
 
 import static com.alibaba.cloud.ai.dataagent.util.ReportTemplateUtil.cleanJsonExample;
 
@@ -65,14 +66,35 @@ public class PromptHelper {
 		return sb.toString();
 	}
 
+	public static String buildTablesInfoPrompt(List<Document> tableDocuments, Boolean withColumn) {
+		StringBuilder sb = new StringBuilder();
+		for(Document table: tableDocuments) {
+			String schema = (String)table.getMetadata().get("schema");
+			String name = table.getMetadata().get("name").toString();
+			String desc = table.getMetadata().get("description").toString();
+			if(StringUtils.isBlank(schema)) {
+				if(sb.isEmpty()){
+					sb.append("| table name | table description  |\n");
+					sb.append("| ---- | ---- |\n");
+				}
+				sb.append("| ").append(name).append(" | ").append(desc).append(" |\n");
+			}
+			else{
+				if(sb.isEmpty()){
+					sb.append("| schema name | table name | table description").append(" |\n");
+					sb.append("| ---- | ---- | ---- |\n");
+				}
+				sb.append("| ").append(schema).append(" | ").append(name).append(" | ").append(desc).append(" |\n");
+			}
+		}
+		return sb.toString();
+	}
+
 	public static String buildMixMacSqlTablePrompt(TableDTO tableDTO, Boolean withColumnType) {
 		StringBuilder sb = new StringBuilder();
-		// sb.append("# Table:
-		// ").append(tableDTO.getName()).append(StringUtils.isBlank(tableDTO.getDescription())
-		// ? "" : ", " + tableDTO.getDescription()).append("\n");
 		sb.append("# Table: ").append(tableDTO.getName());
 		if (!StringUtils.equals(tableDTO.getName(), tableDTO.getDescription())) {
-			sb.append(StringUtils.isBlank(tableDTO.getDescription()) ? "" : ", " + tableDTO.getDescription())
+			sb.append(StringUtils.isBlank(tableDTO.getDescription()) ? "" : " // " + tableDTO.getDescription())
 				.append("\n");
 		}
 		else {
@@ -86,18 +108,26 @@ public class PromptHelper {
 				.append(columnDTO.getName())
 				.append(BooleanUtils.isTrue(withColumnType)
 						? ":" + StringUtils.defaultString(columnDTO.getType(), "").toUpperCase(Locale.ROOT) : "");
-			if (!StringUtils.equals(columnDTO.getDescription(), columnDTO.getName())) {
-				line.append(", ").append(StringUtils.defaultString(columnDTO.getDescription(), ""));
-			}
+
+
 			if (CollectionUtils.isNotEmpty(tableDTO.getPrimaryKeys())
 					&& tableDTO.getPrimaryKeys().contains(columnDTO.getName())) {
 				line.append(", Primary Key");
 			}
+			else if (columnDTO.getNotNULL()!=null && columnDTO.getNotNULL()) {
+				line.append(", NOT NULL");
+			}
+
+			if (!StringUtils.equals(columnDTO.getDescription(), columnDTO.getName())) {
+				line.append(", '").append(StringUtils.defaultString(columnDTO.getDescription(), "")).append("'");
+			}
+
 			List<String> enumData = Optional.ofNullable(columnDTO.getData())
 				.orElse(new ArrayList<>())
 				.stream()
 				.filter(d -> !StringUtils.isEmpty(d))
 				.collect(Collectors.toList());
+
 			if (CollectionUtils.isNotEmpty(enumData) && !"id".equals(columnDTO.getName())) {
 				line.append(", Examples: [");
 				List<String> data = new ArrayList<>(enumData.subList(0, Math.min(3, enumData.size())));

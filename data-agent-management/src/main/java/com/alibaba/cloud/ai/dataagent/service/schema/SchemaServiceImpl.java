@@ -15,12 +15,16 @@
  */
 package com.alibaba.cloud.ai.dataagent.service.schema;
 
+import com.alibaba.cloud.ai.dataagent.bo.schema.ColumnInfoBO;
 import com.alibaba.cloud.ai.dataagent.connector.DbQueryParameter;
 import com.alibaba.cloud.ai.dataagent.bo.schema.ForeignKeyInfoBO;
 import com.alibaba.cloud.ai.dataagent.bo.schema.TableInfoBO;
 import com.alibaba.cloud.ai.dataagent.constant.Constant;
 import com.alibaba.cloud.ai.dataagent.constant.DocumentMetadataConstant;
+import com.alibaba.cloud.ai.dataagent.entity.SemanticModel;
 import com.alibaba.cloud.ai.dataagent.enums.BizDataSourceTypeEnum;
+import com.alibaba.cloud.ai.dataagent.service.semantic.SemanticModelService;
+import com.alibaba.cloud.ai.dataagent.util.DocumentConverterUtil;
 import com.alibaba.cloud.ai.dataagent.util.JsonUtil;
 import com.alibaba.cloud.ai.dataagent.properties.DataAgentProperties;
 import com.alibaba.cloud.ai.dataagent.connector.accessor.Accessor;
@@ -75,6 +79,8 @@ public class SchemaServiceImpl implements SchemaService {
 	private final DynamicFilterService dynamicFilterService;
 
 	private final DataAgentProperties dataAgentProperties;
+
+	private final SemanticModelService semanticModelService;
 
 	/**
 	 * Vector storage service
@@ -170,6 +176,25 @@ public class SchemaServiceImpl implements SchemaService {
 			log.info("Successfully processed all tables for datasource: {}", datasourceId);
 
 			// 转换为文档
+			// 根据dataSourceId和表名列表获取语义模型
+			List<SemanticModel> semanticModels = semanticModelService.getByDatasourceIdAndTableNames(datasourceId, schemaInitRequest.getTables());
+			HashMap<String,SemanticModel> seMap = new HashMap<>();
+			for(SemanticModel seModel: semanticModels){
+				String colKey = seModel.getTableName()+"."+seModel.getColumnName();
+				seMap.put(colKey.toLowerCase(),seModel);
+			}
+			for (TableInfoBO table : tables) {
+				List<ColumnInfoBO> columns = table.getColumns();
+				if (columns != null) {
+					for (ColumnInfoBO column : columns) {
+						String colKey = table.getName()+"."+column.getName();
+						SemanticModel seModel = seMap.get(colKey.toLowerCase());
+						if(seModel!=null){
+							column.fillWith(seModel);
+						}
+					}
+				}
+			}
 			List<Document> columnDocs = convertColumnsToDocuments(datasourceId, tables);
 			List<Document> tableDocs = convertTablesToDocuments(datasourceId, tables);
 
@@ -297,15 +322,12 @@ public class SchemaServiceImpl implements SchemaService {
 
 		Filter.Expression filterExpression = DynamicFilterService.combineWithAnd(conditions);
 
-		// 执行向量检索
-		SearchRequest searchRequest = SearchRequest.builder()
-			.query(query)
-			.topK(tableTopK)
-			.similarityThreshold(tableThreshold)
-			.filterExpression(filterExpression)
-			.build();
+		if(query==null){
+			return agentVectorStoreService.getDocumentsOnlyByFilter(datasourceId.toString(),DocumentMetadataConstant.TABLE,filterExpression,tableTopK*100);
+		}
 
-		return agentVectorStoreService.getDocumentsOnlyByFilter(datasourceId.toString(),DocumentMetadataConstant.TABLE,filterExpression, tableTopK);
+		// 执行向量检索
+		return agentVectorStoreService.getDocumentsForAgent(datasourceId.toString(),query,DocumentMetadataConstant.TABLE,tableTopK,tableThreshold);
 	}
 
 	private List<String> getMissingTableNamesWithForeignKeySet(List<Document> tableDocuments,
@@ -444,12 +466,12 @@ public class SchemaServiceImpl implements SchemaService {
 			columnDTO.setName((String) meta.get("name"));
 			columnDTO.setDescription((String) meta.get("description"));
 			columnDTO.setType((String) meta.get("type"));
+			columnDTO.setNotNULL((Boolean)meta.get("notnull"));
 
 			String samplesStr = (String) meta.get("samples");
 			if (StringUtils.isNotBlank(samplesStr)) {
 				try {
-					List<String> samples = JsonUtil.getObjectMapper().readValue(samplesStr, new TypeReference<List<String>>() {
-						});
+					List<String> samples = JsonUtil.getObjectMapper().readValue(samplesStr, new TypeReference<List<String>>() {	});
 					columnDTO.setData(samples);
 				}
 				catch (Exception e) {
@@ -507,8 +529,7 @@ public class SchemaServiceImpl implements SchemaService {
 			log.warn("TableNames is empty.We need talbeNames to search their columns");
 			return Collections.emptyList();
 		}
-		Filter.Expression filterExpression = dynamicFilterService.buildFilterExpressionForSearchColumns(datasourceId,
-				tableNames);
+		Filter.Expression filterExpression = dynamicFilterService.buildFilterExpressionForSearchColumns(datasourceId, tableNames);
 		if (filterExpression == null) {
 			log.error("FilterExpression is null.This should not happen when tableNames is not Empty, ");
 			return Collections.emptyList();
@@ -516,7 +537,7 @@ public class SchemaServiceImpl implements SchemaService {
 		// 通过元数据过滤查找目标表下的所有列
 		// TopK=表数量×最大预估列数
 		return agentVectorStoreService.getDocumentsOnlyByFilter(datasourceId.toString(), DocumentMetadataConstant.COLUMN, filterExpression,
-				tableNames.size() * dataAgentProperties.getMaxColumnsPerTable());
+				(tableNames.size()+1) * dataAgentProperties.getMaxColumnsPerTable());
 	}
 
 }

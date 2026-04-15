@@ -47,7 +47,7 @@ public class DynamicFilterService {
 		List<Filter.Expression> conditions = new ArrayList<>();
 
 		// 必须条件
-		conditions.add(b.eq(Constant.AGENT_ID, agentId).build());
+		//- conditions.add(b.eq(Constant.AGENT_ID, agentId).build());
 		conditions.add(b.eq(DocumentMetadataConstant.VECTOR_TYPE, vectorType).build());
 		if(vectorType!=null){
 			return combineWithAnd(conditions);

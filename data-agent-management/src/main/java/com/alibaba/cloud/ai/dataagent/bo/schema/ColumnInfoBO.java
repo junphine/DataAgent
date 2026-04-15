@@ -15,10 +15,12 @@
  */
 package com.alibaba.cloud.ai.dataagent.bo.schema;
 
+import com.alibaba.cloud.ai.dataagent.entity.SemanticModel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 
 @Data
 @Builder
@@ -29,6 +31,10 @@ public class ColumnInfoBO {
 	private String name;
 
 	private String tableName;
+	/**
+	 * 业务名/别名 (例如: 客户满意度分数)
+	 */
+	private String businessName;
 
 	private String description;
 
@@ -39,5 +45,73 @@ public class ColumnInfoBO {
 	private boolean notnull;
 
 	private String samples;
+
+	/**
+	 * 是否隐藏该字段
+	 */
+	private boolean hidden = false;
+
+	public String getBusinessName(){
+		if (StringUtils.isBlank(this.businessName) && !StringUtils.isBlank(this.description)) {
+			if(this.description.length()<16){
+				return this.description;
+			}
+		}
+		return this.businessName;
+	}
+
+	public String getDescription(){
+		if (!StringUtils.isBlank(this.businessName)) {
+			if(StringUtils.isBlank(this.description)){
+				return this.businessName;
+			}
+			return this.businessName+" -- "+this.description;
+		}
+		return this.description;
+	}
+
+	public int fillWith(SemanticModel sm){
+		int c = 0;
+		if(!StringUtils.isBlank(sm.getBusinessName())) {
+			if (StringUtils.isBlank(this.businessName)) {
+				this.businessName = sm.getBusinessName();
+			}
+			else if(!this.businessName.equalsIgnoreCase(sm.getBusinessName())){
+				this.businessName = this.businessName + ","+ sm.getBusinessName();
+			}
+			c++;
+		}
+		if(!StringUtils.isBlank(sm.getSynonyms())) {
+			if (StringUtils.isBlank(this.businessName)) {
+				this.businessName = sm.getSynonyms();
+			}
+			else if(!this.businessName.equalsIgnoreCase(sm.getSynonyms())){
+				this.businessName = this.businessName + ",同义:"+ sm.getSynonyms();
+			}
+			c++;
+		}
+		if(!StringUtils.isBlank(sm.getBusinessDescription())) {
+			if (StringUtils.isBlank(this.description)) {
+				this.description = sm.getBusinessDescription();
+			}
+			else if(!this.description.equalsIgnoreCase(sm.getBusinessDescription())){
+				this.description = this.description + ";"+ sm.getBusinessDescription();
+			}
+			c++;
+		}
+		if(!StringUtils.isBlank(sm.getColumnComment())) {
+			if (StringUtils.isBlank(this.description)) {
+				this.description = sm.getColumnComment();
+			}
+			else if(!this.description.equalsIgnoreCase(sm.getColumnComment())){
+				this.description = this.description + ";"+ sm.getColumnComment();
+			}
+			c++;
+		}
+		if(sm.getStatus()!=null && sm.getStatus()==0){
+			this.hidden = true;
+		}
+		return c;
+	}
 
 }

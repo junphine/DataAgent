@@ -44,7 +44,8 @@ public class DocumentConverterUtil {
 			List<ColumnInfoBO> columns = table.getColumns();
 			if (columns != null) {
 				for (ColumnInfoBO column : columns) {
-					documents.add(DocumentConverterUtil.convertColumnToDocument(datasourceId, table, column));
+					if(!column.isHidden())
+						documents.add(DocumentConverterUtil.convertColumnToDocument(datasourceId, table, column));
 				}
 			}
 		}
@@ -61,13 +62,14 @@ public class DocumentConverterUtil {
 	public static Document convertColumnToDocument(Integer datasourceId, TableInfoBO tableInfoBO,
 			ColumnInfoBO columnInfoBO) {
 		String text = tableInfoBO.getName()+"."+columnInfoBO.getName();
-		if(!StringUtils.isBlank(columnInfoBO.getDescription())){
-			text += " // " + columnInfoBO.getDescription();
+		if(!StringUtils.isBlank(columnInfoBO.getBusinessName())){
+			text += " // " + columnInfoBO.getBusinessName();
 		}
+		String desc = columnInfoBO.getDescription();
 		Map<String, Object> metadata = new HashMap<>();
 		metadata.put("name", columnInfoBO.getName());
 		metadata.put("tableName", tableInfoBO.getName());
-		metadata.put("description", Optional.ofNullable(columnInfoBO.getDescription()).orElse(""));
+		metadata.put("description", desc);
 		metadata.put("type", columnInfoBO.getType());
 		metadata.put("primary", columnInfoBO.isPrimary());
 		metadata.put("notnull", columnInfoBO.isNotnull());

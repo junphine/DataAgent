@@ -276,7 +276,7 @@ public class EvidenceRecallNode implements NodeAction {
 					String title = knowledge.getAnswer();
 					// 格式：[来源: xxx] Q: xxx A: xxx
 					result.append(index + 1).append(". ");
-					result.append("Q: ").append(content).append("\nA: ```sql\n").append(knowledge.getAnswer().trim()).append("```\n");
+					result.append("Q: ").append(content).append("\nA: ```sql\n").append(knowledge.getAnswer().trim()).append("\n```\n");
 
 					log.debug("Successfully processed {} knowledge with title: {}", knowledgeType, title);
 				}

@@ -164,8 +164,7 @@ public interface SemanticModelMapper {
 	@Select("""
 			<script>
 			SELECT * FROM semantic_model
-			WHERE datasource_id = #{datasourceId}
-			  AND status = 1
+			WHERE datasource_id = #{datasourceId}			  
 			  AND table_name IN
 			  <foreach item='tableName' index='index' collection='tableNames' open='(' separator=',' close=')'>
 			    #{tableName}
@@ -175,6 +174,7 @@ public interface SemanticModelMapper {
 			""")
 	List<SemanticModel> selectByDatasourceIdAndTableNames(@Param("datasourceId") Integer datasourceId,
 			@Param("tableNames") List<String> tableNames);
+
 
 	/**
 	 * Query semantic model based on agentId, tableName, and columnName

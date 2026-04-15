@@ -15,8 +15,13 @@
  */
 package com.alibaba.cloud.ai.dataagent.workflow.node;
 
+import com.alibaba.cloud.ai.dataagent.dto.planner.Plan;
 import com.alibaba.cloud.ai.dataagent.dto.prompt.QueryEnhanceOutputDTO;
+import com.alibaba.cloud.ai.dataagent.dto.schema.SchemaDTO;
 import com.alibaba.cloud.ai.dataagent.mapper.AgentDatasourceMapper;
+import com.alibaba.cloud.ai.dataagent.prompt.PromptConstant;
+import com.alibaba.cloud.ai.dataagent.prompt.PromptHelper;
+import com.alibaba.cloud.ai.dataagent.service.llm.LlmService;
 import com.alibaba.cloud.ai.graph.GraphResponse;
 import com.alibaba.cloud.ai.graph.OverAllState;
 import com.alibaba.cloud.ai.graph.action.NodeAction;
@@ -28,6 +33,7 @@ import com.alibaba.cloud.ai.dataagent.util.StateUtil;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.converter.BeanOutputConverter;
 import org.springframework.ai.document.Document;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
@@ -55,6 +61,8 @@ import static com.alibaba.cloud.ai.dataagent.constant.Constant.*;
 public class SchemaRecallNode implements NodeAction {
 
 	private final SchemaService schemaService;
+
+	private final LlmService llmService;
 
 	private final AgentDatasourceMapper agentDatasourceMapper;
 
@@ -98,8 +106,15 @@ public class SchemaRecallNode implements NodeAction {
 		}
 
 		// Execute business logic first - recall schema information immediately
-		List<Document> tableDocuments = new ArrayList<>(
-				schemaService.getTableDocumentsByDatasource(datasourceId, input));
+		List<Document> tableDocuments = new ArrayList<>();
+		List<Document> tableInfos = schemaService.getTableDocumentsByDatasource(datasourceId, null);
+		// 如果表数量比较少，使用llm recall，否则使用rag
+		if(tableInfos.size()<500){
+			tableDocuments.addAll(handleTablesRecall(state,tableInfos));
+		}
+		else{
+			tableDocuments.addAll(schemaService.getTableDocumentsByDatasource(datasourceId, input));
+		}
 		// extract table names
 		List<String> recalledTableNames = extractTableName(tableDocuments);
 		List<Document> columnDocuments = schemaService.getColumnDocumentsByTableName(datasourceId, recalledTableNames);
@@ -148,6 +163,42 @@ public class SchemaRecallNode implements NodeAction {
 		log.info("At this SchemaRecallNode, Recall tables are: {}", tableNames);
 		return tableNames;
 
+	}
+
+	private List<Document> handleTablesRecall(OverAllState state,List<Document> tableInfos) {
+		List<Document> tableDocuments = new ArrayList<>();
+		// 获取查询增强节点的输出
+		String canonicalQuery = StateUtil.getCanonicalQuery(state);
+		log.info("Using processed query for filter tables: {}", canonicalQuery);
+
+		String schemaStr = PromptHelper.buildTablesInfoPrompt(tableInfos, false);
+
+		// 构建用户提示
+		String evidence = StateUtil.getStringValue(state, EVIDENCE);
+
+		// 构建模板参数
+		Map<String, Object> params = Map.of(
+				"user_question", canonicalQuery,
+				"tables_info", schemaStr,
+				"evidence", evidence
+				);
+		// 生成计划
+		String tablesRecallPrompt = PromptConstant.getSqlTablesRecallPromptTemplate().render(params);
+		log.debug("Tables recall prompt: as follows \n{}\n", tablesRecallPrompt);
+
+		// 调用LLM生成计划
+		String resp = llmService.blockToString(llmService.callUser(tablesRecallPrompt));
+		if(resp!=null){
+			String[] tables = resp.split(",");
+			for(String tab: tables){
+				tableInfos.forEach(t->{
+					if(t.getMetadata().get("name").equals(tab.trim())){
+						tableDocuments.add(t);
+					}
+				});
+			}
+		}
+		return tableDocuments;
 	}
 
 }

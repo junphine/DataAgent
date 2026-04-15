@@ -192,7 +192,6 @@
             round
             plain
           >
-            <el-icon style="margin-right: 4px"><Connection /></el-icon>
             逻辑外键配置
           </el-button>
           <el-button

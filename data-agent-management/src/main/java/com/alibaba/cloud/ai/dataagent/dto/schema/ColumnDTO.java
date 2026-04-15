@@ -42,6 +42,8 @@ public class ColumnDTO {
 
 	private Map<String, String> mapping;
 
+	private Boolean notNULL;
+
 	@Override
 	public String toString() {
 		ObjectMapper objectMapper = JsonUtil.getObjectMapper();

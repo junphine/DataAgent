@@ -18,8 +18,10 @@ package com.alibaba.cloud.ai.dataagent.config;
 import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import com.alibaba.cloud.ai.dataagent.annotation.McpServerTool;
+import java.util.Optional;
+
 import com.alibaba.cloud.ai.dataagent.entity.Agent;
 import com.alibaba.cloud.ai.dataagent.service.agent.AgentService;
 import com.alibaba.cloud.ai.dataagent.service.graph.GraphService;
@@ -38,11 +40,9 @@ import io.modelcontextprotocol.server.transport.WebFluxSseServerTransportProvide
 import io.modelcontextprotocol.server.transport.WebFluxStreamableServerTransportProvider;
 import io.modelcontextprotocol.spec.McpSchema;
 import org.springframework.ai.mcp.McpToolUtils;
-import org.springframework.ai.support.ToolCallbacks;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.tool.definition.DefaultToolDefinition;
-import org.springframework.ai.tool.definition.ToolDefinition;
 import org.springframework.ai.tool.metadata.ToolMetadata;
 import org.springframework.ai.tool.method.MethodToolCallback;
 import org.springframework.ai.tool.method.MethodToolCallbackProvider;
@@ -52,15 +52,12 @@ import org.springframework.ai.tool.resolution.StaticToolCallbackResolver;
 import org.springframework.ai.tool.resolution.ToolCallbackResolver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.ApplicationArguments;
-import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.support.GenericApplicationContext;
+import org.springframework.core.env.Environment;
 import org.springframework.web.reactive.function.server.RouterFunction;
-import org.springframework.web.reactive.function.server.RouterFunctions;
-import org.springframework.web.reactive.function.server.ServerResponse;
 
 import static io.modelcontextprotocol.spec.McpSchema.*;
 
@@ -72,6 +69,17 @@ public class McpServerConfig {
 	private AgentService agentService;
 	@Autowired
 	private GraphService graphService;
+
+	@Autowired
+	private Environment env;
+
+		public boolean isTestEnv(){
+		Optional<String> profile = Arrays.stream(env.getActiveProfiles()).filter(p->p.equals("test")).findFirst();
+		if(profile.isPresent() && profile.get().equals("test")){
+			return true;
+		}
+		return false;
+	}
 
 
 	// McpServerTool自定义注解 是为了解决如下场景：
@@ -230,7 +238,11 @@ public class McpServerConfig {
 	@Bean
 	public List<McpServerFeatures.SyncToolSpecification> sseTools() {
 		List<McpServerFeatures.SyncToolSpecification> tools = new ArrayList<>();
-		List<Agent> agents = agentService.findByStatus("published");
+		String status = "published";
+		if(isTestEnv()){
+			status = "draft";
+		}
+		List<Agent> agents = agentService.findByStatus(status);
 		agents.forEach((Agent agent) -> {
 			registerSyncTool(tools,agent);
 		});
@@ -242,7 +254,11 @@ public class McpServerConfig {
 	@Bean
 	public List<McpServerFeatures.AsyncToolSpecification> streamableHttpTools() {
 		List<McpServerFeatures.AsyncToolSpecification> tools = new ArrayList<>();
-		List<Agent> agents = agentService.findByStatus("published");
+		String status = "published";
+		if(isTestEnv()){
+			status = "draft";
+		}
+		List<Agent> agents = agentService.findByStatus(status);
 		agents.forEach((Agent agent) -> {
 			registerAsyncTool(tools,agent);
 		});

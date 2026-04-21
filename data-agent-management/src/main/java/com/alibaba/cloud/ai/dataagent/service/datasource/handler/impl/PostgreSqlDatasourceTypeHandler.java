@@ -35,12 +35,15 @@ public class PostgreSqlDatasourceTypeHandler implements DatasourceTypeHandler {
 		}
 		// 提取数据库名（format: "database|schema"，只取database部分）
 		String databaseName = datasource.getDatabaseName();
+		String schema = "public";
 		if (databaseName != null && databaseName.contains("|")) {
-			databaseName = databaseName.split("\\|")[0];
+			String[] parts = databaseName.split("\\|");
+			databaseName = parts[0];
+			schema = parts[1];
 		}
 		return String.format(
-				"jdbc:postgresql://%s:%d/%s?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai",
-				datasource.getHost(), datasource.getPort(), databaseName);
+				"jdbc:postgresql://%s:%d/%s?ssl=false&currentSchema=%s",
+				datasource.getHost(), datasource.getPort(), databaseName,schema);
 	}
 
 	@Override

@@ -1,0 +1,74 @@
+server:
+  port: 8066
+
+# 存储 DataAgent 业务数据的数据库，并非Agent分析数据的来源
+spring:
+  datasource:
+    url: jdbc:postgresql://pgm-bp15i364768i0jh5.pg.rds.aliyuncs.com/nl2sql
+    username: zhang_junfeng
+    password: zjf@pb2026
+    driver-class-name: org.postgresql.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+  sql:
+    init:
+      mode: never
+      schema-locations:
+        - classpath:sql/pg/schema-pg.sql
+        - classpath:sql/pg/product_schema-pg.sql
+      data-locations:
+        - classpath:sql/pg/data-pg.sql
+        - classpath:sql/pg/product_data-pg.sql
+      continue-on-error: true
+      separator: ;
+      encoding: utf-8
+  ai:
+    vectorstore:
+      type: simple
+    dashscope:
+      api-key: sk-c255b2d0e7954c479f78d7c146248305
+    alibaba:
+      data-agent:
+        vector-store:
+          table-topk-limit: 10
+          table-similarity-threshold: 0.3
+          default-topk-limit: 8
+          default-similarity-threshold: 0.5
+        llm-service-type: stream
+        code-executor:
+          # 运行Python代码的环境（生产环境建议使用docker，不建议使用local）
+          code-pool-executor: local
+          # Python执行的最大重试次数
+          python-max-tries-count: 5
+        file:
+          type: local
+          path-prefix: data-agent
+          # 当前目录下不要用点， ./uploads win下拼接完整格式路径会解析不了，比如 data-agent/./uploads win识别不了
+          path: uploads
+          url-prefix: /uploads
+          imageSize: 2097152
+          oss:
+            access-key-id: ${OSS_ACCESS_KEY_ID:}
+            access-key-secret: ${OSS_ACCESS_KEY_SECRET:}
+            endpoint: ${OSS_ENDPOINT:}
+            bucket-name: ${OSS_BUCKET_NAME:}
+            custom-domain: ${OSS_CUSTOM_DOMAIN:}
+        max-sql-retry-count: 10
+        # Langfuse 可观测性配置
+        langfuse:
+          enabled: ${LANGFUSE_ENABLED:true}
+          host: ${LANGFUSE_HOST:https://us.cloud.langfuse.com}
+          public-key: ${LANGFUSE_PUBLIC_KEY:pk-lf-ef971627-0925-4a1b-8a90-f625ae6998cd}
+          secret-key: ${LANGFUSE_SECRET_KEY:sk-lf-67cc65a2-207b-4215-a8bb-13dd6a5954db}
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+      enabled: true
+
+# 日志配置
+logging:
+  level:
+    com.alibaba.cloud.ai.dataagent.service: info
+    com.alibaba.cloud.ai.dataagent.workflow.node: info
+    com.alibaba.cloud.ai.mapper: info
+    org.springframework.jdbc: info

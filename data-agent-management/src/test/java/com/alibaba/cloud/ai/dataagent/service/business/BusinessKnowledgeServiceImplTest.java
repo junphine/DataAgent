@@ -62,33 +62,33 @@ class BusinessKnowledgeServiceImplTest {
 	@BeforeEach
 	void setUp() {
 		testKnowledge = new BusinessKnowledge();
-		testKnowledge.setId(1L);
-		testKnowledge.setAgentId(100L);
+		testKnowledge.setId(1);
+		testKnowledge.setAgentId(100);
 		testKnowledge.setBusinessTerm("Revenue");
 		testKnowledge.setDescription("Total revenue");
-		testKnowledge.setIsRecall(1);
-		testKnowledge.setIsDeleted(0);
+		testKnowledge.setIsRecall(true);
+		testKnowledge.setIsDeleted(false);
 		testKnowledge.setEmbeddingStatus(EmbeddingStatus.COMPLETED);
 
 		testVO = new BusinessKnowledgeVO();
-		testVO.setId(1L);
+		testVO.setId(1);
 		testVO.setBusinessTerm("Revenue");
 	}
 
 	@Test
 	void getKnowledge_withResults() {
-		when(businessKnowledgeMapper.selectByAgentId(100L)).thenReturn(List.of(testKnowledge));
+		when(businessKnowledgeMapper.selectByAgentId(100)).thenReturn(List.of(testKnowledge));
 		when(businessKnowledgeConverter.toVo(testKnowledge)).thenReturn(testVO);
 
-		List<BusinessKnowledgeVO> result = service.getKnowledge(100L);
+		List<BusinessKnowledgeVO> result = service.getKnowledge(100);
 		assertEquals(1, result.size());
 		assertEquals("Revenue", result.get(0).getBusinessTerm());
 	}
 
 	@Test
 	void getKnowledge_empty() {
-		when(businessKnowledgeMapper.selectByAgentId(100L)).thenReturn(Collections.emptyList());
-		List<BusinessKnowledgeVO> result = service.getKnowledge(100L);
+		when(businessKnowledgeMapper.selectByAgentId(100)).thenReturn(Collections.emptyList());
+		List<BusinessKnowledgeVO> result = service.getKnowledge(100);
 		assertTrue(result.isEmpty());
 	}
 
@@ -110,34 +110,34 @@ class BusinessKnowledgeServiceImplTest {
 
 	@Test
 	void searchKnowledge_withResults() {
-		when(businessKnowledgeMapper.searchInAgent(100L, "rev")).thenReturn(List.of(testKnowledge));
+		when(businessKnowledgeMapper.searchInAgent(100, "rev")).thenReturn(List.of(testKnowledge));
 		when(businessKnowledgeConverter.toVo(testKnowledge)).thenReturn(testVO);
 
-		List<BusinessKnowledgeVO> result = service.searchKnowledge(100L, "rev");
+		List<BusinessKnowledgeVO> result = service.searchKnowledge(100, "rev");
 		assertEquals(1, result.size());
 	}
 
 	@Test
 	void searchKnowledge_empty() {
-		when(businessKnowledgeMapper.searchInAgent(100L, "xyz")).thenReturn(Collections.emptyList());
-		List<BusinessKnowledgeVO> result = service.searchKnowledge(100L, "xyz");
+		when(businessKnowledgeMapper.searchInAgent(100, "xyz")).thenReturn(Collections.emptyList());
+		List<BusinessKnowledgeVO> result = service.searchKnowledge(100, "xyz");
 		assertTrue(result.isEmpty());
 	}
 
 	@Test
 	void getKnowledgeById_found() {
-		when(businessKnowledgeMapper.selectById(1L)).thenReturn(testKnowledge);
+		when(businessKnowledgeMapper.selectById(1)).thenReturn(testKnowledge);
 		when(businessKnowledgeConverter.toVo(testKnowledge)).thenReturn(testVO);
 
-		BusinessKnowledgeVO result = service.getKnowledgeById(1L);
+		BusinessKnowledgeVO result = service.getKnowledgeById(1);
 		assertNotNull(result);
-		assertEquals(1L, result.getId());
+		assertEquals(1, result.getId());
 	}
 
 	@Test
 	void getKnowledgeById_notFound() {
-		when(businessKnowledgeMapper.selectById(999L)).thenReturn(null);
-		BusinessKnowledgeVO result = service.getKnowledgeById(999L);
+		when(businessKnowledgeMapper.selectById(999)).thenReturn(null);
+		BusinessKnowledgeVO result = service.getKnowledgeById(999);
 		assertNull(result);
 	}
 
@@ -145,8 +145,8 @@ class BusinessKnowledgeServiceImplTest {
 	void addKnowledge_success() {
 		CreateBusinessKnowledgeDTO dto = new CreateBusinessKnowledgeDTO();
 		BusinessKnowledge entity = new BusinessKnowledge();
-		entity.setId(2L);
-		entity.setAgentId(100L);
+		entity.setId(2);
+		entity.setAgentId(100);
 
 		when(businessKnowledgeConverter.toEntityForCreate(dto)).thenReturn(entity);
 		when(businessKnowledgeMapper.insert(entity)).thenReturn(1);
@@ -161,7 +161,7 @@ class BusinessKnowledgeServiceImplTest {
 	void addKnowledge_insertFails() {
 		CreateBusinessKnowledgeDTO dto = new CreateBusinessKnowledgeDTO();
 		BusinessKnowledge entity = new BusinessKnowledge();
-		entity.setAgentId(100L);
+		entity.setAgentId(100);
 
 		when(businessKnowledgeConverter.toEntityForCreate(dto)).thenReturn(entity);
 		when(businessKnowledgeMapper.insert(entity)).thenReturn(0);
@@ -173,8 +173,8 @@ class BusinessKnowledgeServiceImplTest {
 	void addKnowledge_vectorStoreFails_setsFailedStatus() {
 		CreateBusinessKnowledgeDTO dto = new CreateBusinessKnowledgeDTO();
 		BusinessKnowledge entity = new BusinessKnowledge();
-		entity.setId(2L);
-		entity.setAgentId(100L);
+		entity.setId(2);
+		entity.setAgentId(100);
 
 		when(businessKnowledgeConverter.toEntityForCreate(dto)).thenReturn(entity);
 		when(businessKnowledgeMapper.insert(entity)).thenReturn(1);
@@ -189,14 +189,14 @@ class BusinessKnowledgeServiceImplTest {
 
 	@Test
 	void updateKnowledge_notFound_throws() {
-		when(businessKnowledgeMapper.selectById(999L)).thenReturn(null);
+		when(businessKnowledgeMapper.selectById(999)).thenReturn(null);
 		UpdateBusinessKnowledgeDTO dto = new UpdateBusinessKnowledgeDTO();
-		assertThrows(RuntimeException.class, () -> service.updateKnowledge(999L, dto));
+		assertThrows(RuntimeException.class, () -> service.updateKnowledge(999, dto));
 	}
 
 	@Test
 	void updateKnowledge_success() {
-		when(businessKnowledgeMapper.selectById(1L)).thenReturn(testKnowledge);
+		when(businessKnowledgeMapper.selectById(1)).thenReturn(testKnowledge);
 		when(businessKnowledgeMapper.updateById(testKnowledge)).thenReturn(1);
 		when(businessKnowledgeConverter.toVo(testKnowledge)).thenReturn(testVO);
 
@@ -205,88 +205,88 @@ class BusinessKnowledgeServiceImplTest {
 		dto.setDescription("Updated desc");
 		dto.setSynonyms("syn1,syn2");
 
-		BusinessKnowledgeVO result = service.updateKnowledge(1L, dto);
+		BusinessKnowledgeVO result = service.updateKnowledge(1, dto);
 		assertNotNull(result);
 		assertEquals("Updated Term", testKnowledge.getBusinessTerm());
 	}
 
 	@Test
 	void updateKnowledge_dbUpdateFails_throws() {
-		when(businessKnowledgeMapper.selectById(1L)).thenReturn(testKnowledge);
+		when(businessKnowledgeMapper.selectById(1)).thenReturn(testKnowledge);
 		when(businessKnowledgeMapper.updateById(testKnowledge)).thenReturn(0);
 
 		UpdateBusinessKnowledgeDTO dto = new UpdateBusinessKnowledgeDTO();
 		dto.setBusinessTerm("T");
 		dto.setDescription("D");
 
-		assertThrows(RuntimeException.class, () -> service.updateKnowledge(1L, dto));
+		assertThrows(RuntimeException.class, () -> service.updateKnowledge(1, dto));
 	}
 
 	@Test
 	void deleteKnowledge_found() {
-		when(businessKnowledgeMapper.selectById(1L)).thenReturn(testKnowledge);
-		when(businessKnowledgeMapper.logicalDelete(1L, 1)).thenReturn(1);
+		when(businessKnowledgeMapper.selectById(1)).thenReturn(testKnowledge);
+		when(businessKnowledgeMapper.logicalDelete(1, true)).thenReturn(1);
 
-		service.deleteKnowledge(1L);
-		verify(agentVectorStoreService).deleteDocumentsByMetedata(anyString(), anyMap());
+		service.deleteKnowledge(1);
+		verify(agentVectorStoreService).deleteDocumentsByMetadata(anyString(), anyMap());
 	}
 
 	@Test
 	void deleteKnowledge_notFound_noException() {
-		when(businessKnowledgeMapper.selectById(999L)).thenReturn(null);
-		service.deleteKnowledge(999L);
-		verify(businessKnowledgeMapper, never()).logicalDelete(anyLong(), anyInt());
+		when(businessKnowledgeMapper.selectById(999)).thenReturn(null);
+		service.deleteKnowledge(999);
+		verify(businessKnowledgeMapper, never()).logicalDelete(anyInt(), true);
 	}
 
 	@Test
 	void deleteKnowledge_logicalDeleteFails_throws() {
-		when(businessKnowledgeMapper.selectById(1L)).thenReturn(testKnowledge);
-		when(businessKnowledgeMapper.logicalDelete(1L, 1)).thenReturn(0);
+		when(businessKnowledgeMapper.selectById(1)).thenReturn(testKnowledge);
+		when(businessKnowledgeMapper.logicalDelete(1, true)).thenReturn(0);
 
-		assertThrows(RuntimeException.class, () -> service.deleteKnowledge(1L));
+		assertThrows(RuntimeException.class, () -> service.deleteKnowledge(1));
 	}
 
 	@Test
 	void recallKnowledge_enableRecall() {
-		when(businessKnowledgeMapper.selectById(1L)).thenReturn(testKnowledge);
+		when(businessKnowledgeMapper.selectById(1)).thenReturn(testKnowledge);
 
-		service.recallKnowledge(1L, true);
+		service.recallKnowledge(1, true);
 		assertEquals(1, testKnowledge.getIsRecall());
 		verify(businessKnowledgeMapper).updateById(testKnowledge);
 	}
 
 	@Test
 	void recallKnowledge_disableRecall() {
-		when(businessKnowledgeMapper.selectById(1L)).thenReturn(testKnowledge);
+		when(businessKnowledgeMapper.selectById(1)).thenReturn(testKnowledge);
 
-		service.recallKnowledge(1L, false);
+		service.recallKnowledge(1, false);
 		assertEquals(0, testKnowledge.getIsRecall());
 	}
 
 	@Test
 	void recallKnowledge_notFound_throws() {
-		when(businessKnowledgeMapper.selectById(999L)).thenReturn(null);
-		assertThrows(RuntimeException.class, () -> service.recallKnowledge(999L, true));
+		when(businessKnowledgeMapper.selectById(999)).thenReturn(null);
+		assertThrows(RuntimeException.class, () -> service.recallKnowledge(999, true));
 	}
 
 	@Test
 	void retryEmbedding_notFound_throws() {
-		when(businessKnowledgeMapper.selectById(999L)).thenReturn(null);
-		assertThrows(RuntimeException.class, () -> service.retryEmbedding(999L));
+		when(businessKnowledgeMapper.selectById(999)).thenReturn(null);
+		assertThrows(RuntimeException.class, () -> service.retryEmbedding(999));
 	}
 
 	@Test
 	void retryEmbedding_processing_throws() {
 		testKnowledge.setEmbeddingStatus(EmbeddingStatus.PROCESSING);
-		when(businessKnowledgeMapper.selectById(1L)).thenReturn(testKnowledge);
-		assertThrows(RuntimeException.class, () -> service.retryEmbedding(1L));
+		when(businessKnowledgeMapper.selectById(1)).thenReturn(testKnowledge);
+		assertThrows(RuntimeException.class, () -> service.retryEmbedding(1));
 	}
 
 	@Test
 	void retryEmbedding_notRecalled_throws() {
-		testKnowledge.setIsRecall(0);
-		when(businessKnowledgeMapper.selectById(1L)).thenReturn(testKnowledge);
-		assertThrows(RuntimeException.class, () -> service.retryEmbedding(1L));
+		testKnowledge.setIsRecall(false);
+		when(businessKnowledgeMapper.selectById(1)).thenReturn(testKnowledge);
+		assertThrows(RuntimeException.class, () -> service.retryEmbedding(1));
 	}
 
 }

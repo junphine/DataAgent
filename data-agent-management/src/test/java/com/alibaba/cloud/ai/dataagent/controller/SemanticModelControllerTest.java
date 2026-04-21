@@ -49,8 +49,8 @@ class SemanticModelControllerTest {
 
 	@Test
 	void list_withKeyword_callsSearch() {
-		SemanticModel model = SemanticModel.builder().id(1L).businessName("Revenue").build();
-		when(semanticModelService.search("Rev")).thenReturn(List.of(model));
+		SemanticModel model = SemanticModel.builder().id(1).businessName("Revenue").build();
+		when(semanticModelService.search(1,"Rev")).thenReturn(List.of(model));
 
 		ApiResponse<List<SemanticModel>> result = controller.list("Rev", null);
 
@@ -60,10 +60,10 @@ class SemanticModelControllerTest {
 
 	@Test
 	void list_withAgentId_callsGetByAgentId() {
-		SemanticModel model = SemanticModel.builder().id(1L).agentId(1L).build();
-		when(semanticModelService.getByAgentId(1L)).thenReturn(List.of(model));
+		SemanticModel model = SemanticModel.builder().id(1).agentId(1).build();
+		when(semanticModelService.getByAgentId(1)).thenReturn(List.of(model));
 
-		ApiResponse<List<SemanticModel>> result = controller.list(null, 1L);
+		ApiResponse<List<SemanticModel>> result = controller.list(null, 1);
 
 		assertTrue(result.isSuccess());
 		assertEquals(1, result.getData().size());
@@ -81,20 +81,20 @@ class SemanticModelControllerTest {
 
 	@Test
 	void list_keywordPrioritizedOverAgentId() {
-		when(semanticModelService.search("test")).thenReturn(List.of());
+		when(semanticModelService.search(1,"test")).thenReturn(List.of());
 
-		controller.list("test", 1L);
+		controller.list("test", 1);
 
-		verify(semanticModelService).search("test");
-		verify(semanticModelService, never()).getByAgentId(anyLong());
+		verify(semanticModelService).search(1,"test");
+		verify(semanticModelService, never()).getByAgentId(anyInt());
 	}
 
 	@Test
 	void get_existing_returnsModel() {
-		SemanticModel model = SemanticModel.builder().id(1L).businessName("Revenue").build();
-		when(semanticModelService.getById(1L)).thenReturn(model);
+		SemanticModel model = SemanticModel.builder().id(1).businessName("Revenue").build();
+		when(semanticModelService.getById(1)).thenReturn(model);
 
-		ApiResponse<SemanticModel> result = controller.get(1L);
+		ApiResponse<SemanticModel> result = controller.get(1);
 
 		assertTrue(result.isSuccess());
 		assertEquals("Revenue", result.getData().getBusinessName());
@@ -103,7 +103,7 @@ class SemanticModelControllerTest {
 	@Test
 	void create_success_returnsSuccess() {
 		SemanticModelAddDTO dto = SemanticModelAddDTO.builder()
-			.agentId(1L)
+			.agentId(1)
 			.tableName("orders")
 			.columnName("amount")
 			.businessName("Order Amount")
@@ -120,7 +120,7 @@ class SemanticModelControllerTest {
 	@Test
 	void create_failure_returnsError() {
 		SemanticModelAddDTO dto = SemanticModelAddDTO.builder()
-			.agentId(1L)
+			.agentId(1)
 			.tableName("orders")
 			.columnName("amount")
 			.businessName("Order Amount")
@@ -135,49 +135,49 @@ class SemanticModelControllerTest {
 
 	@Test
 	void update_existing_returnsUpdated() {
-		SemanticModel existing = SemanticModel.builder().id(1L).businessName("Old Name").build();
+		SemanticModel existing = SemanticModel.builder().id(1).businessName("Old Name").build();
 		SemanticModel updated = SemanticModel.builder().businessName("New Name").build();
-		when(semanticModelService.getById(1L)).thenReturn(existing);
+		when(semanticModelService.getById(1)).thenReturn(existing);
 
-		ApiResponse<SemanticModel> result = controller.update(1L, updated);
+		ApiResponse<SemanticModel> result = controller.update(1, updated);
 
 		assertTrue(result.isSuccess());
-		assertEquals(1L, result.getData().getId());
-		verify(semanticModelService).updateSemanticModel(1L, updated);
+		assertEquals(1, result.getData().getId());
+		verify(semanticModelService).updateSemanticModel(1, updated);
 	}
 
 	@Test
 	void update_notFound_returnsError() {
-		when(semanticModelService.getById(999L)).thenReturn(null);
+		when(semanticModelService.getById(999)).thenReturn(null);
 
-		ApiResponse<SemanticModel> result = controller.update(999L, new SemanticModel());
+		ApiResponse<SemanticModel> result = controller.update(999, new SemanticModel());
 
 		assertFalse(result.isSuccess());
 	}
 
 	@Test
 	void delete_existing_returnsSuccess() {
-		SemanticModel existing = SemanticModel.builder().id(1L).build();
-		when(semanticModelService.getById(1L)).thenReturn(existing);
+		SemanticModel existing = SemanticModel.builder().id(1).build();
+		when(semanticModelService.getById(1)).thenReturn(existing);
 
-		ApiResponse<Boolean> result = controller.delete(1L);
+		ApiResponse<Boolean> result = controller.delete(1);
 
 		assertTrue(result.isSuccess());
-		verify(semanticModelService).deleteSemanticModel(1L);
+		verify(semanticModelService).deleteSemanticModel(1);
 	}
 
 	@Test
 	void delete_notFound_returnsError() {
-		when(semanticModelService.getById(999L)).thenReturn(null);
+		when(semanticModelService.getById(999)).thenReturn(null);
 
-		ApiResponse<Boolean> result = controller.delete(999L);
+		ApiResponse<Boolean> result = controller.delete(999);
 
 		assertFalse(result.isSuccess());
 	}
 
 	@Test
 	void batchDelete_success_returnsSuccess() {
-		List<Long> ids = List.of(1L, 2L, 3L);
+		List<Integer> ids = List.of(1, 2, 3);
 
 		ApiResponse<Boolean> result = controller.batchDelete(ids);
 
@@ -187,7 +187,7 @@ class SemanticModelControllerTest {
 
 	@Test
 	void enableFields_success_returnsSuccess() {
-		List<Long> ids = List.of(1L, 2L);
+		List<Integer> ids = List.of(1, 2);
 
 		ApiResponse<Boolean> result = controller.enableFields(ids);
 
@@ -197,17 +197,17 @@ class SemanticModelControllerTest {
 
 	@Test
 	void disableFields_success_returnsSuccess() {
-		List<Long> ids = List.of(1L, 2L);
+		List<Integer> ids = List.of(1, 2);
 
 		ApiResponse<Boolean> result = controller.disableFields(ids);
 
 		assertTrue(result.isSuccess());
-		verify(semanticModelService, times(2)).disableSemanticModel(anyLong());
+		verify(semanticModelService, times(2)).disableSemanticModel(anyInt());
 	}
 
 	@Test
 	void batchImport_success_returnsResult() {
-		SemanticModelBatchImportDTO dto = SemanticModelBatchImportDTO.builder().agentId(1L).items(List.of()).build();
+		SemanticModelBatchImportDTO dto = SemanticModelBatchImportDTO.builder().agentId(1).items(List.of()).build();
 		BatchImportResult importResult = BatchImportResult.builder().total(5).successCount(4).failCount(1).build();
 		when(semanticModelService.batchImport(dto)).thenReturn(importResult);
 

@@ -65,7 +65,7 @@ class AgentDatasourceServiceImplTest {
 		when(datasourceService.getDbConfig(ds)).thenReturn(dbConfig);
 		when(schemaService.schema(eq(1), any(SchemaInitRequest.class))).thenReturn(true);
 
-		Boolean result = service.initializeSchemaForAgentWithDatasource(1L, 1, List.of("table1"));
+		Boolean result = service.initializeSchemaForAgentWithDatasource(1, 1, List.of("table1"));
 		assertTrue(result);
 	}
 
@@ -74,7 +74,7 @@ class AgentDatasourceServiceImplTest {
 		when(datasourceService.getDatasourceById(1)).thenReturn(null);
 
 		assertThrows(RuntimeException.class,
-				() -> service.initializeSchemaForAgentWithDatasource(1L, 1, List.of("table1")));
+				() -> service.initializeSchemaForAgentWithDatasource(1, 1, List.of("table1")));
 	}
 
 	@Test
@@ -86,7 +86,7 @@ class AgentDatasourceServiceImplTest {
 	@Test
 	void testInitializeSchemaForAgentWithDatasource_emptyTables() {
 		assertThrows(IllegalArgumentException.class,
-				() -> service.initializeSchemaForAgentWithDatasource(1L, 1, List.of()));
+				() -> service.initializeSchemaForAgentWithDatasource(1, 1, List.of()));
 	}
 
 	@Test
@@ -95,11 +95,11 @@ class AgentDatasourceServiceImplTest {
 		ad.setDatasourceId(1);
 		ad.setId(10);
 		Datasource ds = new Datasource();
-		when(agentDatasourceMapper.selectByAgentIdWithDatasource(1L)).thenReturn(List.of(ad));
+		when(agentDatasourceMapper.selectByAgentIdWithDatasource(1)).thenReturn(List.of(ad));
 		when(datasourceService.getDatasourceById(1)).thenReturn(ds);
 		when(tablesMapper.getAgentDatasourceTables(10)).thenReturn(List.of("t1"));
 
-		List<AgentDatasource> result = service.getAgentDatasource(1L);
+		List<AgentDatasource> result = service.getAgentDatasource(1);
 		assertEquals(1, result.size());
 		assertEquals(ds, result.get(0).getDatasource());
 		assertEquals(List.of("t1"), result.get(0).getSelectTables());
@@ -112,12 +112,12 @@ class AgentDatasourceServiceImplTest {
 
 	@Test
 	void testAddDatasourceToAgent_newAssociation() {
-		when(agentDatasourceMapper.selectByAgentIdAndDatasourceId(1L, 1)).thenReturn(null);
+		when(agentDatasourceMapper.selectByAgentIdAndDatasourceId(1, 1)).thenReturn(null);
 
-		AgentDatasource result = service.addDatasourceToAgent(1L, 1);
+		AgentDatasource result = service.addDatasourceToAgent(1, 1);
 		assertNotNull(result);
-		verify(agentDatasourceMapper).disableAllByAgentId(1L);
-		verify(agentDatasourceMapper).createNewRelationEnabled(1L, 1);
+		verify(agentDatasourceMapper).disableAllByAgentId(1);
+		verify(agentDatasourceMapper).createNewRelationEnabled(1, 1);
 	}
 
 	@Test
@@ -125,62 +125,62 @@ class AgentDatasourceServiceImplTest {
 		AgentDatasource existing = new AgentDatasource();
 		existing.setId(10);
 		AgentDatasource updated = new AgentDatasource();
-		when(agentDatasourceMapper.selectByAgentIdAndDatasourceId(1L, 1)).thenReturn(existing, updated);
+		when(agentDatasourceMapper.selectByAgentIdAndDatasourceId(1, 1)).thenReturn(existing, updated);
 
-		AgentDatasource result = service.addDatasourceToAgent(1L, 1);
+		AgentDatasource result = service.addDatasourceToAgent(1, 1);
 		assertNotNull(result);
-		verify(agentDatasourceMapper).enableRelation(1L, 1);
+		verify(agentDatasourceMapper).enableRelation(1, 1);
 		verify(tablesMapper).removeAllTables(10);
 	}
 
 	@Test
 	void testRemoveDatasourceFromAgent() {
-		service.removeDatasourceFromAgent(1L, 1);
-		verify(agentDatasourceMapper).removeRelation(1L, 1);
+		service.removeDatasourceFromAgent(1, 1);
+		verify(agentDatasourceMapper).removeRelation(1, 1);
 	}
 
 	@Test
 	void testToggleDatasourceForAgent_enable_noConflict() {
-		when(agentDatasourceMapper.countActiveByAgentIdExcluding(1L, 1)).thenReturn(0);
-		when(agentDatasourceMapper.updateRelation(1L, 1, 1)).thenReturn(1);
+		when(agentDatasourceMapper.countActiveByAgentIdExcluding(1, 1)).thenReturn(0);
+		when(agentDatasourceMapper.updateRelation(1, 1, 1)).thenReturn(1);
 		AgentDatasource expected = new AgentDatasource();
-		when(agentDatasourceMapper.selectByAgentIdAndDatasourceId(1L, 1)).thenReturn(expected);
+		when(agentDatasourceMapper.selectByAgentIdAndDatasourceId(1, 1)).thenReturn(expected);
 
-		AgentDatasource result = service.toggleDatasourceForAgent(1L, 1, true);
+		AgentDatasource result = service.toggleDatasourceForAgent(1, 1, true);
 		assertEquals(expected, result);
 	}
 
 	@Test
 	void testToggleDatasourceForAgent_enable_conflict() {
-		when(agentDatasourceMapper.countActiveByAgentIdExcluding(1L, 1)).thenReturn(1);
+		when(agentDatasourceMapper.countActiveByAgentIdExcluding(1, 1)).thenReturn(1);
 
-		assertThrows(RuntimeException.class, () -> service.toggleDatasourceForAgent(1L, 1, true));
+		assertThrows(RuntimeException.class, () -> service.toggleDatasourceForAgent(1, 1, true));
 	}
 
 	@Test
 	void testToggleDatasourceForAgent_disable() {
-		when(agentDatasourceMapper.updateRelation(1L, 1, 0)).thenReturn(1);
+		when(agentDatasourceMapper.updateRelation(1, 1, 0)).thenReturn(1);
 		AgentDatasource expected = new AgentDatasource();
-		when(agentDatasourceMapper.selectByAgentIdAndDatasourceId(1L, 1)).thenReturn(expected);
+		when(agentDatasourceMapper.selectByAgentIdAndDatasourceId(1, 1)).thenReturn(expected);
 
-		AgentDatasource result = service.toggleDatasourceForAgent(1L, 1, false);
+		AgentDatasource result = service.toggleDatasourceForAgent(1, 1, false);
 		assertEquals(expected, result);
 	}
 
 	@Test
 	void testToggleDatasourceForAgent_notFound() {
-		when(agentDatasourceMapper.updateRelation(1L, 1, 0)).thenReturn(0);
+		when(agentDatasourceMapper.updateRelation(1, 1, 0)).thenReturn(0);
 
-		assertThrows(RuntimeException.class, () -> service.toggleDatasourceForAgent(1L, 1, false));
+		assertThrows(RuntimeException.class, () -> service.toggleDatasourceForAgent(1, 1, false));
 	}
 
 	@Test
 	void testUpdateDatasourceTables_success() {
 		AgentDatasource ad = new AgentDatasource();
 		ad.setId(10);
-		when(agentDatasourceMapper.selectByAgentIdAndDatasourceId(1L, 1)).thenReturn(ad);
+		when(agentDatasourceMapper.selectByAgentIdAndDatasourceId(1, 1)).thenReturn(ad);
 
-		service.updateDatasourceTables(1L, 1, List.of("t1", "t2"));
+		service.updateDatasourceTables(1, 1, List.of("t1", "t2"));
 		verify(tablesMapper).updateAgentDatasourceTables(10, List.of("t1", "t2"));
 	}
 
@@ -188,9 +188,9 @@ class AgentDatasourceServiceImplTest {
 	void testUpdateDatasourceTables_emptyTables() {
 		AgentDatasource ad = new AgentDatasource();
 		ad.setId(10);
-		when(agentDatasourceMapper.selectByAgentIdAndDatasourceId(1L, 1)).thenReturn(ad);
+		when(agentDatasourceMapper.selectByAgentIdAndDatasourceId(1, 1)).thenReturn(ad);
 
-		service.updateDatasourceTables(1L, 1, List.of());
+		service.updateDatasourceTables(1, 1, List.of());
 		verify(tablesMapper).removeAllTables(10);
 	}
 
@@ -201,9 +201,9 @@ class AgentDatasourceServiceImplTest {
 
 	@Test
 	void testUpdateDatasourceTables_notFound() {
-		when(agentDatasourceMapper.selectByAgentIdAndDatasourceId(1L, 1)).thenReturn(null);
+		when(agentDatasourceMapper.selectByAgentIdAndDatasourceId(1, 1)).thenReturn(null);
 
-		assertThrows(IllegalArgumentException.class, () -> service.updateDatasourceTables(1L, 1, List.of("t1")));
+		assertThrows(IllegalArgumentException.class, () -> service.updateDatasourceTables(1, 1, List.of("t1")));
 	}
 
 }

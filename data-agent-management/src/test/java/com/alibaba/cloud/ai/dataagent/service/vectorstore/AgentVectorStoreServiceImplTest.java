@@ -25,6 +25,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.ai.document.Document;
+import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.vectorstore.filter.Filter;
@@ -46,6 +47,9 @@ class AgentVectorStoreServiceImplTest {
 	@Mock
 	private DynamicFilterService dynamicFilterService;
 
+	@Mock
+	private EmbeddingModel embeddingModel;
+
 	private DataAgentProperties dataAgentProperties;
 
 	private AgentVectorStoreServiceImpl service;
@@ -60,7 +64,7 @@ class AgentVectorStoreServiceImplTest {
 		vsProps.setBatchDelTopkLimit(100);
 		dataAgentProperties.setVectorStore(vsProps);
 
-		service = new AgentVectorStoreServiceImpl(vectorStore, Optional.empty(), dataAgentProperties,
+		service = new AgentVectorStoreServiceImpl(vectorStore, embeddingModel,Optional.empty(), dataAgentProperties,
 				dynamicFilterService);
 	}
 
@@ -79,7 +83,7 @@ class AgentVectorStoreServiceImplTest {
 
 	@Test
 	void search_nullFilter_returnsEmpty() {
-		when(dynamicFilterService.buildDynamicFilter("1", "KNOWLEDGE")).thenReturn(null);
+		when(dynamicFilterService.buildDynamicFilter(1, "KNOWLEDGE")).thenReturn(null);
 
 		AgentSearchRequest request = AgentSearchRequest.builder()
 			.agentId("1")
@@ -97,7 +101,7 @@ class AgentVectorStoreServiceImplTest {
 	void search_withFilter_delegatesToVectorStore() {
 		FilterExpressionBuilder b = new FilterExpressionBuilder();
 		Filter.Expression filter = b.eq("agentId", "1").build();
-		when(dynamicFilterService.buildDynamicFilter("1", "KNOWLEDGE")).thenReturn(filter);
+		when(dynamicFilterService.buildDynamicFilter(1, "KNOWLEDGE")).thenReturn(filter);
 		when(vectorStore.similaritySearch(any(SearchRequest.class))).thenReturn(List.of());
 
 		AgentSearchRequest request = AgentSearchRequest.builder()
@@ -172,7 +176,7 @@ class AgentVectorStoreServiceImplTest {
 
 	@Test
 	void getDocumentsForAgent_defaultParams() {
-		when(dynamicFilterService.buildDynamicFilter(anyString(), anyString())).thenReturn(null);
+		when(dynamicFilterService.buildDynamicFilter(1, "KNOWLEDGE")).thenReturn(null);
 
 		List<Document> result = service.getDocumentsForAgent("1", "query", "KNOWLEDGE");
 		assertTrue(result.isEmpty());
@@ -180,7 +184,7 @@ class AgentVectorStoreServiceImplTest {
 
 	@Test
 	void getDocumentsForAgent_customParams() {
-		when(dynamicFilterService.buildDynamicFilter("1", "KNOWLEDGE")).thenReturn(null);
+		when(dynamicFilterService.buildDynamicFilter(1, "KNOWLEDGE")).thenReturn(null);
 
 		List<Document> result = service.getDocumentsForAgent("1", "query", "KNOWLEDGE", 5, 0.8);
 		assertTrue(result.isEmpty());
@@ -188,7 +192,7 @@ class AgentVectorStoreServiceImplTest {
 
 	@Test
 	void getDocumentsOnlyByFilter_nullFilter_throws() {
-		assertThrows(IllegalArgumentException.class, () -> service.getDocumentsOnlyByFilter(null, 10));
+		assertThrows(IllegalArgumentException.class, () -> service.getDocumentsOnlyByFilter( "1","KNOWLEDGE",null,10));
 	}
 
 	@Test
@@ -197,7 +201,7 @@ class AgentVectorStoreServiceImplTest {
 		Filter.Expression filter = b.eq("agentId", "1").build();
 		when(vectorStore.similaritySearch(any(SearchRequest.class))).thenReturn(List.of());
 
-		List<Document> result = service.getDocumentsOnlyByFilter(filter, null);
+		List<Document> result = service.getDocumentsOnlyByFilter("1", "KNOWLEDGE",filter,10);
 		assertNotNull(result);
 	}
 
@@ -206,14 +210,14 @@ class AgentVectorStoreServiceImplTest {
 		Document doc = new Document("content", Map.of("agentId", "1"));
 		when(vectorStore.similaritySearch(any(SearchRequest.class))).thenReturn(List.of(doc));
 
-		assertTrue(service.hasDocuments("1"));
+		assertTrue(service.hasDocuments("1","KNOWLEDGE"));
 	}
 
 	@Test
 	void hasDocuments_noDocs_returnsFalse() {
 		when(vectorStore.similaritySearch(any(SearchRequest.class))).thenReturn(Collections.emptyList());
 
-		assertFalse(service.hasDocuments("1"));
+		assertFalse(service.hasDocuments("1","KNOWLEDGE"));
 	}
 
 }

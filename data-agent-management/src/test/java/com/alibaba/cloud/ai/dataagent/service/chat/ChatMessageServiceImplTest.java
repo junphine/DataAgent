@@ -46,8 +46,8 @@ class ChatMessageServiceImplTest {
 	void findBySessionId_returnsMessages() {
 		String sessionId = "session-1";
 		List<ChatMessage> expected = List.of(
-				ChatMessage.builder().id(1L).sessionId(sessionId).role("user").content("hello").build(),
-				ChatMessage.builder().id(2L).sessionId(sessionId).role("assistant").content("hi").build());
+				ChatMessage.builder().id(1).sessionId(sessionId).role("user").content("hello").build(),
+				ChatMessage.builder().id(2).sessionId(sessionId).role("assistant").content("hi").build());
 		when(chatMessageMapper.selectBySessionId(sessionId)).thenReturn(expected);
 
 		List<ChatMessage> result = service.findBySessionId(sessionId);
@@ -70,7 +70,7 @@ class ChatMessageServiceImplTest {
 	@Test
 	void saveMessage_insertsAndReturnsMessage() {
 		ChatMessage message = ChatMessage.builder()
-			.id(1L)
+			.id(1)
 			.sessionId("session-1")
 			.role("user")
 			.content("test message")

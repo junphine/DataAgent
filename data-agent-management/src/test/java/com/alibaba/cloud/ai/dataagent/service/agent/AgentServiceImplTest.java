@@ -53,7 +53,7 @@ class AgentServiceImplTest {
 	@Test
 	void findAll_returnsList() {
 		Agent agent = new Agent();
-		agent.setId(1L);
+		agent.setId(1);
 		when(agentMapper.findAll()).thenReturn(List.of(agent));
 
 		assertEquals(1, agentService.findAll().size());
@@ -62,11 +62,11 @@ class AgentServiceImplTest {
 	@Test
 	void findById_returnsAgent() {
 		Agent agent = new Agent();
-		agent.setId(1L);
+		agent.setId(1);
 		agent.setName("test");
-		when(agentMapper.findById(1L)).thenReturn(agent);
+		when(agentMapper.findById(1)).thenReturn(agent);
 
-		assertEquals("test", agentService.findById(1L).getName());
+		assertEquals("test", agentService.findById(1).getName());
 	}
 
 	@Test
@@ -98,7 +98,7 @@ class AgentServiceImplTest {
 	@Test
 	void save_existingAgent_updates() {
 		Agent agent = new Agent();
-		agent.setId(1L);
+		agent.setId(1);
 
 		agentService.save(agent);
 
@@ -109,93 +109,93 @@ class AgentServiceImplTest {
 	@Test
 	void deleteById_deletesAgentAndCleansUp() throws Exception {
 		Agent agent = new Agent();
-		agent.setId(1L);
+		agent.setId(1);
 		agent.setAvatar("avatar.png");
-		when(agentMapper.findById(1L)).thenReturn(agent);
+		when(agentMapper.findById(1)).thenReturn(agent);
 
-		agentService.deleteById(1L);
+		agentService.deleteById(1);
 
-		verify(agentMapper).deleteById(1L);
-		verify(agentVectorStoreService).deleteDocumentsByMetedata(eq("1"), any());
+		verify(agentMapper).deleteById(1);
+		verify(agentVectorStoreService).deleteDocumentsByMetadata(eq("1"), any());
 		verify(fileStorageService).deleteFile("avatar.png");
 	}
 
 	@Test
 	void deleteById_vectorCleanupFails_doesNotThrow() throws Exception {
 		Agent agent = new Agent();
-		agent.setId(1L);
-		when(agentMapper.findById(1L)).thenReturn(agent);
+		agent.setId(1);
+		when(agentMapper.findById(1)).thenReturn(agent);
 		doThrow(new RuntimeException("vector error")).when(agentVectorStoreService)
-			.deleteDocumentsByMetedata(anyString(), any());
+			.deleteDocumentsByMetadata(anyString(), any());
 
-		assertDoesNotThrow(() -> agentService.deleteById(1L));
-		verify(agentMapper).deleteById(1L);
+		assertDoesNotThrow(() -> agentService.deleteById(1));
+		verify(agentMapper).deleteById(1);
 	}
 
 	@Test
 	void generateApiKey_setsKeyAndEnabled() {
 		Agent agent = new Agent();
-		agent.setId(1L);
-		when(agentMapper.findById(1L)).thenReturn(agent);
+		agent.setId(1);
+		when(agentMapper.findById(1)).thenReturn(agent);
 
-		Agent result = agentService.generateApiKey(1L);
+		Agent result = agentService.generateApiKey(1);
 
 		assertNotNull(result.getApiKey());
 		assertEquals(1, result.getApiKeyEnabled());
-		verify(agentMapper).updateApiKey(eq(1L), anyString(), eq(1));
+		verify(agentMapper).updateApiKey(eq(1), anyString(), eq(1));
 	}
 
 	@Test
 	void deleteApiKey_clearsKeyAndDisables() {
 		Agent agent = new Agent();
-		agent.setId(1L);
-		when(agentMapper.findById(1L)).thenReturn(agent);
+		agent.setId(1);
+		when(agentMapper.findById(1)).thenReturn(agent);
 
-		Agent result = agentService.deleteApiKey(1L);
+		Agent result = agentService.deleteApiKey(1);
 
 		assertNull(result.getApiKey());
 		assertEquals(0, result.getApiKeyEnabled());
-		verify(agentMapper).updateApiKey(1L, null, 0);
+		verify(agentMapper).updateApiKey(1, null, 0);
 	}
 
 	@Test
 	void toggleApiKey_enablesKey() {
 		Agent agent = new Agent();
-		agent.setId(1L);
-		when(agentMapper.findById(1L)).thenReturn(agent);
+		agent.setId(1);
+		when(agentMapper.findById(1)).thenReturn(agent);
 
-		Agent result = agentService.toggleApiKey(1L, true);
+		Agent result = agentService.toggleApiKey(1, true);
 
 		assertEquals(1, result.getApiKeyEnabled());
-		verify(agentMapper).toggleApiKey(1L, 1);
+		verify(agentMapper).toggleApiKey(1, 1);
 	}
 
 	@Test
 	void getApiKeyMasked_returnsNullWhenNoKey() {
 		Agent agent = new Agent();
-		agent.setId(1L);
-		when(agentMapper.findById(1L)).thenReturn(agent);
+		agent.setId(1);
+		when(agentMapper.findById(1)).thenReturn(agent);
 
-		assertNull(agentService.getApiKeyMasked(1L));
+		assertNull(agentService.getApiKeyMasked(1));
 	}
 
 	@Test
 	void getApiKeyMasked_returnsMaskedKey() {
 		Agent agent = new Agent();
-		agent.setId(1L);
+		agent.setId(1);
 		agent.setApiKey("da-abcdefghijklmnop");
-		when(agentMapper.findById(1L)).thenReturn(agent);
+		when(agentMapper.findById(1)).thenReturn(agent);
 
-		String masked = agentService.getApiKeyMasked(1L);
+		String masked = agentService.getApiKeyMasked(1);
 		assertNotNull(masked);
 		assertTrue(masked.contains("****"));
 	}
 
 	@Test
 	void requireAgent_notFound_throwsException() {
-		when(agentMapper.findById(99L)).thenReturn(null);
+		when(agentMapper.findById(99)).thenReturn(null);
 
-		assertThrows(IllegalArgumentException.class, () -> agentService.generateApiKey(99L));
+		assertThrows(IllegalArgumentException.class, () -> agentService.generateApiKey(99));
 	}
 
 	@Test
@@ -212,7 +212,7 @@ class AgentServiceImplTest {
 	@Test
 	void save_existingAgent_withNullApiKeyEnabled_setsDefault() {
 		Agent agent = new Agent();
-		agent.setId(1L);
+		agent.setId(1);
 		agent.setApiKeyEnabled(null);
 
 		agentService.save(agent);
@@ -224,59 +224,59 @@ class AgentServiceImplTest {
 	@Test
 	void resetApiKey_delegatesToGenerateApiKey() {
 		Agent agent = new Agent();
-		agent.setId(1L);
-		when(agentMapper.findById(1L)).thenReturn(agent);
+		agent.setId(1);
+		when(agentMapper.findById(1)).thenReturn(agent);
 
-		Agent result = agentService.resetApiKey(1L);
+		Agent result = agentService.resetApiKey(1);
 
 		assertNotNull(result.getApiKey());
 		assertEquals(1, result.getApiKeyEnabled());
-		verify(agentMapper).updateApiKey(eq(1L), anyString(), eq(1));
+		verify(agentMapper).updateApiKey(eq(1), anyString(), eq(1));
 	}
 
 	@Test
 	void toggleApiKey_disablesKey() {
 		Agent agent = new Agent();
-		agent.setId(1L);
-		when(agentMapper.findById(1L)).thenReturn(agent);
+		agent.setId(1);
+		when(agentMapper.findById(1)).thenReturn(agent);
 
-		Agent result = agentService.toggleApiKey(1L, false);
+		Agent result = agentService.toggleApiKey(1, false);
 
 		assertEquals(0, result.getApiKeyEnabled());
-		verify(agentMapper).toggleApiKey(1L, 0);
+		verify(agentMapper).toggleApiKey(1, 0);
 	}
 
 	@Test
 	void getApiKeyMasked_blankKey_returnsNull() {
 		Agent agent = new Agent();
-		agent.setId(1L);
+		agent.setId(1);
 		agent.setApiKey("   ");
-		when(agentMapper.findById(1L)).thenReturn(agent);
+		when(agentMapper.findById(1)).thenReturn(agent);
 
-		assertNull(agentService.getApiKeyMasked(1L));
+		assertNull(agentService.getApiKeyMasked(1));
 	}
 
 	@Test
 	void deleteById_noAvatar_skipsAvatarCleanup() {
 		Agent agent = new Agent();
-		agent.setId(1L);
+		agent.setId(1);
 		agent.setAvatar(null);
-		when(agentMapper.findById(1L)).thenReturn(agent);
+		when(agentMapper.findById(1)).thenReturn(agent);
 
-		agentService.deleteById(1L);
+		agentService.deleteById(1);
 
-		verify(agentMapper).deleteById(1L);
+		verify(agentMapper).deleteById(1);
 		verify(fileStorageService, never()).deleteFile(anyString());
 	}
 
 	@Test
 	void deleteById_blankAvatar_skipsAvatarCleanup() {
 		Agent agent = new Agent();
-		agent.setId(1L);
+		agent.setId(1);
 		agent.setAvatar("   ");
-		when(agentMapper.findById(1L)).thenReturn(agent);
+		when(agentMapper.findById(1)).thenReturn(agent);
 
-		agentService.deleteById(1L);
+		agentService.deleteById(1);
 
 		verify(fileStorageService, never()).deleteFile(anyString());
 	}
@@ -284,53 +284,53 @@ class AgentServiceImplTest {
 	@Test
 	void deleteById_avatarCleanupFails_doesNotThrow() {
 		Agent agent = new Agent();
-		agent.setId(1L);
+		agent.setId(1);
 		agent.setAvatar("avatar.png");
-		when(agentMapper.findById(1L)).thenReturn(agent);
+		when(agentMapper.findById(1)).thenReturn(agent);
 		doThrow(new RuntimeException("file error")).when(fileStorageService).deleteFile("avatar.png");
 
-		assertDoesNotThrow(() -> agentService.deleteById(1L));
-		verify(agentMapper).deleteById(1L);
+		assertDoesNotThrow(() -> agentService.deleteById(1));
+		verify(agentMapper).deleteById(1);
 	}
 
 	@Test
 	void deleteById_agentNotFoundInDb_stillDeletes() {
-		when(agentMapper.findById(1L)).thenReturn(null);
+		when(agentMapper.findById(1)).thenReturn(null);
 
-		agentService.deleteById(1L);
+		agentService.deleteById(1);
 
-		verify(agentMapper).deleteById(1L);
+		verify(agentMapper).deleteById(1);
 	}
 
 	@Test
 	void deleteById_mapperThrows_propagatesException() {
 		Agent agent = new Agent();
-		agent.setId(1L);
-		when(agentMapper.findById(1L)).thenReturn(agent);
-		doThrow(new RuntimeException("db error")).when(agentMapper).deleteById(1L);
+		agent.setId(1);
+		when(agentMapper.findById(1)).thenReturn(agent);
+		doThrow(new RuntimeException("db error")).when(agentMapper).deleteById(1);
 
-		assertThrows(RuntimeException.class, () -> agentService.deleteById(1L));
+		assertThrows(RuntimeException.class, () -> agentService.deleteById(1));
 	}
 
 	@Test
 	void deleteApiKey_notFound_throwsException() {
-		when(agentMapper.findById(99L)).thenReturn(null);
+		when(agentMapper.findById(99)).thenReturn(null);
 
-		assertThrows(IllegalArgumentException.class, () -> agentService.deleteApiKey(99L));
+		assertThrows(IllegalArgumentException.class, () -> agentService.deleteApiKey(99));
 	}
 
 	@Test
 	void toggleApiKey_notFound_throwsException() {
-		when(agentMapper.findById(99L)).thenReturn(null);
+		when(agentMapper.findById(99)).thenReturn(null);
 
-		assertThrows(IllegalArgumentException.class, () -> agentService.toggleApiKey(99L, true));
+		assertThrows(IllegalArgumentException.class, () -> agentService.toggleApiKey(99, true));
 	}
 
 	@Test
 	void getApiKeyMasked_notFound_throwsException() {
-		when(agentMapper.findById(99L)).thenReturn(null);
+		when(agentMapper.findById(99)).thenReturn(null);
 
-		assertThrows(IllegalArgumentException.class, () -> agentService.getApiKeyMasked(99L));
+		assertThrows(IllegalArgumentException.class, () -> agentService.getApiKeyMasked(99));
 	}
 
 }

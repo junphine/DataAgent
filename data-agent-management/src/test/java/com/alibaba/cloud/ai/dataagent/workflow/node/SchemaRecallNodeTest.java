@@ -28,6 +28,7 @@ import java.util.Map;
 import com.alibaba.cloud.ai.dataagent.common.TestFixtures;
 import com.alibaba.cloud.ai.dataagent.dto.prompt.QueryEnhanceOutputDTO;
 import com.alibaba.cloud.ai.dataagent.mapper.AgentDatasourceMapper;
+import com.alibaba.cloud.ai.dataagent.service.llm.LlmService;
 import com.alibaba.cloud.ai.dataagent.service.schema.SchemaService;
 import com.alibaba.cloud.ai.graph.OverAllState;
 import com.alibaba.cloud.ai.graph.state.strategy.ReplaceStrategy;
@@ -48,13 +49,16 @@ class SchemaRecallNodeTest {
 	private SchemaService schemaService;
 
 	@Mock
+	private LlmService llmService;
+
+	@Mock
 	private AgentDatasourceMapper agentDatasourceMapper;
 
 	private SchemaRecallNode schemaRecallNode;
 
 	@BeforeEach
 	void setUp() {
-		schemaRecallNode = new SchemaRecallNode(schemaService, agentDatasourceMapper);
+		schemaRecallNode = new SchemaRecallNode(schemaService, llmService, agentDatasourceMapper);
 	}
 
 	private OverAllState createTestState() {
@@ -80,7 +84,7 @@ class SchemaRecallNodeTest {
 		OverAllState state = createTestState();
 		state.updateState(Map.of(QUERY_ENHANCE_NODE_OUTPUT, createQueryEnhanceDTO("查询用户"), AGENT_ID, "1"));
 
-		when(agentDatasourceMapper.selectActiveDatasourceIdByAgentId(1L)).thenReturn(100);
+		when(agentDatasourceMapper.selectActiveDatasourceIdByAgentId(1)).thenReturn(100);
 
 		List<Document> tableDocs = List.of(createTableDocument("users"));
 		when(schemaService.getTableDocumentsByDatasource(eq(100), anyString())).thenReturn(tableDocs);
@@ -98,7 +102,7 @@ class SchemaRecallNodeTest {
 		OverAllState state = createTestState();
 		state.updateState(Map.of(QUERY_ENHANCE_NODE_OUTPUT, createQueryEnhanceDTO("查询用户"), AGENT_ID, "2"));
 
-		when(agentDatasourceMapper.selectActiveDatasourceIdByAgentId(2L)).thenReturn(null);
+		when(agentDatasourceMapper.selectActiveDatasourceIdByAgentId(2)).thenReturn(null);
 
 		Map<String, Object> result = schemaRecallNode.apply(state);
 
@@ -111,7 +115,7 @@ class SchemaRecallNodeTest {
 		OverAllState state = createTestState();
 		state.updateState(Map.of(QUERY_ENHANCE_NODE_OUTPUT, createQueryEnhanceDTO("不存在的查询"), AGENT_ID, "3"));
 
-		when(agentDatasourceMapper.selectActiveDatasourceIdByAgentId(3L)).thenReturn(200);
+		when(agentDatasourceMapper.selectActiveDatasourceIdByAgentId(3)).thenReturn(200);
 		when(schemaService.getTableDocumentsByDatasource(eq(200), anyString())).thenReturn(Collections.emptyList());
 		when(schemaService.getColumnDocumentsByTableName(eq(200), anyList())).thenReturn(Collections.emptyList());
 
@@ -126,7 +130,7 @@ class SchemaRecallNodeTest {
 		OverAllState state = createTestState();
 		state.updateState(Map.of(QUERY_ENHANCE_NODE_OUTPUT, createQueryEnhanceDTO("查询用户和订单"), AGENT_ID, "4"));
 
-		when(agentDatasourceMapper.selectActiveDatasourceIdByAgentId(4L)).thenReturn(300);
+		when(agentDatasourceMapper.selectActiveDatasourceIdByAgentId(4)).thenReturn(300);
 
 		List<Document> tableDocs = List.of(createTableDocument("users"), createTableDocument("orders"));
 		when(schemaService.getTableDocumentsByDatasource(eq(300), anyString())).thenReturn(tableDocs);
@@ -144,7 +148,7 @@ class SchemaRecallNodeTest {
 		OverAllState state = createTestState();
 		state.updateState(Map.of(QUERY_ENHANCE_NODE_OUTPUT, createQueryEnhanceDTO("查询失败"), AGENT_ID, "5"));
 
-		when(agentDatasourceMapper.selectActiveDatasourceIdByAgentId(5L)).thenReturn(400);
+		when(agentDatasourceMapper.selectActiveDatasourceIdByAgentId(5)).thenReturn(400);
 		when(schemaService.getTableDocumentsByDatasource(eq(400), anyString()))
 			.thenThrow(new RuntimeException("DB connection failed"));
 
@@ -156,7 +160,7 @@ class SchemaRecallNodeTest {
 		OverAllState state = createTestState();
 		state.updateState(Map.of(QUERY_ENHANCE_NODE_OUTPUT, createQueryEnhanceDTO("查询"), AGENT_ID, "6"));
 
-		when(agentDatasourceMapper.selectActiveDatasourceIdByAgentId(6L)).thenReturn(500);
+		when(agentDatasourceMapper.selectActiveDatasourceIdByAgentId(6)).thenReturn(500);
 
 		Document validDoc = createTableDocument("users");
 		Document noNameDoc = new Document("doc without name", Map.of("other", "value"));

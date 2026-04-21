@@ -97,13 +97,13 @@ class TableRelationNodeTest {
 
 	private void setupCommonMocks(String agentId, List<Document> tableDocs) throws Exception {
 		DbConfigBO dbConfig = DbConfigBO.builder().dialectType("mysql").schema("test_db").build();
-		when(databaseUtil.getAgentDbConfig(Long.valueOf(agentId))).thenReturn(dbConfig);
+		when(databaseUtil.getAgentDbConfig(Integer.valueOf(agentId))).thenReturn(dbConfig);
 
 		AgentDatasource agentDs = new AgentDatasource();
 		agentDs.setDatasourceId(100);
-		when(agentDatasourceService.getCurrentAgentDatasource(Long.valueOf(agentId))).thenReturn(agentDs);
+		when(agentDatasourceService.getCurrentAgentDatasource(Integer.valueOf(agentId))).thenReturn(agentDs);
 		when(datasourceService.getLogicalRelations(100)).thenReturn(Collections.emptyList());
-		when(semanticModelService.getByAgentIdAndTableNames(eq(Long.valueOf(agentId)), anyList()))
+		when(semanticModelService.getByAgentIdAndTableNames(eq(Integer.valueOf(agentId)), anyList()))
 			.thenReturn(Collections.emptyList());
 
 		SchemaDTO schemaResult = new SchemaDTO();
@@ -193,7 +193,7 @@ class TableRelationNodeTest {
 				TABLE_DOCUMENTS_FOR_SCHEMA_OUTPUT, tableDocs, COLUMN_DOCUMENTS__FOR_SCHEMA_OUTPUT,
 				Collections.emptyList()));
 
-		when(databaseUtil.getAgentDbConfig(4L)).thenThrow(new RuntimeException("DB config not found"));
+		when(databaseUtil.getAgentDbConfig(4)).thenThrow(new RuntimeException("DB config not found"));
 
 		assertThrows(RuntimeException.class, () -> tableRelationNode.apply(state));
 	}
@@ -209,9 +209,9 @@ class TableRelationNodeTest {
 				Collections.emptyList()));
 
 		DbConfigBO dbConfig = DbConfigBO.builder().dialectType("mysql").schema("test_db").build();
-		when(databaseUtil.getAgentDbConfig(5L)).thenReturn(dbConfig);
-		when(agentDatasourceService.getCurrentAgentDatasource(5L)).thenReturn(null);
-		when(semanticModelService.getByAgentIdAndTableNames(eq(5L), anyList())).thenReturn(Collections.emptyList());
+		when(databaseUtil.getAgentDbConfig(5)).thenReturn(dbConfig);
+		when(agentDatasourceService.getCurrentAgentDatasource(5)).thenReturn(null);
+		when(semanticModelService.getByAgentIdAndTableNames(eq(5), anyList())).thenReturn(Collections.emptyList());
 
 		SchemaDTO schemaResult = new SchemaDTO();
 		schemaResult.setName("test_db");
@@ -243,13 +243,13 @@ class TableRelationNodeTest {
 				Collections.emptyList(), SQL_GENERATE_SCHEMA_MISSING_ADVICE, "add orders table"));
 
 		DbConfigBO dbConfig = DbConfigBO.builder().dialectType("mysql").schema("test_db").build();
-		when(databaseUtil.getAgentDbConfig(6L)).thenReturn(dbConfig);
+		when(databaseUtil.getAgentDbConfig(6)).thenReturn(dbConfig);
 
 		AgentDatasource agentDs = new AgentDatasource();
 		agentDs.setDatasourceId(600);
-		when(agentDatasourceService.getCurrentAgentDatasource(6L)).thenReturn(agentDs);
+		when(agentDatasourceService.getCurrentAgentDatasource(6)).thenReturn(agentDs);
 		when(datasourceService.getLogicalRelations(600)).thenReturn(Collections.emptyList());
-		when(semanticModelService.getByAgentIdAndTableNames(eq(6L), anyList())).thenReturn(Collections.emptyList());
+		when(semanticModelService.getByAgentIdAndTableNames(eq(6), anyList())).thenReturn(Collections.emptyList());
 
 		SchemaDTO schemaResult = new SchemaDTO();
 		schemaResult.setName("test_db");

@@ -17,6 +17,7 @@ package com.alibaba.cloud.ai.dataagent.service.agent;
 
 import com.alibaba.cloud.ai.dataagent.entity.AgentPresetQuestion;
 import com.alibaba.cloud.ai.dataagent.mapper.AgentPresetQuestionMapper;
+import com.alibaba.cloud.ai.dataagent.service.vectorstore.AgentVectorStoreService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,25 +39,28 @@ class AgentPresetQuestionServiceImplTest {
 	@Mock
 	private AgentPresetQuestionMapper mapper;
 
+	@Mock
+	AgentVectorStoreService agentVectorStoreService;
+
 	@BeforeEach
 	void setUp() {
-		service = new AgentPresetQuestionServiceImpl(mapper);
+		service = new AgentPresetQuestionServiceImpl(mapper,agentVectorStoreService);
 	}
 
 	@Test
 	void testFindByAgentId() {
 		AgentPresetQuestion q = new AgentPresetQuestion();
-		when(mapper.selectByAgentId(1L)).thenReturn(List.of(q));
+		when(mapper.selectByAgentId(1)).thenReturn(List.of(q));
 
-		List<AgentPresetQuestion> result = service.findByAgentId(1L);
+		List<AgentPresetQuestion> result = service.findByAgentId(1);
 		assertEquals(1, result.size());
 	}
 
 	@Test
 	void testFindAllByAgentId() {
-		when(mapper.selectAllByAgentId(1L)).thenReturn(List.of());
+		when(mapper.selectAllByAgentId(1)).thenReturn(List.of());
 
-		List<AgentPresetQuestion> result = service.findAllByAgentId(1L);
+		List<AgentPresetQuestion> result = service.findAllByAgentId(1);
 		assertTrue(result.isEmpty());
 	}
 
@@ -87,22 +91,22 @@ class AgentPresetQuestionServiceImplTest {
 	@Test
 	void testUpdate() {
 		AgentPresetQuestion q = new AgentPresetQuestion();
-		service.update(10L, q);
+		service.update(10, q);
 
-		assertEquals(10L, q.getId());
+		assertEquals(10, q.getId());
 		verify(mapper).update(q);
 	}
 
 	@Test
 	void testDeleteById() {
-		service.deleteById(10L);
-		verify(mapper).deleteById(10L);
+		service.deleteById(10);
+		verify(mapper).deleteById(10);
 	}
 
 	@Test
 	void testDeleteByAgentId() {
-		service.deleteByAgentId(1L);
-		verify(mapper).deleteByAgentId(1L);
+		service.deleteByAgentId(1);
+		verify(mapper).deleteByAgentId(1);
 	}
 
 	@Test
@@ -112,24 +116,24 @@ class AgentPresetQuestionServiceImplTest {
 		AgentPresetQuestion q2 = new AgentPresetQuestion();
 		q2.setQuestion("q2");
 
-		service.batchSave(1L, List.of(q1, q2));
+		service.batchSave(1, List.of(q1, q2));
 
-		verify(mapper).deleteByAgentId(1L);
+		verify(mapper).deleteByAgentId(1);
 
 		ArgumentCaptor<AgentPresetQuestion> captor = ArgumentCaptor.forClass(AgentPresetQuestion.class);
 		verify(mapper, times(2)).insert(captor.capture());
 
 		List<AgentPresetQuestion> inserted = captor.getAllValues();
-		assertEquals(1L, inserted.get(0).getAgentId());
+		assertEquals(1, inserted.get(0).getAgentId());
 		assertEquals(0, inserted.get(0).getSortOrder());
-		assertEquals(1L, inserted.get(1).getAgentId());
+		assertEquals(1, inserted.get(1).getAgentId());
 		assertEquals(1, inserted.get(1).getSortOrder());
 	}
 
 	@Test
 	void testBatchSave_emptyList() {
-		service.batchSave(1L, List.of());
-		verify(mapper).deleteByAgentId(1L);
+		service.batchSave(1, List.of());
+		verify(mapper).deleteByAgentId(1);
 		verify(mapper, never()).insert(any());
 	}
 

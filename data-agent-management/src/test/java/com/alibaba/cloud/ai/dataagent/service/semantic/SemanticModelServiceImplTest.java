@@ -63,12 +63,12 @@ class SemanticModelServiceImplTest {
 	void setUp() {
 		activeDs = new AgentDatasource();
 		activeDs.setDatasourceId(10);
-		activeDs.setIsActive(1);
+		activeDs.setIsActive(true);
 	}
 
 	@Test
 	void getAll_delegatesToMapper() {
-		SemanticModel model = SemanticModel.builder().id(1L).build();
+		SemanticModel model = SemanticModel.builder().id(1).build();
 		when(semanticModelMapper.selectAll()).thenReturn(List.of(model));
 
 		List<SemanticModel> result = service.getAll();
@@ -78,19 +78,19 @@ class SemanticModelServiceImplTest {
 
 	@Test
 	void getEnabledByAgentId_delegatesToMapper() {
-		when(semanticModelMapper.selectEnabledByAgentId(1L)).thenReturn(List.of());
+		when(semanticModelMapper.selectEnabledByAgentId(1)).thenReturn(List.of());
 
-		List<SemanticModel> result = service.getEnabledByAgentId(1L);
+		List<SemanticModel> result = service.getEnabledByAgentId(1);
 		assertTrue(result.isEmpty());
 	}
 
 	@Test
 	void getById_delegatesToMapper() {
-		SemanticModel model = SemanticModel.builder().id(1L).build();
-		when(semanticModelMapper.selectById(1L)).thenReturn(model);
+		SemanticModel model = SemanticModel.builder().id(1).build();
+		when(semanticModelMapper.selectById(1)).thenReturn(model);
 
-		SemanticModel result = service.getById(1L);
-		assertEquals(1L, result.getId());
+		SemanticModel result = service.getById(1);
+		assertEquals(1, result.getId());
 	}
 
 	@Test
@@ -102,10 +102,10 @@ class SemanticModelServiceImplTest {
 
 	@Test
 	void addSemanticModel_dto_createsAndInserts() {
-		when(agentDatasourceMapper.selectByAgentId(1L)).thenReturn(List.of(activeDs));
+		when(agentDatasourceMapper.selectByAgentId(1)).thenReturn(List.of(activeDs));
 
 		SemanticModelAddDTO dto = new SemanticModelAddDTO();
-		dto.setAgentId(1L);
+		dto.setAgentId(1);
 		dto.setTableName("users");
 		dto.setColumnName("name");
 		dto.setBusinessName("User Name");
@@ -117,81 +117,81 @@ class SemanticModelServiceImplTest {
 
 	@Test
 	void addSemanticModel_dto_noDatasource_throws() {
-		when(agentDatasourceMapper.selectByAgentId(1L)).thenReturn(Collections.emptyList());
+		when(agentDatasourceMapper.selectByAgentId(1)).thenReturn(Collections.emptyList());
 
 		SemanticModelAddDTO dto = new SemanticModelAddDTO();
-		dto.setAgentId(1L);
+		dto.setAgentId(1);
 
 		assertThrows(RuntimeException.class, () -> service.addSemanticModel(dto));
 	}
 
 	@Test
 	void enableSemanticModel_delegatesToMapper() {
-		service.enableSemanticModel(1L);
-		verify(semanticModelMapper).enableById(1L);
+		service.enableSemanticModel(1);
+		verify(semanticModelMapper).enableById(1);
 	}
 
 	@Test
 	void disableSemanticModel_delegatesToMapper() {
-		service.disableSemanticModel(1L);
-		verify(semanticModelMapper).disableById(1L);
+		service.disableSemanticModel(1);
+		verify(semanticModelMapper).disableById(1);
 	}
 
 	@Test
 	void getByAgentId_delegatesToMapper() {
-		when(semanticModelMapper.selectByAgentId(1L)).thenReturn(List.of());
-		List<SemanticModel> result = service.getByAgentId(1L);
+		when(semanticModelMapper.selectByAgentId(1)).thenReturn(List.of());
+		List<SemanticModel> result = service.getByAgentId(1);
 		assertTrue(result.isEmpty());
 	}
 
 	@Test
 	void search_delegatesToMapper() {
-		when(semanticModelMapper.searchByKeyword("test")).thenReturn(List.of());
-		List<SemanticModel> result = service.search("test");
+		when(semanticModelMapper.searchByKeyword(1,"test")).thenReturn(List.of());
+		List<SemanticModel> result = service.search(1,"test");
 		assertTrue(result.isEmpty());
 	}
 
 	@Test
 	void deleteSemanticModel_delegatesToMapper() {
-		service.deleteSemanticModel(1L);
-		verify(semanticModelMapper).deleteById(1L);
+		service.deleteSemanticModel(1);
+		verify(semanticModelMapper).deleteById(1);
 	}
 
 	@Test
 	void updateSemanticModel_setsIdAndDelegates() {
 		SemanticModel model = SemanticModel.builder().build();
-		service.updateSemanticModel(5L, model);
-		assertEquals(5L, model.getId());
+		service.updateSemanticModel(5, model);
+		assertEquals(5, model.getId());
 		verify(semanticModelMapper).updateById(model);
 	}
 
 	@Test
 	void getByAgentIdAndTableNames_noDatasource_returnsEmpty() {
-		when(agentDatasourceMapper.selectByAgentId(1L)).thenReturn(Collections.emptyList());
+		when(agentDatasourceMapper.selectByAgentId(1)).thenReturn(Collections.emptyList());
 
-		assertThrows(RuntimeException.class, () -> service.getByAgentIdAndTableNames(1L, List.of("users")));
+		assertThrows(RuntimeException.class, () -> service.getByAgentIdAndTableNames(1, List.of("users")));
 	}
 
 	@Test
 	void getByAgentIdAndTableNames_nullTableNames_returnsEmpty() {
-		when(agentDatasourceMapper.selectByAgentId(1L)).thenReturn(List.of(activeDs));
-		List<SemanticModel> result = service.getByAgentIdAndTableNames(1L, null);
+		when(agentDatasourceMapper.selectByAgentId(1)).thenReturn(List.of(activeDs));
+		List<SemanticModel> result = service.getByAgentIdAndTableNames(1, null);
 		assertTrue(result.isEmpty());
 	}
 
 	@Test
 	void getByAgentIdAndTableNames_emptyTableNames_returnsEmpty() {
-		when(agentDatasourceMapper.selectByAgentId(1L)).thenReturn(List.of(activeDs));
-		List<SemanticModel> result = service.getByAgentIdAndTableNames(1L, Collections.emptyList());
+		when(agentDatasourceMapper.selectByAgentId(1)).thenReturn(List.of(activeDs));
+		List<SemanticModel> result = service.getByAgentIdAndTableNames(1, Collections.emptyList());
 		assertTrue(result.isEmpty());
 	}
 
 	@Test
 	void getByAgentIdAndTableNames_withValidData() {
-		when(agentDatasourceMapper.selectByAgentId(1L)).thenReturn(List.of(activeDs));
+		when(agentDatasourceMapper.selectByAgentId(1)).thenReturn(List.of(activeDs));
 		when(semanticModelMapper.selectByDatasourceIdAndTableNames(eq(10), anyList())).thenReturn(List.of());
 
-		List<SemanticModel> result = service.getByAgentIdAndTableNames(1L, List.of("users"));
+		List<SemanticModel> result = service.getByAgentIdAndTableNames(1, List.of("users"));
 		assertNotNull(result);
 	}
 
@@ -199,12 +199,12 @@ class SemanticModelServiceImplTest {
 	void findDatasourceId_prefersActiveDs() {
 		AgentDatasource inactiveDs = new AgentDatasource();
 		inactiveDs.setDatasourceId(20);
-		inactiveDs.setIsActive(0);
+		inactiveDs.setIsActive(false);
 
-		when(agentDatasourceMapper.selectByAgentId(1L)).thenReturn(List.of(inactiveDs, activeDs));
+		when(agentDatasourceMapper.selectByAgentId(1)).thenReturn(List.of(inactiveDs, activeDs));
 
 		SemanticModelAddDTO dto = new SemanticModelAddDTO();
-		dto.setAgentId(1L);
+		dto.setAgentId(1);
 		dto.setTableName("t");
 		dto.setColumnName("c");
 
@@ -216,12 +216,12 @@ class SemanticModelServiceImplTest {
 	void findDatasourceId_fallsBackToFirst() {
 		AgentDatasource inactiveDs = new AgentDatasource();
 		inactiveDs.setDatasourceId(20);
-		inactiveDs.setIsActive(0);
+		inactiveDs.setIsActive(false);
 
-		when(agentDatasourceMapper.selectByAgentId(1L)).thenReturn(List.of(inactiveDs));
+		when(agentDatasourceMapper.selectByAgentId(1)).thenReturn(List.of(inactiveDs));
 
 		SemanticModelAddDTO dto = new SemanticModelAddDTO();
-		dto.setAgentId(1L);
+		dto.setAgentId(1);
 		dto.setTableName("t");
 		dto.setColumnName("c");
 
@@ -231,7 +231,7 @@ class SemanticModelServiceImplTest {
 
 	@Test
 	void batchImport_successfulInsert() {
-		when(agentDatasourceMapper.selectByAgentId(1L)).thenReturn(List.of(activeDs));
+		when(agentDatasourceMapper.selectByAgentId(1)).thenReturn(List.of(activeDs));
 		when(semanticModelMapper.selectByAgentIdAndTableNameAndColumnName(anyInt(), anyString(), anyString()))
 			.thenReturn(null);
 
@@ -241,7 +241,7 @@ class SemanticModelServiceImplTest {
 		item.setBusinessName("Name");
 
 		SemanticModelBatchImportDTO dto = SemanticModelBatchImportDTO.builder()
-			.agentId(1L)
+			.agentId(1)
 			.items(List.of(item))
 			.build();
 
@@ -253,8 +253,8 @@ class SemanticModelServiceImplTest {
 
 	@Test
 	void batchImport_updatesExisting() {
-		when(agentDatasourceMapper.selectByAgentId(1L)).thenReturn(List.of(activeDs));
-		SemanticModel existing = SemanticModel.builder().id(1L).build();
+		when(agentDatasourceMapper.selectByAgentId(1)).thenReturn(List.of(activeDs));
+		SemanticModel existing = SemanticModel.builder().id(1).build();
 		when(semanticModelMapper.selectByAgentIdAndTableNameAndColumnName(anyInt(), anyString(), anyString()))
 			.thenReturn(existing);
 
@@ -264,7 +264,7 @@ class SemanticModelServiceImplTest {
 		item.setBusinessName("Updated Name");
 
 		SemanticModelBatchImportDTO dto = SemanticModelBatchImportDTO.builder()
-			.agentId(1L)
+			.agentId(1)
 			.items(List.of(item))
 			.build();
 
@@ -275,14 +275,14 @@ class SemanticModelServiceImplTest {
 
 	@Test
 	void batchImport_datasourceLookupFails() {
-		when(agentDatasourceMapper.selectByAgentId(1L)).thenReturn(Collections.emptyList());
+		when(agentDatasourceMapper.selectByAgentId(1)).thenReturn(Collections.emptyList());
 
 		SemanticModelImportItem item = new SemanticModelImportItem();
 		item.setTableName("t");
 		item.setColumnName("c");
 
 		SemanticModelBatchImportDTO dto = SemanticModelBatchImportDTO.builder()
-			.agentId(1L)
+			.agentId(1)
 			.items(List.of(item))
 			.build();
 
@@ -292,7 +292,7 @@ class SemanticModelServiceImplTest {
 
 	@Test
 	void batchImport_insertFailsForItem_incrementsFailCount() {
-		when(agentDatasourceMapper.selectByAgentId(1L)).thenReturn(List.of(activeDs));
+		when(agentDatasourceMapper.selectByAgentId(1)).thenReturn(List.of(activeDs));
 		when(semanticModelMapper.selectByAgentIdAndTableNameAndColumnName(anyInt(), anyString(), anyString()))
 			.thenReturn(null);
 		doThrow(new RuntimeException("insert error")).when(semanticModelMapper).insert(any(SemanticModel.class));
@@ -303,7 +303,7 @@ class SemanticModelServiceImplTest {
 		item.setBusinessName("Name");
 
 		SemanticModelBatchImportDTO dto = SemanticModelBatchImportDTO.builder()
-			.agentId(1L)
+			.agentId(1)
 			.items(List.of(item))
 			.build();
 
@@ -315,7 +315,7 @@ class SemanticModelServiceImplTest {
 
 	@Test
 	void batchImport_multipleItems_mixedResults() {
-		when(agentDatasourceMapper.selectByAgentId(1L)).thenReturn(List.of(activeDs));
+		when(agentDatasourceMapper.selectByAgentId(1)).thenReturn(List.of(activeDs));
 		when(semanticModelMapper.selectByAgentIdAndTableNameAndColumnName(anyInt(), eq("users"), eq("name")))
 			.thenReturn(null);
 		when(semanticModelMapper.selectByAgentIdAndTableNameAndColumnName(anyInt(), eq("orders"), eq("total")))
@@ -334,7 +334,7 @@ class SemanticModelServiceImplTest {
 		item2.setBusinessName("Total");
 
 		SemanticModelBatchImportDTO dto = SemanticModelBatchImportDTO.builder()
-			.agentId(1L)
+			.agentId(1)
 			.items(List.of(item1, item2))
 			.build();
 
@@ -346,7 +346,7 @@ class SemanticModelServiceImplTest {
 
 	@Test
 	void batchImport_withCreateTime_preservesTimestamp() {
-		when(agentDatasourceMapper.selectByAgentId(1L)).thenReturn(List.of(activeDs));
+		when(agentDatasourceMapper.selectByAgentId(1)).thenReturn(List.of(activeDs));
 		when(semanticModelMapper.selectByAgentIdAndTableNameAndColumnName(anyInt(), anyString(), anyString()))
 			.thenReturn(null);
 
@@ -359,7 +359,7 @@ class SemanticModelServiceImplTest {
 		item.setCreateTime(customTime);
 
 		SemanticModelBatchImportDTO dto = SemanticModelBatchImportDTO.builder()
-			.agentId(1L)
+			.agentId(1)
 			.items(List.of(item))
 			.build();
 
@@ -369,7 +369,7 @@ class SemanticModelServiceImplTest {
 
 	@Test
 	void importFromExcel_validFile_delegatesToBatchImport() throws Exception {
-		when(agentDatasourceMapper.selectByAgentId(1L)).thenReturn(List.of(activeDs));
+		when(agentDatasourceMapper.selectByAgentId(1)).thenReturn(List.of(activeDs));
 
 		SemanticModelImportItem item = new SemanticModelImportItem();
 		item.setTableName("users");
@@ -381,7 +381,7 @@ class SemanticModelServiceImplTest {
 			.thenReturn(null);
 
 		InputStream fakeStream = new ByteArrayInputStream(new byte[0]);
-		BatchImportResult result = service.importFromExcel(fakeStream, "test.xlsx", 1L);
+		BatchImportResult result = service.importFromExcel(fakeStream, "test.xlsx", 1);
 
 		assertNotNull(result);
 		assertEquals(1, result.getTotal());
@@ -393,7 +393,7 @@ class SemanticModelServiceImplTest {
 			.thenThrow(new RuntimeException("parse error"));
 
 		InputStream fakeStream = new ByteArrayInputStream(new byte[0]);
-		BatchImportResult result = service.importFromExcel(fakeStream, "bad.xlsx", 1L);
+		BatchImportResult result = service.importFromExcel(fakeStream, "bad.xlsx", 1);
 
 		assertNotNull(result);
 		assertEquals(0, result.getTotal());
@@ -405,10 +405,10 @@ class SemanticModelServiceImplTest {
 		dsNullActive.setDatasourceId(30);
 		dsNullActive.setIsActive(null);
 
-		when(agentDatasourceMapper.selectByAgentId(1L)).thenReturn(List.of(dsNullActive));
+		when(agentDatasourceMapper.selectByAgentId(1)).thenReturn(List.of(dsNullActive));
 
 		SemanticModelAddDTO dto = new SemanticModelAddDTO();
-		dto.setAgentId(1L);
+		dto.setAgentId(1);
 		dto.setTableName("t");
 		dto.setColumnName("c");
 

@@ -54,7 +54,7 @@ class PromptConfigControllerTest {
 
 	@Test
 	void saveConfig_success() {
-		PromptConfigDTO dto = new PromptConfigDTO("1", "test", "planner", 1L, "prompt", true, "desc", "admin", 1, 1);
+		PromptConfigDTO dto = new PromptConfigDTO("1", "test", "planner", 1, "prompt", true, "desc", "admin", 1, 1);
 		when(promptConfigService.saveOrUpdateConfig(dto)).thenReturn(testConfig);
 
 		ResponseEntity<Map<String, Object>> response = controller.saveConfig(dto);
@@ -95,9 +95,9 @@ class PromptConfigControllerTest {
 
 	@Test
 	void getConfigsByType_withAgentId() {
-		when(promptConfigService.getConfigsByType("planner", 1L)).thenReturn(List.of(testConfig));
+		when(promptConfigService.getConfigsByType("planner", 1)).thenReturn(List.of(testConfig));
 
-		ResponseEntity<Map<String, Object>> response = controller.getConfigsByType("planner", 1L);
+		ResponseEntity<Map<String, Object>> response = controller.getConfigsByType("planner", 1);
 
 		assertTrue((Boolean) response.getBody().get("success"));
 		assertEquals(1, response.getBody().get("total"));
@@ -115,9 +115,9 @@ class PromptConfigControllerTest {
 
 	@Test
 	void getActiveConfig_found() {
-		when(promptConfigService.getActiveConfigByType("planner", 1L)).thenReturn(testConfig);
+		when(promptConfigService.getActiveConfigByType("planner", 1)).thenReturn(testConfig);
 
-		ResponseEntity<Map<String, Object>> response = controller.getActiveConfig("planner", 1L);
+		ResponseEntity<Map<String, Object>> response = controller.getActiveConfig("planner", 1);
 
 		assertTrue((Boolean) response.getBody().get("success"));
 		assertTrue((Boolean) response.getBody().get("hasCustomConfig"));
@@ -135,9 +135,9 @@ class PromptConfigControllerTest {
 
 	@Test
 	void getActiveConfigs_withResults() {
-		when(promptConfigService.getActiveConfigsByType("planner", 1L)).thenReturn(List.of(testConfig));
+		when(promptConfigService.getActiveConfigsByType("planner", 1)).thenReturn(List.of(testConfig));
 
-		ResponseEntity<Map<String, Object>> response = controller.getActiveConfigs("planner", 1L);
+		ResponseEntity<Map<String, Object>> response = controller.getActiveConfigs("planner", 1);
 
 		assertTrue((Boolean) response.getBody().get("success"));
 		assertTrue((Boolean) response.getBody().get("hasOptimizationConfigs"));
@@ -146,9 +146,9 @@ class PromptConfigControllerTest {
 
 	@Test
 	void getActiveConfigs_empty() {
-		when(promptConfigService.getActiveConfigsByType("planner", 1L)).thenReturn(List.of());
+		when(promptConfigService.getActiveConfigsByType("planner", 1)).thenReturn(List.of());
 
-		ResponseEntity<Map<String, Object>> response = controller.getActiveConfigs("planner", 1L);
+		ResponseEntity<Map<String, Object>> response = controller.getActiveConfigs("planner", 1);
 
 		assertFalse((Boolean) response.getBody().get("hasOptimizationConfigs"));
 	}

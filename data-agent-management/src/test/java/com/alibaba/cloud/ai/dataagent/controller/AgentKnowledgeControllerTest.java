@@ -143,7 +143,7 @@ class AgentKnowledgeControllerTest {
 
 		assertTrue(result.isSuccess());
 		assertEquals(1, result.getData().size());
-		assertEquals(1L, result.getTotal());
+		assertEquals(1, result.getTotal());
 	}
 
 	@Test

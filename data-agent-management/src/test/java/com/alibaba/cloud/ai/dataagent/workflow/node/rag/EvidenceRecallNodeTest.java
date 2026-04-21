@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.alibaba.cloud.ai.dataagent.mapper.AgentPresetQuestionMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -72,10 +73,13 @@ class EvidenceRecallNodeTest {
 
 	private EvidenceRecallNode evidenceRecallNode;
 
+	@Mock
+	AgentPresetQuestionMapper agentPresetQuestionMapper;
+
 	@BeforeEach
 	void setUp() {
 		evidenceRecallNode = new EvidenceRecallNode(llmService, vectorStoreService, jsonParseUtil,
-				agentKnowledgeMapper);
+				agentKnowledgeMapper,agentPresetQuestionMapper);
 	}
 
 	private OverAllState createTestState() {

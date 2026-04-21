@@ -21,6 +21,7 @@ import com.alibaba.cloud.ai.dataagent.connector.accessor.AccessorFactory;
 import com.alibaba.cloud.ai.dataagent.dto.schema.SchemaDTO;
 import com.alibaba.cloud.ai.dataagent.dto.schema.TableDTO;
 import com.alibaba.cloud.ai.dataagent.properties.DataAgentProperties;
+import com.alibaba.cloud.ai.dataagent.service.semantic.SemanticModelService;
 import com.alibaba.cloud.ai.dataagent.service.vectorstore.AgentVectorStoreService;
 import com.alibaba.cloud.ai.dataagent.service.vectorstore.DynamicFilterService;
 import org.junit.jupiter.api.BeforeEach;
@@ -63,13 +64,16 @@ class SchemaServiceImplTest {
 	@Mock
 	private AgentVectorStoreService agentVectorStoreService;
 
+	@Mock
+	private SemanticModelService semanticModelService;
+
 	private SchemaServiceImpl schemaService;
 
 	@BeforeEach
 	void setUp() {
 		ExecutorService executor = Executors.newSingleThreadExecutor();
 		schemaService = new SchemaServiceImpl(executor, accessorFactory, tableMetadataService, batchingStrategy,
-				dynamicFilterService, dataAgentProperties, agentVectorStoreService);
+				dynamicFilterService, dataAgentProperties, semanticModelService, agentVectorStoreService);
 
 		DataAgentProperties.VectorStoreProperties vsProps = new DataAgentProperties.VectorStoreProperties();
 		vsProps.setTableTopkLimit(10);
@@ -212,7 +216,7 @@ class SchemaServiceImplTest {
 
 	@Test
 	void getTableDocumentsByDatasource_delegates() {
-		when(agentVectorStoreService.getDocumentsOnlyByFilter(any(), anyInt())).thenReturn(List.of());
+		//when(agentVectorStoreService.getDocumentsOnlyByFilter("1",any(), anyInt())).thenReturn(List.of());
 
 		List<Document> result = schemaService.getTableDocumentsByDatasource(1, "test query");
 		assertNotNull(result);

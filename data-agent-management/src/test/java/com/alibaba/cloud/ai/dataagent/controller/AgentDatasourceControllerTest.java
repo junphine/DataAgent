@@ -51,11 +51,11 @@ class AgentDatasourceControllerTest {
 		AgentDatasource ds = new AgentDatasource();
 		ds.setDatasourceId(1);
 		ds.setSelectTables(List.of("users", "orders"));
-		when(agentDatasourceService.getCurrentAgentDatasource(1L)).thenReturn(ds);
-		when(agentDatasourceService.initializeSchemaForAgentWithDatasource(1L, 1, List.of("users", "orders")))
+		when(agentDatasourceService.getCurrentAgentDatasource(1)).thenReturn(ds);
+		when(agentDatasourceService.initializeSchemaForAgentWithDatasource(1, 1, List.of("users", "orders")))
 			.thenReturn(true);
 
-		ApiResponse<?> result = controller.initSchema(1L);
+		ApiResponse<?> result = controller.initSchema(1);
 
 		assertTrue(result.isSuccess());
 	}
@@ -65,10 +65,10 @@ class AgentDatasourceControllerTest {
 		AgentDatasource ds = new AgentDatasource();
 		ds.setDatasourceId(1);
 		ds.setSelectTables(List.of("users"));
-		when(agentDatasourceService.getCurrentAgentDatasource(1L)).thenReturn(ds);
-		when(agentDatasourceService.initializeSchemaForAgentWithDatasource(1L, 1, List.of("users"))).thenReturn(false);
+		when(agentDatasourceService.getCurrentAgentDatasource(1)).thenReturn(ds);
+		when(agentDatasourceService.initializeSchemaForAgentWithDatasource(1, 1, List.of("users"))).thenReturn(false);
 
-		assertThrows(InternalServerException.class, () -> controller.initSchema(1L));
+		assertThrows(InternalServerException.class, () -> controller.initSchema(1));
 	}
 
 	@Test
@@ -76,9 +76,9 @@ class AgentDatasourceControllerTest {
 		AgentDatasource ds = new AgentDatasource();
 		ds.setDatasourceId(null);
 		ds.setSelectTables(List.of("users"));
-		when(agentDatasourceService.getCurrentAgentDatasource(1L)).thenReturn(ds);
+		when(agentDatasourceService.getCurrentAgentDatasource(1)).thenReturn(ds);
 
-		assertThrows(InternalServerException.class, () -> controller.initSchema(1L));
+		assertThrows(InternalServerException.class, () -> controller.initSchema(1));
 	}
 
 	@Test
@@ -86,17 +86,17 @@ class AgentDatasourceControllerTest {
 		AgentDatasource ds = new AgentDatasource();
 		ds.setDatasourceId(1);
 		ds.setSelectTables(List.of());
-		when(agentDatasourceService.getCurrentAgentDatasource(1L)).thenReturn(ds);
+		when(agentDatasourceService.getCurrentAgentDatasource(1)).thenReturn(ds);
 
-		assertThrows(InternalServerException.class, () -> controller.initSchema(1L));
+		assertThrows(InternalServerException.class, () -> controller.initSchema(1));
 	}
 
 	@Test
 	void getAgentDatasource_success_returnsDatasources() {
-		AgentDatasource ds = new AgentDatasource(1L, 1);
-		when(agentDatasourceService.getAgentDatasource(1L)).thenReturn(List.of(ds));
+		AgentDatasource ds = new AgentDatasource(1, 1);
+		when(agentDatasourceService.getAgentDatasource(1)).thenReturn(List.of(ds));
 
-		ApiResponse<List<AgentDatasource>> result = controller.getAgentDatasource(1L);
+		ApiResponse<List<AgentDatasource>> result = controller.getAgentDatasource(1);
 
 		assertTrue(result.isSuccess());
 		assertEquals(1, result.getData().size());
@@ -104,21 +104,21 @@ class AgentDatasourceControllerTest {
 
 	@Test
 	void getActiveAgentDatasource_success_returnsActiveDatasource() {
-		AgentDatasource ds = new AgentDatasource(1L, 1);
-		when(agentDatasourceService.getCurrentAgentDatasource(1L)).thenReturn(ds);
+		AgentDatasource ds = new AgentDatasource(1, 1);
+		when(agentDatasourceService.getCurrentAgentDatasource(1)).thenReturn(ds);
 
-		ApiResponse<AgentDatasource> result = controller.getActiveAgentDatasource(1L);
+		ApiResponse<AgentDatasource> result = controller.getActiveAgentDatasource(1);
 
 		assertTrue(result.isSuccess());
-		assertEquals(1L, result.getData().getAgentId());
+		assertEquals(1, result.getData().getAgentId());
 	}
 
 	@Test
 	void addDatasourceToAgent_success_returnsCreatedAssociation() {
-		AgentDatasource ds = new AgentDatasource(1L, 5);
-		when(agentDatasourceService.addDatasourceToAgent(1L, 5)).thenReturn(ds);
+		AgentDatasource ds = new AgentDatasource(1, 5);
+		when(agentDatasourceService.addDatasourceToAgent(1, 5)).thenReturn(ds);
 
-		ApiResponse<AgentDatasource> result = controller.addDatasourceToAgent(1L, 5);
+		ApiResponse<AgentDatasource> result = controller.addDatasourceToAgent(1, 5);
 
 		assertTrue(result.isSuccess());
 		assertEquals(5, result.getData().getDatasourceId());
@@ -130,10 +130,10 @@ class AgentDatasourceControllerTest {
 		dto.setDatasourceId(1);
 		dto.setTables(List.of("users", "orders"));
 
-		ApiResponse<?> result = controller.updateDatasourceTables(1L, dto);
+		ApiResponse<?> result = controller.updateDatasourceTables(1, dto);
 
 		assertTrue(result.isSuccess());
-		verify(agentDatasourceService).updateDatasourceTables(1L, 1, List.of("users", "orders"));
+		verify(agentDatasourceService).updateDatasourceTables(1, 1, List.of("users", "orders"));
 	}
 
 	@Test
@@ -142,18 +142,18 @@ class AgentDatasourceControllerTest {
 		dto.setDatasourceId(1);
 		dto.setTables(null);
 
-		ApiResponse<?> result = controller.updateDatasourceTables(1L, dto);
+		ApiResponse<?> result = controller.updateDatasourceTables(1, dto);
 
 		assertTrue(result.isSuccess());
-		verify(agentDatasourceService).updateDatasourceTables(1L, 1, List.of());
+		verify(agentDatasourceService).updateDatasourceTables(1, 1, List.of());
 	}
 
 	@Test
 	void removeDatasourceFromAgent_success_returnsSuccess() {
-		ApiResponse<?> result = controller.removeDatasourceFromAgent(1L, 5);
+		ApiResponse<?> result = controller.removeDatasourceFromAgent(1, 5);
 
 		assertTrue(result.isSuccess());
-		verify(agentDatasourceService).removeDatasourceFromAgent(1L, 5);
+		verify(agentDatasourceService).removeDatasourceFromAgent(1, 5);
 	}
 
 	@Test
@@ -161,10 +161,10 @@ class AgentDatasourceControllerTest {
 		ToggleDatasourceDTO dto = new ToggleDatasourceDTO();
 		dto.setDatasourceId(1);
 		dto.setIsActive(true);
-		AgentDatasource ds = new AgentDatasource(1L, 1);
-		when(agentDatasourceService.toggleDatasourceForAgent(1L, 1, true)).thenReturn(ds);
+		AgentDatasource ds = new AgentDatasource(1, 1);
+		when(agentDatasourceService.toggleDatasourceForAgent(1, 1, true)).thenReturn(ds);
 
-		ApiResponse<AgentDatasource> result = controller.toggleDatasourceForAgent(1L, dto);
+		ApiResponse<AgentDatasource> result = controller.toggleDatasourceForAgent(1, dto);
 
 		assertTrue(result.isSuccess());
 		assertNotNull(result.getData());
@@ -176,7 +176,7 @@ class AgentDatasourceControllerTest {
 		dto.setDatasourceId(1);
 		dto.setIsActive(null);
 
-		assertThrows(InternalServerException.class, () -> controller.toggleDatasourceForAgent(1L, dto));
+		assertThrows(InternalServerException.class, () -> controller.toggleDatasourceForAgent(1, dto));
 	}
 
 	@Test
@@ -185,7 +185,7 @@ class AgentDatasourceControllerTest {
 		dto.setDatasourceId(null);
 		dto.setIsActive(true);
 
-		assertThrows(InternalServerException.class, () -> controller.toggleDatasourceForAgent(1L, dto));
+		assertThrows(InternalServerException.class, () -> controller.toggleDatasourceForAgent(1, dto));
 	}
 
 }

@@ -38,7 +38,7 @@ class AgentKnowledgeConverterTest {
 		po.setType(KnowledgeType.QA);
 		po.setQuestion("What is AI?");
 		po.setContent("AI is...");
-		po.setIsRecall(1);
+		po.setIsRecall(true);
 		po.setEmbeddingStatus(EmbeddingStatus.COMPLETED);
 		po.setSplitterType("token");
 		po.setErrorMsg(null);
@@ -62,7 +62,7 @@ class AgentKnowledgeConverterTest {
 		AgentKnowledge po = new AgentKnowledge();
 		po.setId(1);
 		po.setType(null);
-		po.setIsRecall(0);
+		po.setIsRecall(false);
 
 		AgentKnowledgeVO vo = converter.toVo(po);
 
@@ -136,7 +136,7 @@ class AgentKnowledgeConverterTest {
 
 		assertEquals("test.pdf", entity.getSourceFilename());
 		assertEquals("/uploads/test.pdf", entity.getFilePath());
-		assertEquals(11L, entity.getFileSize());
+		assertEquals(11, entity.getFileSize());
 		assertEquals("application/pdf", entity.getFileType());
 	}
 

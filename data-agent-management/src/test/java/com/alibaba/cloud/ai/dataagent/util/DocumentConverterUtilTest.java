@@ -137,8 +137,8 @@ class DocumentConverterUtilTest {
 	@Test
 	void testConvertBusinessKnowledgeToDocument() {
 		BusinessKnowledge bk = new BusinessKnowledge();
-		bk.setId(1L);
-		bk.setAgentId(10L);
+		bk.setId(1);
+		bk.setAgentId(10);
 		bk.setBusinessTerm("GMV");
 		bk.setDescription("Gross Merchandise Value");
 		bk.setSynonyms("总交易额");

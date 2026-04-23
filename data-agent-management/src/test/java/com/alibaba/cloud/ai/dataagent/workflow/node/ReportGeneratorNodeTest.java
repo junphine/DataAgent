@@ -86,7 +86,7 @@ class ReportGeneratorNodeTest {
 		OverAllState state = createTestState();
 		setupBasicState(state);
 
-		when(promptConfigService.getOptimizationConfigs(eq("report-generator"), eq(1L)))
+		when(promptConfigService.getOptimizationConfigs(eq("report-generator"), eq(1)))
 			.thenReturn(Collections.emptyList());
 		when(llmService.callUser(anyString()))
 			.thenReturn(Flux.just(ChatResponseUtil.createPureResponse("<h1>用户数据分析报告</h1>")));
@@ -108,7 +108,7 @@ class ReportGeneratorNodeTest {
 		state.updateState(Map.of(PLANNER_NODE_OUTPUT, planJson, QUERY_ENHANCE_NODE_OUTPUT, dto, PLAN_CURRENT_STEP, 1,
 				SQL_EXECUTE_NODE_OUTPUT, new HashMap<>(), AGENT_ID, "2"));
 
-		when(promptConfigService.getOptimizationConfigs(eq("report-generator"), eq(2L)))
+		when(promptConfigService.getOptimizationConfigs(eq("report-generator"), eq(2)))
 			.thenReturn(Collections.emptyList());
 		when(llmService.callUser(anyString())).thenReturn(Flux.just(ChatResponseUtil.createPureResponse("暂无数据可分析")));
 
@@ -133,7 +133,7 @@ class ReportGeneratorNodeTest {
 		state.updateState(Map.of(PLANNER_NODE_OUTPUT, planJson, QUERY_ENHANCE_NODE_OUTPUT, dto, PLAN_CURRENT_STEP, 3,
 				SQL_EXECUTE_NODE_OUTPUT, executionResults, AGENT_ID, "3"));
 
-		when(promptConfigService.getOptimizationConfigs(eq("report-generator"), eq(3L)))
+		when(promptConfigService.getOptimizationConfigs(eq("report-generator"), eq(3)))
 			.thenReturn(Collections.emptyList());
 		when(llmService.callUser(anyString()))
 			.thenReturn(Flux.just(ChatResponseUtil.createPureResponse("<h1>综合报告</h1>")));
@@ -149,7 +149,7 @@ class ReportGeneratorNodeTest {
 		OverAllState state = createTestState();
 		setupBasicState(state);
 
-		when(promptConfigService.getOptimizationConfigs(eq("report-generator"), eq(1L)))
+		when(promptConfigService.getOptimizationConfigs(eq("report-generator"), eq(1)))
 			.thenReturn(Collections.emptyList());
 		when(llmService.callUser(anyString())).thenThrow(new RuntimeException("LLM unavailable"));
 
@@ -212,7 +212,7 @@ class ReportGeneratorNodeTest {
 		state.updateState(Map.of(PLANNER_NODE_OUTPUT, planJson, QUERY_ENHANCE_NODE_OUTPUT, dto, PLAN_CURRENT_STEP, 2,
 				SQL_EXECUTE_NODE_OUTPUT, executionResults, AGENT_ID, "4"));
 
-		when(promptConfigService.getOptimizationConfigs(eq("report-generator"), eq(4L)))
+		when(promptConfigService.getOptimizationConfigs(eq("report-generator"), eq(4)))
 			.thenReturn(Collections.emptyList());
 		when(llmService.callUser(anyString()))
 			.thenReturn(Flux.just(ChatResponseUtil.createPureResponse("<p>分析完成</p>")));

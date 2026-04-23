@@ -33,12 +33,12 @@ class BusinessKnowledgeConverterTest {
 	void toVo_allFieldsMapped() {
 		LocalDateTime now = LocalDateTime.now();
 		BusinessKnowledge po = BusinessKnowledge.builder()
-			.id(1L)
+			.id(1)
 			.businessTerm("GMV")
 			.description("Gross Merchandise Volume")
 			.synonyms("sales,revenue")
-			.isRecall(1)
-			.agentId(10L)
+			.isRecall(true)
+			.agentId(10)
 			.createdTime(now)
 			.updatedTime(now)
 			.embeddingStatus(EmbeddingStatus.COMPLETED)
@@ -47,12 +47,12 @@ class BusinessKnowledgeConverterTest {
 
 		BusinessKnowledgeVO vo = converter.toVo(po);
 
-		assertEquals(1L, vo.getId());
+		assertEquals(1, vo.getId());
 		assertEquals("GMV", vo.getBusinessTerm());
 		assertEquals("Gross Merchandise Volume", vo.getDescription());
 		assertEquals("sales,revenue", vo.getSynonyms());
 		assertTrue(vo.getIsRecall());
-		assertEquals(10L, vo.getAgentId());
+		assertEquals(10, vo.getAgentId());
 		assertEquals(now, vo.getCreatedTime());
 		assertEquals(now, vo.getUpdatedTime());
 		assertEquals("COMPLETED", vo.getEmbeddingStatus());
@@ -61,7 +61,7 @@ class BusinessKnowledgeConverterTest {
 
 	@Test
 	void toVo_isRecallZero_returnsFalse() {
-		BusinessKnowledge po = BusinessKnowledge.builder().id(1L).isRecall(0).build();
+		BusinessKnowledge po = BusinessKnowledge.builder().id(1).isRecall(false).build();
 
 		BusinessKnowledgeVO vo = converter.toVo(po);
 
@@ -70,7 +70,7 @@ class BusinessKnowledgeConverterTest {
 
 	@Test
 	void toVo_nullEmbeddingStatus_returnsNullStatus() {
-		BusinessKnowledge po = BusinessKnowledge.builder().id(1L).isRecall(1).embeddingStatus(null).build();
+		BusinessKnowledge po = BusinessKnowledge.builder().id(1).isRecall(true).embeddingStatus(null).build();
 
 		BusinessKnowledgeVO vo = converter.toVo(po);
 
@@ -80,8 +80,8 @@ class BusinessKnowledgeConverterTest {
 	@Test
 	void toVo_withErrorMsg_mapsErrorMsg() {
 		BusinessKnowledge po = BusinessKnowledge.builder()
-			.id(1L)
-			.isRecall(1)
+			.id(1)
+			.isRecall(true)
 			.embeddingStatus(EmbeddingStatus.FAILED)
 			.errorMsg("embedding failed")
 			.build();
@@ -99,7 +99,7 @@ class BusinessKnowledgeConverterTest {
 			.description("Daily Active Users")
 			.synonyms("active users,daily users")
 			.isRecall(true)
-			.agentId(5L)
+			.agentId(5)
 			.build();
 
 		BusinessKnowledge entity = converter.toEntityForCreate(dto);
@@ -107,7 +107,7 @@ class BusinessKnowledgeConverterTest {
 		assertEquals("DAU", entity.getBusinessTerm());
 		assertEquals("Daily Active Users", entity.getDescription());
 		assertEquals("active users,daily users", entity.getSynonyms());
-		assertEquals(5L, entity.getAgentId());
+		assertEquals(5, entity.getAgentId());
 		assertEquals(1, entity.getIsRecall());
 		assertEquals(0, entity.getIsDeleted());
 		assertEquals(EmbeddingStatus.PROCESSING, entity.getEmbeddingStatus());
@@ -119,7 +119,7 @@ class BusinessKnowledgeConverterTest {
 			.businessTerm("term")
 			.description("desc")
 			.isRecall(false)
-			.agentId(1L)
+			.agentId(1)
 			.build();
 
 		BusinessKnowledge entity = converter.toEntityForCreate(dto);

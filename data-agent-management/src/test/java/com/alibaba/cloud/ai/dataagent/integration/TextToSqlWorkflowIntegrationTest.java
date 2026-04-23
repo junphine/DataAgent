@@ -121,8 +121,8 @@ class TextToSqlWorkflowIntegrationTest {
 
 		DbConfigBO dbConfig = new DbConfigBO();
 		dbConfig.setSchema("test_db");
-		when(databaseUtil.getAgentDbConfig(1L)).thenReturn(dbConfig);
-		when(databaseUtil.getAgentAccessor(1L)).thenReturn(accessor);
+		when(databaseUtil.getAgentDbConfig(1)).thenReturn(dbConfig);
+		when(databaseUtil.getAgentAccessor(1)).thenReturn(accessor);
 
 		ResultSetBO resultSetBO = new ResultSetBO();
 		List<Map<String, String>> data = new ArrayList<>();
@@ -156,8 +156,8 @@ class TextToSqlWorkflowIntegrationTest {
 
 		DbConfigBO dbConfig = new DbConfigBO();
 		dbConfig.setSchema("test_db");
-		when(databaseUtil.getAgentDbConfig(1L)).thenReturn(dbConfig);
-		when(databaseUtil.getAgentAccessor(1L)).thenReturn(accessor);
+		when(databaseUtil.getAgentDbConfig(1)).thenReturn(dbConfig);
+		when(databaseUtil.getAgentAccessor(1)).thenReturn(accessor);
 		when(accessor.executeSqlAndReturnObject(any(DbConfigBO.class), any()))
 			.thenThrow(new RuntimeException("Table 'nonexistent_table' doesn't exist"));
 

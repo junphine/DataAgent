@@ -255,7 +255,7 @@ class AgentKnowledgeServiceImplTest {
 		when(agentKnowledgeConverter.toVo(knowledge)).thenReturn(vo);
 
 		PageResult<AgentKnowledgeVO> result = service.queryByConditionsWithPage(queryDTO);
-		assertEquals(1L, result.getTotal());
+		assertEquals(1, result.getTotal());
 		assertEquals(1, result.getData().size());
 	}
 
@@ -319,7 +319,7 @@ class AgentKnowledgeServiceImplTest {
 	void retryEmbedding_notRecalled_throwsException() {
 		AgentKnowledge knowledge = new AgentKnowledge();
 		knowledge.setEmbeddingStatus(EmbeddingStatus.FAILED);
-		knowledge.setIsRecall(0);
+		knowledge.setIsRecall(false);
 
 		when(agentKnowledgeMapper.selectById(1)).thenReturn(knowledge);
 
@@ -342,7 +342,7 @@ class AgentKnowledgeServiceImplTest {
 		AgentKnowledge knowledge = new AgentKnowledge();
 		knowledge.setId(1);
 		knowledge.setEmbeddingStatus(EmbeddingStatus.FAILED);
-		knowledge.setIsRecall(1);
+		knowledge.setIsRecall(true);
 		knowledge.setSplitterType("token");
 
 		when(agentKnowledgeMapper.selectById(1)).thenReturn(knowledge);

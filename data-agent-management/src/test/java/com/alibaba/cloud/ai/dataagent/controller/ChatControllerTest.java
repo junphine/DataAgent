@@ -93,8 +93,8 @@ class ChatControllerTest {
 	@Test
 	void getMessages_validSession_returnsMessages() {
 		List<ChatMessage> messages = List.of(
-				ChatMessage.builder().id(1L).sessionId("uuid-1").role("user").content("Hello").build(),
-				ChatMessage.builder().id(2L).sessionId("uuid-1").role("assistant").content("Hi there").build());
+				ChatMessage.builder().id(1).sessionId("uuid-1").role("user").content("Hello").build(),
+				ChatMessage.builder().id(2).sessionId("uuid-1").role("assistant").content("Hi there").build());
 		when(chatMessageService.findBySessionId("uuid-1")).thenReturn(messages);
 
 		ResponseEntity<List<ChatMessage>> result = chatController.getSessionMessages("uuid-1");
@@ -268,7 +268,7 @@ class ChatControllerTest {
 		dto.setMessageType("text");
 		dto.setTitleNeeded(false);
 
-		ChatMessage saved = ChatMessage.builder().id(1L).sessionId("uuid-1").role("user").content("Hello").build();
+		ChatMessage saved = ChatMessage.builder().id(1).sessionId("uuid-1").role("user").content("Hello").build();
 		when(chatMessageService.saveMessage(any())).thenReturn(saved);
 
 		ResponseEntity<ChatMessage> result = chatController.saveMessage("uuid-1", dto);
@@ -286,7 +286,7 @@ class ChatControllerTest {
 		dto.setTitleNeeded(true);
 
 		ChatMessage saved = ChatMessage.builder()
-			.id(1L)
+			.id(1)
 			.sessionId("uuid-1")
 			.role("user")
 			.content("What is AI?")

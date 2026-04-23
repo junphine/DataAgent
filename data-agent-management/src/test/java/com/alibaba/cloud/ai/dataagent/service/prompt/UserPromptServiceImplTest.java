@@ -46,7 +46,7 @@ class UserPromptServiceImplTest {
 
 	@Test
 	void saveOrUpdateConfig_newConfig_createsWithGeneratedId() {
-		PromptConfigDTO dto = new PromptConfigDTO(null, "test", "optimization", 1L, "prompt", true, "desc", "creator",
+		PromptConfigDTO dto = new PromptConfigDTO(null, "test", "optimization", 1, "prompt", true, "desc", "creator",
 				1, 0);
 
 		UserPromptConfig result = userPromptService.saveOrUpdateConfig(dto);
@@ -64,7 +64,7 @@ class UserPromptServiceImplTest {
 		existing.setName("old");
 		when(userPromptConfigMapper.selectById("existing-id")).thenReturn(existing);
 
-		PromptConfigDTO dto = new PromptConfigDTO("existing-id", "updated", "optimization", 1L, "prompt", false, "desc",
+		PromptConfigDTO dto = new PromptConfigDTO("existing-id", "updated", "optimization", 1, "prompt", false, "desc",
 				"creator", 1, 0);
 
 		UserPromptConfig result = userPromptService.saveOrUpdateConfig(dto);
@@ -77,7 +77,7 @@ class UserPromptServiceImplTest {
 	void saveOrUpdateConfig_nonExistentId_createsNew() {
 		when(userPromptConfigMapper.selectById("non-existent")).thenReturn(null);
 
-		PromptConfigDTO dto = new PromptConfigDTO("non-existent", "new", "optimization", 1L, "prompt", false,
+		PromptConfigDTO dto = new PromptConfigDTO("non-existent", "new", "optimization", 1, "prompt", false,
 				"desc", "creator", null, null);
 
 		UserPromptConfig result = userPromptService.saveOrUpdateConfig(dto);
@@ -97,9 +97,9 @@ class UserPromptServiceImplTest {
 
 	@Test
 	void getActiveConfigsByType_returnsList() {
-		when(userPromptConfigMapper.getActiveConfigsByType("opt", 1L)).thenReturn(List.of(new UserPromptConfig()));
+		when(userPromptConfigMapper.getActiveConfigsByType("opt", 1)).thenReturn(List.of(new UserPromptConfig()));
 
-		List<UserPromptConfig> result = userPromptService.getActiveConfigsByType("opt", 1L);
+		List<UserPromptConfig> result = userPromptService.getActiveConfigsByType("opt", 1);
 		assertEquals(1, result.size());
 	}
 

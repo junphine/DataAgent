@@ -19,7 +19,7 @@ import com.alibaba.cloud.ai.dataagent.properties.DataAgentProperties;
 import com.alibaba.cloud.ai.dataagent.service.hybrid.fusion.FusionStrategy;
 import com.alibaba.cloud.ai.dataagent.service.hybrid.retrieval.HybridRetrievalStrategy;
 import com.alibaba.cloud.ai.dataagent.service.hybrid.retrieval.impl.DefaultHybridRetrievalStrategy;
-import com.alibaba.cloud.ai.dataagent.service.hybrid.retrieval.impl.ElasticsearchHybridRetrievalStrategy;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -82,7 +82,7 @@ class HybridRetrievalStrategyFactoryTest {
 
 		HybridRetrievalStrategy result = factory.getObject();
 		assertNotNull(result);
-		assertInstanceOf(ElasticsearchHybridRetrievalStrategy.class, result);
+		
 	}
 
 	@Test

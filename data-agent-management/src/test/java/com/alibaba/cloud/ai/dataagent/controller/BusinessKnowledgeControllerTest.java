@@ -47,34 +47,34 @@ class BusinessKnowledgeControllerTest {
 
 	@Test
 	void list_withoutKeyword_returnsAllForAgent() {
-		BusinessKnowledgeVO vo = BusinessKnowledgeVO.builder().id(1L).businessTerm("Revenue").build();
-		when(businessKnowledgeService.getKnowledge(1L)).thenReturn(List.of(vo));
+		BusinessKnowledgeVO vo = BusinessKnowledgeVO.builder().id(1).businessTerm("Revenue").build();
+		when(businessKnowledgeService.getKnowledge(1)).thenReturn(List.of(vo));
 
 		ApiResponse<List<BusinessKnowledgeVO>> result = controller.list("1", null);
 
 		assertTrue(result.isSuccess());
 		assertEquals(1, result.getData().size());
-		verify(businessKnowledgeService).getKnowledge(1L);
+		verify(businessKnowledgeService).getKnowledge(1);
 	}
 
 	@Test
 	void list_withKeyword_callsSearch() {
-		BusinessKnowledgeVO vo = BusinessKnowledgeVO.builder().id(1L).businessTerm("Revenue").build();
-		when(businessKnowledgeService.searchKnowledge(1L, "Rev")).thenReturn(List.of(vo));
+		BusinessKnowledgeVO vo = BusinessKnowledgeVO.builder().id(1).businessTerm("Revenue").build();
+		when(businessKnowledgeService.searchKnowledge(1, "Rev")).thenReturn(List.of(vo));
 
 		ApiResponse<List<BusinessKnowledgeVO>> result = controller.list("1", "Rev");
 
 		assertTrue(result.isSuccess());
 		assertEquals(1, result.getData().size());
-		verify(businessKnowledgeService).searchKnowledge(1L, "Rev");
+		verify(businessKnowledgeService).searchKnowledge(1, "Rev");
 	}
 
 	@Test
 	void get_existing_returnsKnowledge() {
-		BusinessKnowledgeVO vo = BusinessKnowledgeVO.builder().id(1L).businessTerm("Revenue").build();
-		when(businessKnowledgeService.getKnowledgeById(1L)).thenReturn(vo);
+		BusinessKnowledgeVO vo = BusinessKnowledgeVO.builder().id(1).businessTerm("Revenue").build();
+		when(businessKnowledgeService.getKnowledgeById(1)).thenReturn(vo);
 
-		ApiResponse<BusinessKnowledgeVO> result = controller.get(1L);
+		ApiResponse<BusinessKnowledgeVO> result = controller.get(1);
 
 		assertTrue(result.isSuccess());
 		assertEquals("Revenue", result.getData().getBusinessTerm());
@@ -82,9 +82,9 @@ class BusinessKnowledgeControllerTest {
 
 	@Test
 	void get_notFound_returnsError() {
-		when(businessKnowledgeService.getKnowledgeById(999L)).thenReturn(null);
+		when(businessKnowledgeService.getKnowledgeById(999)).thenReturn(null);
 
-		ApiResponse<BusinessKnowledgeVO> result = controller.get(999L);
+		ApiResponse<BusinessKnowledgeVO> result = controller.get(999);
 
 		assertFalse(result.isSuccess());
 	}
@@ -94,9 +94,9 @@ class BusinessKnowledgeControllerTest {
 		CreateBusinessKnowledgeDTO dto = CreateBusinessKnowledgeDTO.builder()
 			.businessTerm("GMV")
 			.description("Gross Merchandise Volume")
-			.agentId(1L)
+			.agentId(1)
 			.build();
-		BusinessKnowledgeVO vo = BusinessKnowledgeVO.builder().id(1L).businessTerm("GMV").build();
+		BusinessKnowledgeVO vo = BusinessKnowledgeVO.builder().id(1).businessTerm("GMV").build();
 		when(businessKnowledgeService.addKnowledge(dto)).thenReturn(vo);
 
 		ApiResponse<BusinessKnowledgeVO> result = controller.create(dto);
@@ -110,12 +110,12 @@ class BusinessKnowledgeControllerTest {
 		UpdateBusinessKnowledgeDTO dto = UpdateBusinessKnowledgeDTO.builder()
 			.businessTerm("Updated GMV")
 			.description("Updated description")
-			.agentId(1L)
+			.agentId(1)
 			.build();
-		BusinessKnowledgeVO vo = BusinessKnowledgeVO.builder().id(1L).businessTerm("Updated GMV").build();
-		when(businessKnowledgeService.updateKnowledge(1L, dto)).thenReturn(vo);
+		BusinessKnowledgeVO vo = BusinessKnowledgeVO.builder().id(1).businessTerm("Updated GMV").build();
+		when(businessKnowledgeService.updateKnowledge(1, dto)).thenReturn(vo);
 
-		ApiResponse<BusinessKnowledgeVO> result = controller.update(1L, dto);
+		ApiResponse<BusinessKnowledgeVO> result = controller.update(1, dto);
 
 		assertTrue(result.isSuccess());
 		assertEquals("Updated GMV", result.getData().getBusinessTerm());
@@ -123,31 +123,31 @@ class BusinessKnowledgeControllerTest {
 
 	@Test
 	void delete_existing_returnsSuccess() {
-		BusinessKnowledgeVO vo = BusinessKnowledgeVO.builder().id(1L).build();
-		when(businessKnowledgeService.getKnowledgeById(1L)).thenReturn(vo);
+		BusinessKnowledgeVO vo = BusinessKnowledgeVO.builder().id(1).build();
+		when(businessKnowledgeService.getKnowledgeById(1)).thenReturn(vo);
 
-		ApiResponse<Boolean> result = controller.delete(1L);
+		ApiResponse<Boolean> result = controller.delete(1);
 
 		assertTrue(result.isSuccess());
-		verify(businessKnowledgeService).deleteKnowledge(1L);
+		verify(businessKnowledgeService).deleteKnowledge(1);
 	}
 
 	@Test
 	void delete_notFound_returnsError() {
-		when(businessKnowledgeService.getKnowledgeById(999L)).thenReturn(null);
+		when(businessKnowledgeService.getKnowledgeById(999)).thenReturn(null);
 
-		ApiResponse<Boolean> result = controller.delete(999L);
+		ApiResponse<Boolean> result = controller.delete(999);
 
 		assertFalse(result.isSuccess());
-		verify(businessKnowledgeService, never()).deleteKnowledge(anyLong());
+		verify(businessKnowledgeService, never()).deleteKnowledge(anyInt());
 	}
 
 	@Test
 	void recallKnowledge_success_returnsSuccess() {
-		ApiResponse<Boolean> result = controller.recallKnowledge(1L, true);
+		ApiResponse<Boolean> result = controller.recallKnowledge(1, true);
 
 		assertTrue(result.isSuccess());
-		verify(businessKnowledgeService).recallKnowledge(1L, true);
+		verify(businessKnowledgeService).recallKnowledge(1, true);
 	}
 
 	@Test
@@ -177,10 +177,10 @@ class BusinessKnowledgeControllerTest {
 
 	@Test
 	void retryEmbedding_success_returnsSuccess() {
-		ApiResponse<Boolean> result = controller.retryEmbedding(1L);
+		ApiResponse<Boolean> result = controller.retryEmbedding(1);
 
 		assertTrue(result.isSuccess());
-		verify(businessKnowledgeService).retryEmbedding(1L);
+		verify(businessKnowledgeService).retryEmbedding(1);
 	}
 
 }

@@ -48,13 +48,13 @@ class AgentControllerTest {
 	@Test
 	void createAgent_validRequest_returnsCreatedAgent() {
 		Agent input = Agent.builder().name("Test Agent").description("A test agent").build();
-		Agent saved = Agent.builder().id(1L).name("Test Agent").description("A test agent").status("draft").build();
+		Agent saved = Agent.builder().id(1).name("Test Agent").description("A test agent").status("draft").build();
 		when(agentService.save(any(Agent.class))).thenReturn(saved);
 
 		Agent result = agentController.create(input);
 
 		assertNotNull(result);
-		assertEquals(1L, result.getId());
+		assertEquals(1, result.getId());
 		assertEquals("Test Agent", result.getName());
 		assertEquals("draft", result.getStatus());
 		verify(agentService).save(any(Agent.class));
@@ -62,39 +62,39 @@ class AgentControllerTest {
 
 	@Test
 	void getAgent_existingId_returnsAgent() {
-		Agent agent = Agent.builder().id(1L).name("Test Agent").build();
-		when(agentService.findById(1L)).thenReturn(agent);
+		Agent agent = Agent.builder().id(1).name("Test Agent").build();
+		when(agentService.findById(1)).thenReturn(agent);
 
-		Agent result = agentController.get(1L);
+		Agent result = agentController.get(1);
 
 		assertNotNull(result);
-		assertEquals(1L, result.getId());
+		assertEquals(1, result.getId());
 	}
 
 	@Test
 	void getAgent_nonExistingId_throwsNotFoundException() {
-		when(agentService.findById(999L)).thenReturn(null);
+		when(agentService.findById(999)).thenReturn(null);
 
-		assertThrows(ResponseStatusException.class, () -> agentController.get(999L));
+		assertThrows(ResponseStatusException.class, () -> agentController.get(999));
 	}
 
 	@Test
 	void deleteAgent_existingId_callsDeleteOnService() {
-		Agent agent = Agent.builder().id(1L).name("Test Agent").build();
-		when(agentService.findById(1L)).thenReturn(agent);
+		Agent agent = Agent.builder().id(1).name("Test Agent").build();
+		when(agentService.findById(1)).thenReturn(agent);
 
-		agentController.delete(1L);
+		agentController.delete(1);
 
-		verify(agentService).deleteById(1L);
+		verify(agentService).deleteById(1);
 	}
 
 	@Test
 	void publishAgent_validAgent_updatesStatusToPublished() {
-		Agent agent = Agent.builder().id(1L).name("Test Agent").status("draft").build();
-		when(agentService.findById(1L)).thenReturn(agent);
+		Agent agent = Agent.builder().id(1).name("Test Agent").status("draft").build();
+		when(agentService.findById(1)).thenReturn(agent);
 		when(agentService.save(any(Agent.class))).thenAnswer(inv -> inv.getArgument(0));
 
-		Agent result = agentController.publish(1L);
+		Agent result = agentController.publish(1);
 
 		assertEquals("published", result.getStatus());
 		verify(agentService).save(any(Agent.class));
@@ -102,12 +102,12 @@ class AgentControllerTest {
 
 	@Test
 	void generateApiKey_validAgent_returnsKeyResponse() {
-		Agent agent = Agent.builder().id(1L).name("Test Agent").build();
-		Agent updated = Agent.builder().id(1L).apiKey("sk-abc123").apiKeyEnabled(1).build();
-		when(agentService.findById(1L)).thenReturn(agent);
-		when(agentService.generateApiKey(1L)).thenReturn(updated);
+		Agent agent = Agent.builder().id(1).name("Test Agent").build();
+		Agent updated = Agent.builder().id(1).apiKey("sk-abc123").apiKeyEnabled(1).build();
+		when(agentService.findById(1)).thenReturn(agent);
+		when(agentService.generateApiKey(1)).thenReturn(updated);
 
-		ApiResponse<ApiKeyResponse> result = agentController.generateApiKey(1L);
+		ApiResponse<ApiKeyResponse> result = agentController.generateApiKey(1);
 
 		assertTrue(result.isSuccess());
 		assertEquals("sk-abc123", result.getData().getApiKey());
@@ -116,7 +116,7 @@ class AgentControllerTest {
 
 	@Test
 	void list_withKeyword_callsSearch() {
-		List<Agent> agents = List.of(Agent.builder().id(1L).name("Sales Agent").build());
+		List<Agent> agents = List.of(Agent.builder().id(1).name("Sales Agent").build());
 		when(agentService.search("Sales")).thenReturn(agents);
 
 		List<Agent> result = agentController.list(null, "Sales");

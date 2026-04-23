@@ -60,14 +60,14 @@ class DatabaseUtilTest {
 		expectedConfig.setSchema("test");
 		expectedConfig.setDialectType("mysql");
 
-		when(agentDatasourceService.getCurrentAgentDatasource(1L)).thenReturn(agentDatasource);
+		when(agentDatasourceService.getCurrentAgentDatasource(1)).thenReturn(agentDatasource);
 		when(datasourceService.getDbConfig(datasource)).thenReturn(expectedConfig);
 
-		DbConfigBO result = databaseUtil.getAgentDbConfig(1L);
+		DbConfigBO result = databaseUtil.getAgentDbConfig(1);
 
 		assertNotNull(result);
 		assertEquals("jdbc:mysql://localhost:3306/test", result.getUrl());
-		verify(agentDatasourceService).getCurrentAgentDatasource(1L);
+		verify(agentDatasourceService).getCurrentAgentDatasource(1);
 		verify(datasourceService).getDbConfig(datasource);
 	}
 
@@ -82,11 +82,11 @@ class DatabaseUtilTest {
 
 		Accessor mockAccessor = mock(Accessor.class);
 
-		when(agentDatasourceService.getCurrentAgentDatasource(1L)).thenReturn(agentDatasource);
+		when(agentDatasourceService.getCurrentAgentDatasource(1)).thenReturn(agentDatasource);
 		when(datasourceService.getDbConfig(datasource)).thenReturn(config);
 		when(accessorFactory.getAccessorByDbConfig(config)).thenReturn(mockAccessor);
 
-		Accessor result = databaseUtil.getAgentAccessor(1L);
+		Accessor result = databaseUtil.getAgentAccessor(1);
 
 		assertNotNull(result);
 		assertSame(mockAccessor, result);

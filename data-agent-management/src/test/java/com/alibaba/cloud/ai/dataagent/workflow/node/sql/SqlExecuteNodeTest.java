@@ -122,8 +122,8 @@ class SqlExecuteNodeTest {
 		DbConfigBO dbConfig = new DbConfigBO();
 		dbConfig.setSchema("test_schema");
 		when(nl2SqlService.sqlTrim(any())).thenAnswer(inv -> inv.getArgument(0));
-		when(databaseUtil.getAgentDbConfig(1L)).thenReturn(dbConfig);
-		when(databaseUtil.getAgentAccessor(1L)).thenReturn(accessor);
+		when(databaseUtil.getAgentDbConfig(1)).thenReturn(dbConfig);
+		when(databaseUtil.getAgentAccessor(1)).thenReturn(accessor);
 	}
 
 	@Test
@@ -138,8 +138,8 @@ class SqlExecuteNodeTest {
 		resultSetBO.setData(new ArrayList<>());
 
 		when(nl2SqlService.sqlTrim(any())).thenReturn("SELECT * FROM users");
-		when(databaseUtil.getAgentDbConfig(1L)).thenReturn(dbConfig);
-		when(databaseUtil.getAgentAccessor(1L)).thenReturn(accessor);
+		when(databaseUtil.getAgentDbConfig(1)).thenReturn(dbConfig);
+		when(databaseUtil.getAgentAccessor(1)).thenReturn(accessor);
 		when(accessor.executeSqlAndReturnObject(any(), any())).thenReturn(resultSetBO);
 
 		Map<String, Object> result = sqlExecuteNode.apply(state);
@@ -161,8 +161,8 @@ class SqlExecuteNodeTest {
 		resultSetBO.setData(new ArrayList<>());
 
 		when(nl2SqlService.sqlTrim(any())).thenReturn("SELECT id, name, age FROM users");
-		when(databaseUtil.getAgentDbConfig(1L)).thenReturn(dbConfig);
-		when(databaseUtil.getAgentAccessor(1L)).thenReturn(accessor);
+		when(databaseUtil.getAgentDbConfig(1)).thenReturn(dbConfig);
+		when(databaseUtil.getAgentAccessor(1)).thenReturn(accessor);
 		when(accessor.executeSqlAndReturnObject(any(), any())).thenReturn(resultSetBO);
 
 		Map<String, Object> result = sqlExecuteNode.apply(state);
@@ -191,7 +191,7 @@ class SqlExecuteNodeTest {
 		setupBasicState(state);
 
 		when(nl2SqlService.sqlTrim(any())).thenAnswer(inv -> inv.getArgument(0));
-		when(databaseUtil.getAgentDbConfig(1L)).thenThrow(new RuntimeException("Connection refused"));
+		when(databaseUtil.getAgentDbConfig(1)).thenThrow(new RuntimeException("Connection refused"));
 
 		assertThrows(RuntimeException.class, () -> sqlExecuteNode.apply(state));
 	}

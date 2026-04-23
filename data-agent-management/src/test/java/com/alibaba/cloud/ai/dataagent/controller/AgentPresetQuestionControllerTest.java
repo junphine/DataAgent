@@ -46,10 +46,10 @@ class AgentPresetQuestionControllerTest {
 
 	@Test
 	void getPresetQuestions_success_returnsQuestions() {
-		AgentPresetQuestion q = new AgentPresetQuestion(1L, "What is revenue?", 1);
-		when(presetQuestionService.findAllByAgentId(1L)).thenReturn(List.of(q));
+		AgentPresetQuestion q = new AgentPresetQuestion(1, "What is revenue?", 1);
+		when(presetQuestionService.findAllByAgentId(1)).thenReturn(List.of(q));
 
-		ResponseEntity<List<AgentPresetQuestion>> result = controller.getPresetQuestions(1L);
+		ResponseEntity<List<AgentPresetQuestion>> result = controller.getPresetQuestions(1);
 
 		assertEquals(200, result.getStatusCode().value());
 		assertEquals(1, result.getBody().size());
@@ -58,9 +58,9 @@ class AgentPresetQuestionControllerTest {
 
 	@Test
 	void getPresetQuestions_serviceThrows_returns500() {
-		when(presetQuestionService.findAllByAgentId(1L)).thenThrow(new RuntimeException("db error"));
+		when(presetQuestionService.findAllByAgentId(1)).thenThrow(new RuntimeException("db error"));
 
-		ResponseEntity<List<AgentPresetQuestion>> result = controller.getPresetQuestions(1L);
+		ResponseEntity<List<AgentPresetQuestion>> result = controller.getPresetQuestions(1);
 
 		assertEquals(500, result.getStatusCode().value());
 	}
@@ -69,20 +69,20 @@ class AgentPresetQuestionControllerTest {
 	void savePresetQuestions_success_returnsOk() {
 		List<Map<String, Object>> data = List.of(Map.of("question", "Test?", "isActive", true));
 
-		ResponseEntity<Map<String, String>> result = controller.savePresetQuestions(1L, data);
+		ResponseEntity<Map<String, String>> result = controller.savePresetQuestions(1, data);
 
 		assertEquals(200, result.getStatusCode().value());
-		verify(presetQuestionService).batchSave(eq(1L), anyList());
+		verify(presetQuestionService).batchSave(eq(1), anyList());
 	}
 
 	@Test
 	void savePresetQuestions_booleanStringIsActive_parsesCorrectly() {
 		List<Map<String, Object>> data = List.of(Map.of("question", "Test?", "isActive", "true"));
 
-		ResponseEntity<Map<String, String>> result = controller.savePresetQuestions(1L, data);
+		ResponseEntity<Map<String, String>> result = controller.savePresetQuestions(1, data);
 
 		assertEquals(200, result.getStatusCode().value());
-		verify(presetQuestionService).batchSave(eq(1L), anyList());
+		verify(presetQuestionService).batchSave(eq(1), anyList());
 	}
 
 	@Test
@@ -92,18 +92,18 @@ class AgentPresetQuestionControllerTest {
 		questionData.put("isActive", null);
 		List<Map<String, Object>> data = List.of(questionData);
 
-		ResponseEntity<Map<String, String>> result = controller.savePresetQuestions(1L, data);
+		ResponseEntity<Map<String, String>> result = controller.savePresetQuestions(1, data);
 
 		assertEquals(200, result.getStatusCode().value());
-		verify(presetQuestionService).batchSave(eq(1L), anyList());
+		verify(presetQuestionService).batchSave(eq(1), anyList());
 	}
 
 	@Test
 	void savePresetQuestions_serviceThrows_returns500() {
 		List<Map<String, Object>> data = List.of(Map.of("question", "Test?", "isActive", true));
-		doThrow(new RuntimeException("db error")).when(presetQuestionService).batchSave(eq(1L), anyList());
+		doThrow(new RuntimeException("db error")).when(presetQuestionService).batchSave(eq(1), anyList());
 
-		ResponseEntity<Map<String, String>> result = controller.savePresetQuestions(1L, data);
+		ResponseEntity<Map<String, String>> result = controller.savePresetQuestions(1, data);
 
 		assertEquals(500, result.getStatusCode().value());
 		assertTrue(result.getBody().containsKey("error"));
@@ -111,17 +111,17 @@ class AgentPresetQuestionControllerTest {
 
 	@Test
 	void deletePresetQuestion_success_returnsOk() {
-		ResponseEntity<Map<String, String>> result = controller.deletePresetQuestion(1L, 10L);
+		ResponseEntity<Map<String, String>> result = controller.deletePresetQuestion(1, 10);
 
 		assertEquals(200, result.getStatusCode().value());
-		verify(presetQuestionService).deleteById(10L);
+		verify(presetQuestionService).deleteById(10);
 	}
 
 	@Test
 	void deletePresetQuestion_serviceThrows_returns500() {
-		doThrow(new RuntimeException("db error")).when(presetQuestionService).deleteById(10L);
+		doThrow(new RuntimeException("db error")).when(presetQuestionService).deleteById(10);
 
-		ResponseEntity<Map<String, String>> result = controller.deletePresetQuestion(1L, 10L);
+		ResponseEntity<Map<String, String>> result = controller.deletePresetQuestion(1, 10);
 
 		assertEquals(500, result.getStatusCode().value());
 		assertTrue(result.getBody().containsKey("error"));

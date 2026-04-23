@@ -52,13 +52,13 @@ class AgentKnowledgeResourceManagerTest {
 	void testDeleteFromVectorStore_success() {
 		boolean result = manager.deleteFromVectorStore(1, 10);
 		assertTrue(result);
-		verify(agentVectorStoreService).deleteDocumentsByMetedata(eq("1"), anyMap());
+		verify(agentVectorStoreService).deleteDocumentsByMetadata(eq("1"), anyMap());
 	}
 
 	@Test
 	void testDeleteFromVectorStore_notFoundError() {
 		doThrow(new RuntimeException("not found")).when(agentVectorStoreService)
-			.deleteDocumentsByMetedata(anyString(), anyMap());
+			.deleteDocumentsByMetadata(anyString(), anyMap());
 
 		boolean result = manager.deleteFromVectorStore(1, 10);
 		assertTrue(result);
@@ -67,7 +67,7 @@ class AgentKnowledgeResourceManagerTest {
 	@Test
 	void testDeleteFromVectorStore_otherError() {
 		doThrow(new RuntimeException("connection refused")).when(agentVectorStoreService)
-			.deleteDocumentsByMetedata(anyString(), anyMap());
+			.deleteDocumentsByMetadata(anyString(), anyMap());
 
 		boolean result = manager.deleteFromVectorStore(1, 10);
 		assertFalse(result);

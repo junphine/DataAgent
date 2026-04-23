@@ -17,6 +17,7 @@ package com.alibaba.cloud.ai.dataagent.service.vectorstore;
 
 import com.alibaba.cloud.ai.dataagent.constant.DocumentMetadataConstant;
 import com.alibaba.cloud.ai.dataagent.mapper.AgentKnowledgeMapper;
+import com.alibaba.cloud.ai.dataagent.mapper.AgentPresetQuestionMapper;
 import com.alibaba.cloud.ai.dataagent.mapper.BusinessKnowledgeMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,7 +35,6 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -49,16 +49,18 @@ class DynamicFilterServiceTest {
 
 	private DynamicFilterService dynamicFilterService;
 
+	private AgentPresetQuestionMapper agentPresetQuestionMapper;
+
 	@BeforeEach
 	void setUp() {
-		dynamicFilterService = new DynamicFilterService(agentKnowledgeMapper, businessKnowledgeMapper);
+		dynamicFilterService = new DynamicFilterService(agentKnowledgeMapper, businessKnowledgeMapper, agentPresetQuestionMapper);
 	}
 
 	@Test
 	void buildDynamicFilter_agentKnowledge_withValidIds_returnsFilterExpression() {
 		when(agentKnowledgeMapper.selectRecalledKnowledgeIds(anyInt())).thenReturn(List.of(1, 2, 3));
 
-		Filter.Expression result = dynamicFilterService.buildDynamicFilter("1",
+		Filter.Expression result = dynamicFilterService.buildDynamicFilter(1,
 				DocumentMetadataConstant.AGENT_KNOWLEDGE);
 
 		assertNotNull(result);
@@ -68,7 +70,7 @@ class DynamicFilterServiceTest {
 	void buildDynamicFilter_agentKnowledge_noValidIds_returnsNull() {
 		when(agentKnowledgeMapper.selectRecalledKnowledgeIds(anyInt())).thenReturn(new ArrayList<>());
 
-		Filter.Expression result = dynamicFilterService.buildDynamicFilter("1",
+		Filter.Expression result = dynamicFilterService.buildDynamicFilter(1,
 				DocumentMetadataConstant.AGENT_KNOWLEDGE);
 
 		assertNull(result);
@@ -76,9 +78,9 @@ class DynamicFilterServiceTest {
 
 	@Test
 	void buildDynamicFilter_businessTerm_withValidIds_returnsFilterExpression() {
-		when(businessKnowledgeMapper.selectRecalledKnowledgeIds(anyLong())).thenReturn(List.of(10L, 20L));
+		when(businessKnowledgeMapper.selectRecalledKnowledgeIds(anyInt())).thenReturn(List.of(10, 20));
 
-		Filter.Expression result = dynamicFilterService.buildDynamicFilter("1",
+		Filter.Expression result = dynamicFilterService.buildDynamicFilter(1,
 				DocumentMetadataConstant.BUSINESS_TERM);
 
 		assertNotNull(result);
@@ -86,9 +88,9 @@ class DynamicFilterServiceTest {
 
 	@Test
 	void buildDynamicFilter_businessTerm_noValidIds_returnsNull() {
-		when(businessKnowledgeMapper.selectRecalledKnowledgeIds(anyLong())).thenReturn(new ArrayList<>());
+		when(businessKnowledgeMapper.selectRecalledKnowledgeIds(anyInt())).thenReturn(new ArrayList<>());
 
-		Filter.Expression result = dynamicFilterService.buildDynamicFilter("1",
+		Filter.Expression result = dynamicFilterService.buildDynamicFilter(1,
 				DocumentMetadataConstant.BUSINESS_TERM);
 
 		assertNull(result);
@@ -97,7 +99,7 @@ class DynamicFilterServiceTest {
 	@Test
 	void combineWithAnd_multipleConditions_returnsAndExpression() {
 		Filter.Expression e1 = new Filter.Expression(Filter.ExpressionType.EQ, new Filter.Key("a"),
-				new Filter.Value("1"));
+				new Filter.Value(1));
 		Filter.Expression e2 = new Filter.Expression(Filter.ExpressionType.EQ, new Filter.Key("b"),
 				new Filter.Value("2"));
 		Filter.Expression e3 = new Filter.Expression(Filter.ExpressionType.EQ, new Filter.Key("c"),
@@ -112,7 +114,7 @@ class DynamicFilterServiceTest {
 	@Test
 	void combineWithAnd_singleCondition_returnsSingleExpression() {
 		Filter.Expression e1 = new Filter.Expression(Filter.ExpressionType.EQ, new Filter.Key("a"),
-				new Filter.Value("1"));
+				new Filter.Value(1));
 
 		Filter.Expression result = DynamicFilterService.combineWithAnd(List.of(e1));
 
@@ -199,7 +201,7 @@ class DynamicFilterServiceTest {
 	@Test
 	void buildFilterExpressionString_validMap_returnsExpression() {
 		Map<String, Object> filterMap = new HashMap<>();
-		filterMap.put("agentId", "1");
+		filterMap.put("agentId", 1);
 		filterMap.put("vectorType", "table");
 
 		String result = DynamicFilterService.buildFilterExpressionString(filterMap);

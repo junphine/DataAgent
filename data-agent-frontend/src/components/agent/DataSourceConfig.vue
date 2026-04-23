@@ -879,7 +879,7 @@
         }
       });
 
-      const needsSchemaCheck = (dbType:String) => {
+      const needsSchemaCheck = (dbType:String|undefined) => {
         if(!dbType) return true;
         if(!datasourceTypes.value) return true;
         for(let type of datasourceTypes.value){

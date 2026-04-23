@@ -28,14 +28,14 @@ interface UpdateDatasourceTablesDto {
   tables?: string[];
 }
 
-const BASE_URL_FUNC = (agentId: string) => `/api/agent/${agentId}/datasources`;
+const BASE_URL_FUNC = (agentId: string|number) => `/api/agent/${agentId}/datasources`;
 
 class AgentDatasourceService {
   /**
    * 初始化数据源Schema
    * @param agentId 智能体ID
    */
-  async initSchema(agentId: string): Promise<ApiResponse<null>> {
+  async initSchema(agentId: string|number): Promise<ApiResponse<null>> {
     try {
       const response = await axios.post<ApiResponse<null>>(`${BASE_URL_FUNC(agentId)}/init`);
       return response.data;

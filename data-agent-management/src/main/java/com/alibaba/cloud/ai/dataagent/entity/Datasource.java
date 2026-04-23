@@ -45,10 +45,8 @@ public class Datasource {
 
 	private String username;
 
-	@JsonIgnore
 	private String password;
 
-	@JsonIgnore
 	private String connectionUrl;
 
 	private String status;

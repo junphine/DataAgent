@@ -78,7 +78,8 @@ public class DynamicModelFactory {
 			.model(config.getModelName())
 			.temperature(config.getTemperature())
 			.maxTokens(config.getMaxTokens())
-			.reasoningEffort("low")				
+			//.reasoningEffort("low")
+			.extraBody(Map.of("chat_template_kwargs",Map.of("enable_thinking",false)))
 			.streamUsage(true)
 			.build();
 		// 4. 返回统一的 OpenAiChatModel

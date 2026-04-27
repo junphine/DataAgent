@@ -29,6 +29,8 @@ public class SqlGenerationDTO {
 
 	private String query;
 
+	private String requirementAnalysis;
+
 	private SchemaDTO schemaDTO;
 
 	private String sql;

@@ -149,6 +149,7 @@ public class PromptHelper {
 		params.put("question", sqlGenerationDTO.getQuery());
 		params.put("schema_info", schemaInfo);
 		params.put("evidence", sqlGenerationDTO.getEvidence());
+		params.put("requirement_analysis", sqlGenerationDTO.getRequirementAnalysis());
 		params.put("execution_description", sqlGenerationDTO.getExecutionDescription());
 		return PromptConstant.getNewSqlGeneratorPromptTemplate().render(params);
 	}

@@ -73,7 +73,7 @@ public class McpServerConfig {
 	@Autowired
 	private Environment env;
 
-		public boolean isTestEnv(){
+	public boolean isTestEnv(){
 		Optional<String> profile = Arrays.stream(env.getActiveProfiles()).filter(p->p.equals("test")).findFirst();
 		if(profile.isPresent() && profile.get().equals("test")){
 			return true;

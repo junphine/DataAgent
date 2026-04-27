@@ -134,10 +134,11 @@ public class SqlGenerateNode implements NodeAction {
 		SchemaDTO schemaDTO = StateUtil.getObjectValue(state, TABLE_RELATION_OUTPUT, SchemaDTO.class);
 		String userQuery = StateUtil.getCanonicalQuery(state);
 		String dialect = StateUtil.getStringValue(state, DB_DIALECT_TYPE);
-
+		String requestAssembly = StateUtil.getStringValue(state,FEASIBILITY_ASSESSMENT_NODE_OUTPUT,"");
 		SqlGenerationDTO sqlGenerationDTO = SqlGenerationDTO.builder()
 			.evidence(evidence)
 			.query(userQuery)
+			.requirementAnalysis(requestAssembly)
 			.schemaDTO(schemaDTO)
 			.sql(originalSql)
 			.exceptionMessage(errorMsg)

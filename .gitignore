@@ -58,6 +58,8 @@ modified_mcp_config.json
 
 uploads/*
 vectorstore/*
+data-agent-management/uploads/*
+data-agent-management/vectorstore/*
 .java-version
 
 # spring-ai-alibaba source

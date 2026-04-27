@@ -47,6 +47,8 @@ public class AgentVectorStoreServiceImpl implements AgentVectorStoreService, Dis
 
 	private static final String DEFAULT = "default";
 
+	private static final long CPU_TIME = System.currentTimeMillis();
+
 	private final VectorStore vectorStore; // default
 
 	private final EmbeddingModel embeddingModel;
@@ -58,7 +60,8 @@ public class AgentVectorStoreServiceImpl implements AgentVectorStoreService, Dis
 	private final DynamicFilterService dynamicFilterService;
 
 	private Map<String,VectorStore> vectorStoreMap = new ConcurrentHashMap<>();
-	private Map<String,Boolean> vectorStoreMapStatus = new ConcurrentHashMap<>();
+	private Map<String,Long> vectorStoreMapUpdated = new ConcurrentHashMap<>();
+
 
 	public AgentVectorStoreServiceImpl(VectorStore vectorStore,EmbeddingModel embeddingModel,
 			Optional<HybridRetrievalStrategy> hybridRetrievalStrategy, DataAgentProperties dataAgentProperties,
@@ -97,7 +100,7 @@ public class AgentVectorStoreServiceImpl implements AgentVectorStoreService, Dis
 
 	public boolean flushVectorStore(String agentId, String vectorType){
 		String key = agentId+"."+vectorType;
-		if(vectorStoreMapStatus.containsKey(key)){
+		if(!vectorStoreMapUpdated.containsKey(key)){
 			return false;
 		}
 		VectorStore vectorStore = vectorStoreMap.get(key);
@@ -114,7 +117,7 @@ public class AgentVectorStoreServiceImpl implements AgentVectorStoreService, Dis
 				}
 
 				instance.save(path.toFile());
-				vectorStoreMapStatus.put(key,true);
+				vectorStoreMapUpdated.remove(key);
 				return true;
 			}
 			catch (Throwable t) {
@@ -199,7 +202,7 @@ public class AgentVectorStoreServiceImpl implements AgentVectorStoreService, Dis
 		}
 		if(lastVectorType!=null) {
 			vectorStore(agentId, lastVectorType).add(documents);
-			vectorStoreMapStatus.remove(agentId+"."+lastVectorType);
+			vectorStoreMapUpdated.put(agentId+"."+lastVectorType,System.currentTimeMillis());
 		}
 	}
 
@@ -236,8 +239,7 @@ public class AgentVectorStoreServiceImpl implements AgentVectorStoreService, Dis
 			vectorStore.delete(filterExpression);
 		}
 
-		vectorStoreMapStatus.remove(agentId+"."+vectorType);
-
+		vectorStoreMapUpdated.put(agentId+"."+vectorType,System.currentTimeMillis());
 		return true;
 	}
 
@@ -336,6 +338,9 @@ public class AgentVectorStoreServiceImpl implements AgentVectorStoreService, Dis
 			if (entry.getValue() instanceof SimpleVectorStore) {
 				SimpleVectorStore instance = (SimpleVectorStore)entry.getValue();
 				log.info("Serialize the vector database to a local file.");
+				if(!vectorStoreMapUpdated.containsKey(entry.getKey())){
+					continue;
+				}
 				Path path = Paths.get(dataAgentProperties.getVectorStore().getFilePath(),entry.getKey()+".json");
 
 				try {

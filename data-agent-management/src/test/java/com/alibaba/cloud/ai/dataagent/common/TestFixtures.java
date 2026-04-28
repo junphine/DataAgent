@@ -15,7 +15,7 @@
  */
 package com.alibaba.cloud.ai.dataagent.common;
 
-import com.alibaba.cloud.ai.dataagent.dto.datasource.SqlRetryDto;
+import com.alibaba.cloud.ai.dataagent.dto.datasource.SqlRetryDTO;
 import com.alibaba.cloud.ai.dataagent.dto.planner.ExecutionStep;
 import com.alibaba.cloud.ai.dataagent.dto.planner.Plan;
 import com.alibaba.cloud.ai.dataagent.dto.prompt.IntentRecognitionOutputDTO;
@@ -152,16 +152,16 @@ public final class TestFixtures {
 
 	// --- SqlRetryDto Fixtures ---
 
-	public static SqlRetryDto createEmptyRetry() {
-		return SqlRetryDto.empty();
+	public static SqlRetryDTO createEmptyRetry() {
+		return SqlRetryDTO.empty();
 	}
 
-	public static SqlRetryDto createSemanticRetry(String reason) {
-		return SqlRetryDto.semantic(reason);
+	public static SqlRetryDTO createSemanticRetry(String reason) {
+		return SqlRetryDTO.semantic(reason);
 	}
 
-	public static SqlRetryDto createSqlExecuteRetry(String reason) {
-		return SqlRetryDto.sqlExecute(reason);
+	public static SqlRetryDTO createSqlExecuteRetry(String reason) {
+		return SqlRetryDTO.sqlExecute(reason);
 	}
 
 	// --- Common Plan JSON ---

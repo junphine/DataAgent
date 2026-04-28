@@ -22,7 +22,7 @@ import com.alibaba.cloud.ai.dataagent.bo.schema.ResultSetBO;
 import com.alibaba.cloud.ai.dataagent.connector.DbQueryParameter;
 import com.alibaba.cloud.ai.dataagent.connector.accessor.Accessor;
 import com.alibaba.cloud.ai.dataagent.constant.Constant;
-import com.alibaba.cloud.ai.dataagent.dto.datasource.SqlRetryDto;
+import com.alibaba.cloud.ai.dataagent.dto.datasource.SqlRetryDTO;
 import com.alibaba.cloud.ai.dataagent.dto.planner.ExecutionStep;
 import com.alibaba.cloud.ai.dataagent.enums.TextType;
 import com.alibaba.cloud.ai.dataagent.prompt.PromptHelper;
@@ -185,14 +185,14 @@ public class SqlExecuteNode implements NodeAction {
 				// Reset sql generate count retry times when sql execute success
 				result.putAll(Map.of(SQL_EXECUTE_NODE_OUTPUT, updatedResults,
 						SQL_EXECUTE_SQL_OUTPUT,updatedSqls,
-						SQL_REGENERATE_REASON,SqlRetryDto.empty(),
+						SQL_REGENERATE_REASON, SqlRetryDTO.empty(),
 						SQL_RESULT_LIST_MEMORY, resultSetBO.getData(),
 						PLAN_CURRENT_STEP,currentStep + 1, SQL_GENERATE_COUNT, 0));
 			}
 			catch (Exception e) {
 				String errorMessage = e.getMessage();
 				log.error("SQL execution failed - SQL as follows: \n {} \n ", sqlQuery, e);
-				result.put(SQL_REGENERATE_REASON, SqlRetryDto.sqlExecute(errorMessage));
+				result.put(SQL_REGENERATE_REASON, SqlRetryDTO.sqlExecute(errorMessage));
 				emitter.next(ChatResponseUtil.createResponse("SQL执行失败: " + errorMessage));
 			}
 			finally {

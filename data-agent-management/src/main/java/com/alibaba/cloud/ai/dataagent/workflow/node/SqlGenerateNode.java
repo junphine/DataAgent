@@ -22,7 +22,7 @@ import com.alibaba.cloud.ai.dataagent.util.FluxUtil;
 import com.alibaba.cloud.ai.dataagent.util.PlanProcessUtil;
 import com.alibaba.cloud.ai.dataagent.util.StateUtil;
 import com.alibaba.cloud.ai.dataagent.properties.DataAgentProperties;
-import com.alibaba.cloud.ai.dataagent.dto.datasource.SqlRetryDto;
+import com.alibaba.cloud.ai.dataagent.dto.datasource.SqlRetryDTO;
 import com.alibaba.cloud.ai.dataagent.dto.prompt.SqlGenerationDTO;
 import com.alibaba.cloud.ai.dataagent.dto.schema.SchemaDTO;
 import com.alibaba.cloud.ai.dataagent.service.nl2sql.Nl2SqlService;
@@ -87,8 +87,8 @@ public class SqlGenerateNode implements NodeAction {
 		// 准备生成SQL
 		String displayMessage;
 		Flux<String> sqlFlux;
-		SqlRetryDto retryDto = StateUtil.getObjectValue(state, SQL_REGENERATE_REASON, SqlRetryDto.class,
-				SqlRetryDto.empty());
+		SqlRetryDTO retryDto = StateUtil.getObjectValue(state, SQL_REGENERATE_REASON, SqlRetryDTO.class,
+				SqlRetryDTO.empty());
 
 		if (retryDto.sqlExecuteFail()) {
 			displayMessage = "检测到SQL执行异常，开始重新生成SQL...";
@@ -107,7 +107,7 @@ public class SqlGenerateNode implements NodeAction {
 
 		// 准备返回结果，同时需要清除一些状态数据
 		Map<String, Object> result = new HashMap<>(Map.of(SQL_GENERATE_OUTPUT, StateGraph.END, SQL_GENERATE_COUNT,
-				count + 1, SQL_REGENERATE_REASON, SqlRetryDto.empty()));
+				count + 1, SQL_REGENERATE_REASON, SqlRetryDTO.empty()));
 
 		// Create display flux for user experience only
 		StringBuilder sqlCollector = new StringBuilder();

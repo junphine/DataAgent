@@ -15,7 +15,7 @@
  */
 package com.alibaba.cloud.ai.dataagent.workflow.node.sql;
 
-import com.alibaba.cloud.ai.dataagent.dto.datasource.SqlRetryDto;
+import com.alibaba.cloud.ai.dataagent.dto.datasource.SqlRetryDTO;
 import com.alibaba.cloud.ai.dataagent.workflow.node.SqlGenerateNode;
 import com.alibaba.cloud.ai.dataagent.properties.DataAgentProperties;
 import com.alibaba.cloud.ai.dataagent.service.nl2sql.Nl2SqlService;
@@ -211,7 +211,7 @@ class SqlGenerateNodeTest {
 		OverAllState state = createTestState();
 		setupBasicState(state);
 		state.updateState(
-				Map.of(SQL_REGENERATE_REASON, new SqlRetryDto("SQL execution error: table not found", false, true),
+				Map.of(SQL_REGENERATE_REASON, new SqlRetryDTO("SQL execution error: table not found", false, true),
 						SQL_GENERATE_OUTPUT, "SELECT * FROM nonexistent"));
 
 		when(properties.getMaxSqlRetryCount()).thenReturn(10);
@@ -227,7 +227,7 @@ class SqlGenerateNodeTest {
 		OverAllState state = createTestState();
 		setupBasicState(state);
 		state.updateState(Map.of(SQL_REGENERATE_REASON,
-				new SqlRetryDto("Semantic check failed: query intent mismatch", true, false), SQL_GENERATE_OUTPUT,
+				new SqlRetryDTO("Semantic check failed: query intent mismatch", true, false), SQL_GENERATE_OUTPUT,
 				"SELECT count(*) FROM orders"));
 
 		when(properties.getMaxSqlRetryCount()).thenReturn(10);

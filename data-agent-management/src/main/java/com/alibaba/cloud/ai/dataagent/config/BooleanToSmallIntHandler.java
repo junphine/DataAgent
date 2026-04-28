@@ -28,44 +28,81 @@ import java.sql.SQLException;
 
 @Component
 @MappedTypes({Boolean.class,boolean.class})
-@MappedJdbcTypes(value={JdbcType.BOOLEAN, JdbcType.BIT, JdbcType.SMALLINT},includeNullJdbcType=true)
+@MappedJdbcTypes(value={JdbcType.TINYINT, JdbcType.BIT, JdbcType.SMALLINT},includeNullJdbcType=true)
 public class BooleanToSmallIntHandler extends BaseTypeHandler<Boolean> {
 
     @Override
     public void setNonNullParameter(PreparedStatement ps, int i,
                                     Boolean parameter, JdbcType jdbcType)
             throws SQLException {
-        ps.setInt(i, parameter ? 1 : 0);
+        if(JdbcType.BOOLEAN==jdbcType){
+            ps.setBoolean(i, parameter);
+        }
+        else {
+            ps.setInt(i, parameter ? 1 : 0);
+        }
     }
 
     @Override
     public Boolean getNullableResult(ResultSet rs, String columnName)
             throws SQLException {
-        int value = rs.getInt(columnName);
-        // 处理 null 值
-        if (rs.wasNull()) {
-            return null;
-        }
-        return value == 1;
+        try{
+            int value = rs.getInt(columnName);
+            // 处理 null 值
+            if (rs.wasNull()) {
+                return null;
+            }
+            return value == 1;
+        } catch (Exception e) {}
+
+        try {
+            boolean value = rs.getBoolean(columnName);
+            if (!rs.wasNull()) {
+                return value;
+            }
+        } catch (Exception e) {}
+        return null;
     }
 
     @Override
     public Boolean getNullableResult(ResultSet rs, int columnIndex)
             throws SQLException {
-        int value = rs.getInt(columnIndex);
-        if (rs.wasNull()) {
-            return null;
-        }
-        return value == 1;
+        try{
+            int value = rs.getInt(columnIndex);
+            // 处理 null 值
+            if (rs.wasNull()) {
+                return null;
+            }
+            return value == 1;
+        } catch (Exception e) {}
+
+        try {
+            boolean value = rs.getBoolean(columnIndex);
+            if (!rs.wasNull()) {
+                return value;
+            }
+        } catch (Exception e) {}
+        return null;
     }
 
     @Override
-    public Boolean getNullableResult(CallableStatement cs, int columnIndex)
+    public Boolean getNullableResult(CallableStatement rs, int columnIndex)
             throws SQLException {
-        int value = cs.getInt(columnIndex);
-        if (cs.wasNull()) {
-            return null;
-        }
-        return value == 1;
+        try{
+            int value = rs.getInt(columnIndex);
+            // 处理 null 值
+            if (rs.wasNull()) {
+                return null;
+            }
+            return value == 1;
+        } catch (Exception e) {}
+
+        try {
+            boolean value = rs.getBoolean(columnIndex);
+            if (!rs.wasNull()) {
+                return value;
+            }
+        } catch (Exception e) {}
+        return null;
     }
 }

@@ -15,7 +15,7 @@
  */
 package com.alibaba.cloud.ai.dataagent.workflow.dispatcher;
 
-import com.alibaba.cloud.ai.dataagent.dto.datasource.SqlRetryDto;
+import com.alibaba.cloud.ai.dataagent.dto.datasource.SqlRetryDTO;
 import com.alibaba.cloud.ai.graph.OverAllState;
 import com.alibaba.cloud.ai.graph.action.EdgeAction;
 import com.alibaba.cloud.ai.dataagent.util.StateUtil;
@@ -31,7 +31,7 @@ public class SQLExecutorDispatcher implements EdgeAction {
 
 	@Override
 	public String apply(OverAllState state) {
-		SqlRetryDto retryDto = StateUtil.getObjectValue(state, SQL_REGENERATE_REASON, SqlRetryDto.class);
+		SqlRetryDTO retryDto = StateUtil.getObjectValue(state, SQL_REGENERATE_REASON, SqlRetryDTO.class);
 		if (retryDto.sqlExecuteFail()) {
 			log.warn("SQL运行失败，需要重新生成！");
 			return SQL_GENERATE_NODE;

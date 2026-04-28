@@ -16,6 +16,8 @@
 package com.alibaba.cloud.ai.dataagent.config;
 
 import org.apache.ibatis.session.AutoMappingBehavior;
+import org.apache.ibatis.type.BooleanTypeHandler;
+import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.TypeHandlerRegistry;
 
 import org.mybatis.spring.annotation.MapperScan;
@@ -35,6 +37,10 @@ public class MyBatisTypeHandlerConfig {
             // 全局注册 Boolean 类型处理器
             registry.register(Boolean.class, new BooleanToSmallIntHandler());
             registry.register(boolean.class, new BooleanToSmallIntHandler());
+
+            registry.register(Boolean.class, JdbcType.BOOLEAN, new BooleanTypeHandler());
+            registry.register(boolean.class, JdbcType.BOOLEAN, new BooleanTypeHandler());
+
 
             configuration.setMapUnderscoreToCamelCase(true);
             configuration.setAutoMappingBehavior(AutoMappingBehavior.FULL);

@@ -15,7 +15,7 @@
 -->
 
 <template>
-  <!-- todo: 添加分页 -->
+  <!-- 添加分页 -->
   <div style="padding: 20px">
     <div style="margin-bottom: 20px">
       <h2>语义模型管理</h2>
@@ -176,7 +176,19 @@
       </el-form-item>
 
       <el-form-item label="数据类型" prop="dataType" required>
-        <el-input v-model="modelForm.dataType" placeholder="请输入数据类型，如：int, varchar(20)" />
+          <el-select
+            v-model="modelForm.dataType"
+            placeholder="请选择数据类型"
+            style="width: 100%"
+            size="large"
+          >
+            <el-option
+              v-for="type in dataClassDTOs"
+              :key="type.id"
+              :label="type.id+' -- '+type.name"
+              :value="type.id"
+            />
+          </el-select>
       </el-form-item>
     </el-form>
 
@@ -213,6 +225,7 @@
     SemanticModelQueryDto,
     SemanticModelAddDto,
     SemanticModelImportItem,
+    DataClassDTO
   } from '@/services/semanticModel';
   import { ElMessage, ElMessageBox } from 'element-plus';
   import { formatDateTime } from '@/services/common';
@@ -236,6 +249,7 @@
       const isEdit: Ref<boolean> = ref(false);
       const searchKeyword: Ref<string> = ref('');
       const selectedModels: Ref<SemanticModel[]> = ref([]);
+      const dataClassDTOs: Ref<DataClassDTO[]> = ref([]);
       const modelForm: Ref<SemanticModel> = ref({
         tableName: '',
         columnName: '',
@@ -345,6 +359,17 @@
         }
       };
 
+      // 加载数量类型模型列表
+      const loadDataClassDTOs = async () => {
+        try {
+          let dataClassListResult = await semanticModelService.dataClassList();
+          dataClassDTOs.value = dataClassListResult;
+        } catch (error) {
+          ElMessage.error('加载数据类型模型列表失败');
+          console.error('Failed to load DataClassDTO models:', error);
+        }
+      };
+
       // 编辑语义模型
       const editModel = (model: SemanticModel) => {
         isEdit.value = true;
@@ -451,6 +476,7 @@
 
       onMounted(() => {
         loadSemanticModels();
+        loadDataClassDTOs();
       });
 
       // 批量导入相关状态
@@ -562,6 +588,7 @@
         Search,
         Delete,
         semanticModelList,
+        dataClassDTOs,
         dialogVisible,
         isEdit,
         searchKeyword,

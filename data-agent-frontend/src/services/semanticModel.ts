@@ -33,6 +33,15 @@ interface SemanticModel {
   updateTime?: string;
 }
 
+interface DataClassDTO {
+  id: string;
+  name: string;
+  indexed: boolean;
+  stored: boolean;
+  keyword: boolean;
+  status: string;
+}
+
 /**
  * 分页查询请求参数
  */
@@ -91,6 +100,19 @@ class SemanticModelService {
     if (keyword) params.keyword = keyword;
 
     const response = await axios.get<ApiResponse<SemanticModel[]>>(API_BASE_URL, { params });
+    return response.data.data || [];
+  }
+
+  /**
+   * 获取语义模型列表
+   * @param agentId 关联的 Agent ID
+   * @param keyword 搜索关键词
+   */
+  async dataClassList(status?: string): Promise<DataClassDTO[]> {
+    const params: { status?: string } = {};
+    if (status) params.status = status;
+
+    const response = await axios.get<ApiResponse<DataClassDTO[]>>(API_BASE_URL+'/dataclass/list', { params });
     return response.data.data || [];
   }
 

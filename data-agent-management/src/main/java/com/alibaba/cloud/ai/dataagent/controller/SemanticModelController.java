@@ -17,7 +17,9 @@ package com.alibaba.cloud.ai.dataagent.controller;
 
 import com.alibaba.cloud.ai.dataagent.dto.schema.SemanticModelAddDTO;
 import com.alibaba.cloud.ai.dataagent.dto.schema.SemanticModelBatchImportDTO;
+import com.alibaba.cloud.ai.dataagent.entity.DataClass;
 import com.alibaba.cloud.ai.dataagent.entity.SemanticModel;
+import com.alibaba.cloud.ai.dataagent.mapper.DataClassMapper;
 import com.alibaba.cloud.ai.dataagent.service.semantic.SemanticModelService;
 import com.alibaba.cloud.ai.dataagent.vo.*;
 import jakarta.validation.Valid;
@@ -54,6 +56,8 @@ public class SemanticModelController {
 	private static final String TEMPLATE_FILE_NAME = "semantic_model_template.xlsx";
 
 	private final SemanticModelService semanticModelService;
+
+	private final DataClassMapper dataClassMapper;
 
 	@GetMapping
 	public ApiResponse<List<SemanticModel>> list(@RequestParam(value = "keyword", required = false) String keyword,
@@ -206,4 +210,16 @@ public class SemanticModelController {
 		});
 	}
 
+
+	@GetMapping("/dataclass/list")
+	public ApiResponse<List<DataClass>> listDataClass(@RequestParam(value = "status", required = false) String status) {
+		List<DataClass> result;
+		if (status != null && !status.isEmpty()) {
+			result = dataClassMapper.selectByStatus(status);
+		}
+		else {
+			result = dataClassMapper.selectAll();
+		}
+		return ApiResponse.success("success list dataClass", result);
+	}
 }

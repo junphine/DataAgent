@@ -15,7 +15,7 @@
  */
 package com.alibaba.cloud.ai.dataagent.workflow.dispatcher;
 
-import com.alibaba.cloud.ai.dataagent.dto.datasource.SqlRetryDto;
+import com.alibaba.cloud.ai.dataagent.dto.datasource.SqlRetryDTO;
 import com.alibaba.cloud.ai.graph.OverAllState;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,7 +38,7 @@ class SQLExecutorDispatcherTest {
 	@Test
 	void apply_sqlExecuteFailed_routesToSqlGenerate() {
 		OverAllState state = new OverAllState();
-		state.updateState(Map.of(SQL_REGENERATE_REASON, SqlRetryDto.sqlExecute("syntax error")));
+		state.updateState(Map.of(SQL_REGENERATE_REASON, SqlRetryDTO.sqlExecute("syntax error")));
 
 		assertEquals(SQL_GENERATE_NODE, dispatcher.apply(state));
 	}
@@ -46,7 +46,7 @@ class SQLExecutorDispatcherTest {
 	@Test
 	void apply_noRetryReason_routesToPlanExecutor() {
 		OverAllState state = new OverAllState();
-		state.updateState(Map.of(SQL_REGENERATE_REASON, SqlRetryDto.empty()));
+		state.updateState(Map.of(SQL_REGENERATE_REASON, SqlRetryDTO.empty()));
 
 		assertEquals(PLAN_EXECUTOR_NODE, dispatcher.apply(state));
 	}
@@ -54,7 +54,7 @@ class SQLExecutorDispatcherTest {
 	@Test
 	void apply_semanticFail_notSqlExecuteFail_routesToPlanExecutor() {
 		OverAllState state = new OverAllState();
-		state.updateState(Map.of(SQL_REGENERATE_REASON, SqlRetryDto.semantic("semantic issue")));
+		state.updateState(Map.of(SQL_REGENERATE_REASON, SqlRetryDTO.semantic("semantic issue")));
 
 		assertEquals(PLAN_EXECUTOR_NODE, dispatcher.apply(state));
 	}

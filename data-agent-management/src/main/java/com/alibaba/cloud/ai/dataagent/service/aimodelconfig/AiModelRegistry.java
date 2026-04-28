@@ -15,12 +15,14 @@
  */
 package com.alibaba.cloud.ai.dataagent.service.aimodelconfig;
 
+import com.alibaba.cloud.ai.dataagent.aop.EhCacheAdvisor;
 import com.alibaba.cloud.ai.dataagent.enums.ModelType;
 import com.alibaba.cloud.ai.dataagent.dto.ModelConfigDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.embedding.EmbeddingRequest;
@@ -37,6 +39,8 @@ public class AiModelRegistry {
 	private final DynamicModelFactory modelFactory;
 
 	private final ModelConfigDataService modelConfigDataService;
+
+	private final EhCacheAdvisor cacheAdvisor;
 
 	// 缓存对象 (volatile 保证可见性)
 	private volatile ChatClient currentChatClient;
@@ -56,7 +60,9 @@ public class AiModelRegistry {
 						if (config != null) {
 							ChatModel chatModel = modelFactory.createChatModel(config);
 							// 核心：基于新 Model 创建新 Client，彻底消除旧参数缓存
-							currentChatClient = ChatClient.builder(chatModel).build();
+							currentChatClient = ChatClient.builder(chatModel)
+									//.defaultAdvisors(cacheAdvisor)
+									.build();
 						}
 					}
 					catch (Exception e) {

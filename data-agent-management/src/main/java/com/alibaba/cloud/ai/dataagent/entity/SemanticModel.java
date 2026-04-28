@@ -77,7 +77,7 @@ public class SemanticModel {
 	private String columnComment;
 
 	/**
-	 * 物理数据类型 (例如: int, varchar(20))
+	 * 数据类型 (see data_class)
 	 */
 	private String dataType;
 

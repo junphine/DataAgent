@@ -2542,6 +2542,16 @@ ALTER TABLE ONLY public.semantic_model
 
 -- Completed on 2026-04-10 16:58:57
 
+CREATE TABLE IF NOT EXISTS public.data_class
+(
+    id character varying(64) COLLATE pg_catalog."default" NOT NULL,
+    name character varying(64) COLLATE pg_catalog."default" NOT NULL,
+    indexed boolean NOT NULL DEFAULT false,
+    stored boolean NOT NULL DEFAULT false,
+    keyword boolean NOT NULL DEFAULT false,
+    CONSTRAINT data_class_pkey PRIMARY KEY (id)
+);
+
 --
 -- PostgreSQL database dump complete
 --

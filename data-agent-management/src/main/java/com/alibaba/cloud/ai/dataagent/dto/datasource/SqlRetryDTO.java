@@ -15,18 +15,18 @@
  */
 package com.alibaba.cloud.ai.dataagent.dto.datasource;
 
-public record SqlRetryDto(String reason, boolean semanticFail, boolean sqlExecuteFail) {
+public record SqlRetryDTO(String reason, boolean semanticFail, boolean sqlExecuteFail) {
 
-	public static SqlRetryDto semantic(String reason) {
-		return new SqlRetryDto(reason, true, false);
+	public static SqlRetryDTO semantic(String reason) {
+		return new SqlRetryDTO(reason, true, false);
 	}
 
-	public static SqlRetryDto sqlExecute(String reason) {
-		return new SqlRetryDto(reason, false, true);
+	public static SqlRetryDTO sqlExecute(String reason) {
+		return new SqlRetryDTO(reason, false, true);
 	}
 
-	public static SqlRetryDto empty() {
-		return new SqlRetryDto("", false, false);
+	public static SqlRetryDTO empty() {
+		return new SqlRetryDTO("", false, false);
 	}
 
 }

@@ -44,7 +44,7 @@ class SemanticModelControllerTest {
 
 	@BeforeEach
 	void setUp() {
-		controller = new SemanticModelController(semanticModelService);
+		controller = new SemanticModelController(semanticModelService,null);
 	}
 
 	@Test

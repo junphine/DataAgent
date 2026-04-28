@@ -40,7 +40,7 @@ public class AiModelRegistry {
 
 	private final ModelConfigDataService modelConfigDataService;
 
-	private final EhCacheAdvisor cacheAdvisor;
+	//private final EhCacheAdvisor cacheAdvisor;
 
 	// 缓存对象 (volatile 保证可见性)
 	private volatile ChatClient currentChatClient;

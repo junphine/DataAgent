@@ -195,6 +195,12 @@ public class AgentKnowledgeServiceImpl implements AgentKnowledgeService {
 			log.error("Failed to update knowledge with id: {}", knowledge.getId());
 			throw new RuntimeException("Failed to update knowledge in database.");
 		}
+		if(recalled){
+			eventPublisher.publishEvent(new AgentKnowledgeDeletionEvent(this, id));
+		}
+		else{
+			eventPublisher.publishEvent(new AgentKnowledgeEmbeddingEvent(this, id, knowledge.getSplitterType()));
+		}
 		return agentKnowledgeConverter.toVo(knowledge);
 	}
 

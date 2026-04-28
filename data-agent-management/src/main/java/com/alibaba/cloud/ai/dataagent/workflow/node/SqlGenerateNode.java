@@ -135,6 +135,9 @@ public class SqlGenerateNode implements NodeAction {
 		String userQuery = StateUtil.getCanonicalQuery(state);
 		String dialect = StateUtil.getStringValue(state, DB_DIALECT_TYPE);
 		String requestAssembly = StateUtil.getStringValue(state,FEASIBILITY_ASSESSMENT_NODE_OUTPUT,"");
+		if(!state.value(IS_ONLY_NL2SQL, false)){
+			requestAssembly = "";
+		}
 		SqlGenerationDTO sqlGenerationDTO = SqlGenerationDTO.builder()
 			.evidence(evidence)
 			.query(userQuery)

@@ -33,4 +33,8 @@ public class EvidenceQueryRewriteDTO {
 	@JsonPropertyDescription("重写后的完整句子")
 	private String standaloneQuery;
 
+	@JsonProperty("keywords")
+	@JsonPropertyDescription("提取的关键词列表")
+	private String keywords;
+
 }

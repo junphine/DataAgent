@@ -4,7 +4,7 @@ server:
 # 存储 DataAgent 业务数据的数据库，并非Agent分析数据的来源
 spring:
   datasource:
-    url: jdbc:postgresql://pgm-bp15i364768i0jh5.pg.rds.aliyuncs.com/nl2sql
+    url: jdbc:postgresql://pgm-bp15i364768i0jh5go.pg.rds.aliyuncs.com/nl2sql
     username: zhang_junfeng
     password: zjf@pb2026
     driver-class-name: org.postgresql.Driver

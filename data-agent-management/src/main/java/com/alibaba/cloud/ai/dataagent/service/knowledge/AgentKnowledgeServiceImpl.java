@@ -85,8 +85,7 @@ public class AgentKnowledgeServiceImpl implements AgentKnowledgeService {
 			throw new RuntimeException("Failed to create knowledge in database.");
 		}
 
-		eventPublisher
-			.publishEvent(new AgentKnowledgeEmbeddingEvent(this, knowledge.getId(), knowledge.getSplitterType()));
+		eventPublisher.publishEvent(new AgentKnowledgeEmbeddingEvent(this, knowledge.getId(), knowledge.getSplitterType()));
 		log.info("Knowledge created and event published. Id: {}, splitterType: {}", knowledge.getId(),
 				knowledge.getSplitterType());
 
@@ -179,6 +178,7 @@ public class AgentKnowledgeServiceImpl implements AgentKnowledgeService {
 	}
 
 	@Override
+	@Transactional
 	public AgentKnowledgeVO updateKnowledgeRecallStatus(Integer id, Boolean recalled) {
 		// 查询知识
 		AgentKnowledge knowledge = agentKnowledgeMapper.selectById(id);
@@ -195,7 +195,7 @@ public class AgentKnowledgeServiceImpl implements AgentKnowledgeService {
 			log.error("Failed to update knowledge with id: {}", knowledge.getId());
 			throw new RuntimeException("Failed to update knowledge in database.");
 		}
-		if(recalled){
+		if(!recalled){
 			eventPublisher.publishEvent(new AgentKnowledgeDeletionEvent(this, id));
 		}
 		else{

@@ -34,6 +34,8 @@ public class AgentSearchRequest implements java.io.Serializable {
 
 	private String query;
 
+	private String keywords;
+
 	private Integer topK;
 
 }

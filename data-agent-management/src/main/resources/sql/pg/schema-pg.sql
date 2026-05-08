@@ -2544,8 +2544,8 @@ ALTER TABLE ONLY public.semantic_model
 
 CREATE TABLE IF NOT EXISTS public.data_class
 (
-    id character varying(64) COLLATE pg_catalog."default" NOT NULL,
-    name character varying(64) COLLATE pg_catalog."default" NOT NULL,
+    id character varying(64)  NOT NULL,
+    name character varying(64) NOT NULL,
     indexed boolean NOT NULL DEFAULT false,
     stored boolean NOT NULL DEFAULT false,
     keyword boolean NOT NULL DEFAULT false,

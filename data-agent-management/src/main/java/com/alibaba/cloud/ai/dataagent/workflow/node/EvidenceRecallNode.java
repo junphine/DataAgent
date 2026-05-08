@@ -104,7 +104,8 @@ public class EvidenceRecallNode implements NodeAction {
 
 	private Map<String, Object> getEvidences(String llmOutput, String agentId, Sinks.Many<String> sink) {
 		try {
-			String standaloneQuery = extractStandaloneQuery(llmOutput);
+			EvidenceQueryRewriteDTO dto = extractRewriteQuery(llmOutput);
+			String standaloneQuery = dto.getStandaloneQuery();
 
 			if (null == standaloneQuery || standaloneQuery.isEmpty()) {
 				log.debug("No standalone query from LLM output");
@@ -116,7 +117,7 @@ public class EvidenceRecallNode implements NodeAction {
 			outputRewrittenQuery(standaloneQuery, sink);
 
 			// 获取业务知识和智能体知识文档
-			DocumentRetrievalResult retrievalResult = retrieveDocuments(agentId, standaloneQuery);
+			DocumentRetrievalResult retrievalResult = retrieveDocuments(agentId, dto);
 
 			// 检查是否有证据文档
 			if (retrievalResult.allDocuments().isEmpty()) {
@@ -152,7 +153,8 @@ public class EvidenceRecallNode implements NodeAction {
 		sink.tryEmitNext("正在获取证据...");
 	}
 
-	private DocumentRetrievalResult retrieveDocuments(String agentId, String standaloneQuery) {
+	private DocumentRetrievalResult retrieveDocuments(String agentId, EvidenceQueryRewriteDTO dto) {
+		String standaloneQuery = dto.getStandaloneQuery()+" keywords: "+ dto.getKeywords();
 		// 获取业务知识文档
 		List<Document> businessTermDocuments = vectorStoreService
 			.getDocumentsForAgent(agentId, standaloneQuery, DocumentMetadataConstant.BUSINESS_TERM)
@@ -406,14 +408,14 @@ public class EvidenceRecallNode implements NodeAction {
 			List<Document> allDocuments) {
 	}
 
-	private String extractStandaloneQuery(String llmOutput) {
+	private EvidenceQueryRewriteDTO extractRewriteQuery(String llmOutput) {
 		EvidenceQueryRewriteDTO evidenceQueryRewriteDTO;
 		try {
 			String content = MarkdownParserUtil.extractText(llmOutput.trim());
 			evidenceQueryRewriteDTO = jsonParseUtil.tryConvertToObject(content, EvidenceQueryRewriteDTO.class);
 			log.info("For getting evidence, successfully parsed EvidenceQueryRewriteDTO from LLM response: {}",
 					evidenceQueryRewriteDTO);
-			return evidenceQueryRewriteDTO.getStandaloneQuery();
+			return evidenceQueryRewriteDTO;
 		}
 		catch (Exception e) {
 			log.error("Failed to parse EvidenceQueryRewriteDTO from LLM response", e);

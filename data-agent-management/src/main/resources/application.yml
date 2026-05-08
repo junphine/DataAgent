@@ -10,7 +10,7 @@ springdoc:
 # 存储 DataAgent 业务数据的数据库，并非Agent分析数据的来源
 spring:
   profiles:
-    active: dev
+    active: pro
 
   datasource:
     url: ${DATA_AGENT_DATASOURCE_URL:jdbc:mysql://127.0.0.1:3306/saa_data_agent?useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&transformedBitIsBoolean=true&allowMultiQueries=true&allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=Asia/Shanghai}

@@ -341,6 +341,8 @@ public class PromptHelper {
 		params.put("latest_query", latestQuery);
 		BeanOutputConverter<EvidenceQueryRewriteDTO> beanOutputConverter = new BeanOutputConverter<>(
 				EvidenceQueryRewriteDTO.class);
+
+		params.put("current_time_info", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
 		params.put("format", beanOutputConverter.getFormat());
 		return PromptConstant.getEvidenceQueryRewritePromptTemplate().render(params);
 	}
